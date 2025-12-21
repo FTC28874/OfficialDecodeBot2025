@@ -8,8 +8,6 @@ import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
-import org.firstinspires.ftc.teamcode.robot.Shooter;
-
 @Autonomous
 public class autopathing extends OpMode {
     private double shooterEncSpeed = 1600;
@@ -19,7 +17,7 @@ public class autopathing extends OpMode {
     public enum PathState {
 
         DRIVE_STARTPOS_TO_SHOOTING_POS,
-        PAUSE_FLYWHEEL_1,
+        PAUSE_FOR_SHOOT_1,
 
         DRIVE_SHOOTPOS_TO_INTAKE_READY_SET_2_POS,
         DRIVE_INTAKE_READY_POSE_SET_2_TO_ACTUALLY_DO_INTAKE_SET_2,
@@ -27,17 +25,17 @@ public class autopathing extends OpMode {
         DRIVE_READY_TO_EMPTY_TO_EMPTY_GATE,
         DRIVE_EMPTY_GATE_TO_GO_TO_SHOOTING_LINE,
         DRIVE_GO_TO_SHOOTING_LINE_TO_SHOOT_POSE,
-        PAUSE_FLYWHEEL_2,
+        PAUSE_FOR_SHOOT_2,
 
         DRIVE_SHOOT_POSE_TO_INTAKE_READY_POSE_SET_1,
         DRIVE_INTAKE_READY_POSE_SET_1_TO_ACTUALLY_DO_INTAKE_SET_1,
         DRIVE_ACTUALLY_DO_INTAKE_SET_1_TO_SHOOT_POSE,
-        PAUSE_FLYWHEEL_3,
+        PAUSE_FOR_SHOOT_3,
 
         DRIVE_SHOOT_POSE_TO_INTAKE_READY_POSE_SET_3,
         DRIVE_INTAKE_READY_POSE_SET_3_TO_ACTUALLY_DO_INTAKE_SET_3,
         DRIVE_ACTUALLY_DO_INTAKE_SET_3_TO_SHOOT_POSE,
-        PAUSE_FLYWHEEL_4,
+        PAUSE_FOR_SHOOT_4,
 
         DRIVE_SHOOT_POSE_TO_READY_TO_EMPTY_END
     }
@@ -110,10 +108,10 @@ public class autopathing extends OpMode {
 
             case DRIVE_STARTPOS_TO_SHOOTING_POS:
                 follower.followPath(driveStartToShoot, true);
-                setPathState(PathState.PAUSE_FLYWHEEL_1);
+                setPathState(PathState.PAUSE_FOR_SHOOT_1);
                 break;
 
-            case PAUSE_FLYWHEEL_1:
+            case PAUSE_FOR_SHOOT_1:
                 // TODO add flywheel logic
                 if (pathTimer.getElapsedTimeSeconds() >= 2.0) {
                     setPathState(PathState.DRIVE_SHOOTPOS_TO_INTAKE_READY_SET_2_POS);
@@ -146,10 +144,10 @@ public class autopathing extends OpMode {
 
             case DRIVE_GO_TO_SHOOTING_LINE_TO_SHOOT_POSE:
                 follower.followPath(driveGoToShootingLineToShootPose, true);
-                setPathState(PathState.PAUSE_FLYWHEEL_2);
+                setPathState(PathState.PAUSE_FOR_SHOOT_2);
                 break;
 
-            case PAUSE_FLYWHEEL_2:
+            case PAUSE_FOR_SHOOT_2:
 
                 // TODO add flywheel logic
                 if (pathTimer.getElapsedTimeSeconds() >= 2.0) {
@@ -169,10 +167,10 @@ public class autopathing extends OpMode {
 
             case DRIVE_ACTUALLY_DO_INTAKE_SET_1_TO_SHOOT_POSE:
                 follower.followPath(driveActuallyDoIntakeSet1toShootPose, true);
-                setPathState(PathState.PAUSE_FLYWHEEL_3);
+                setPathState(PathState.PAUSE_FOR_SHOOT_3);
                 break;
 
-            case PAUSE_FLYWHEEL_3:
+            case PAUSE_FOR_SHOOT_3:
 
                 // TODO add flywheel logic
 
@@ -193,10 +191,10 @@ public class autopathing extends OpMode {
 
             case DRIVE_ACTUALLY_DO_INTAKE_SET_3_TO_SHOOT_POSE:
                 follower.followPath(driveActuallyDoIntakeSet3toShootPose, true);
-                setPathState(PathState.PAUSE_FLYWHEEL_4);
+                setPathState(PathState.PAUSE_FOR_SHOOT_4);
                 break;
 
-            case PAUSE_FLYWHEEL_4:
+            case PAUSE_FOR_SHOOT_4:
 
                 // TODO add flywheel logic
                 if (pathTimer.getElapsedTimeSeconds() >= 2.0) {
