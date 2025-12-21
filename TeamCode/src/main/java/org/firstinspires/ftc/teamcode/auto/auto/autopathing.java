@@ -7,9 +7,12 @@ import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import org.firstinspires.ftc.teamcode.robot.Shooter;
+import org.firstinspires.ftc.teamcode.robot.Intake;
 
 @Autonomous
 public class autopathing extends OpMode {
+
     private double shooterEncSpeed = 1600;
     private Follower follower;
     private Timer pathTimer, opModeTimer;
@@ -103,6 +106,12 @@ public class autopathing extends OpMode {
         return pathChain;
     }
 
+    private void runShooterPID() {
+        Shooter.SetShooterPower(
+                Shooter.PIDControl(shooterEncSpeed, Shooter.GetCurrentRPM())
+        );
+    }
+
     public void statePathUpdate() {
         switch (pathState) {
 
@@ -112,9 +121,10 @@ public class autopathing extends OpMode {
                 break;
 
             case PAUSE_FOR_SHOOT_1:
-                // TODO add flywheel logic
+                runShooterPID();
                 if (pathTimer.getElapsedTimeSeconds() >= 2.0) {
                     setPathState(PathState.DRIVE_SHOOTPOS_TO_INTAKE_READY_SET_2_POS);
+                    Shooter.StopShooter();
                 }
                 break;
 
@@ -124,6 +134,7 @@ public class autopathing extends OpMode {
                 break;
 
             case DRIVE_INTAKE_READY_POSE_SET_2_TO_ACTUALLY_DO_INTAKE_SET_2:
+                Intake.runIntake();
                 follower.followPath(driveIntakeReadyPoseSet2ToActuallyDoIntakeSet2, true);
                 setPathState(PathState.DRIVE_ACTUALLY_DO_INTAKE_SET_2_TO_READY_TO_EMPTY);
                 break;
@@ -141,6 +152,7 @@ public class autopathing extends OpMode {
             case DRIVE_EMPTY_GATE_TO_GO_TO_SHOOTING_LINE:
                 follower.followPath(driveEmptyGateToGoToShootingLine, true);
                 setPathState(PathState.DRIVE_GO_TO_SHOOTING_LINE_TO_SHOOT_POSE);
+                break;
 
             case DRIVE_GO_TO_SHOOTING_LINE_TO_SHOOT_POSE:
                 follower.followPath(driveGoToShootingLineToShootPose, true);
@@ -148,10 +160,10 @@ public class autopathing extends OpMode {
                 break;
 
             case PAUSE_FOR_SHOOT_2:
-
-                // TODO add flywheel logic
+                runShooterPID();
                 if (pathTimer.getElapsedTimeSeconds() >= 2.0) {
                     setPathState(PathState.DRIVE_SHOOT_POSE_TO_INTAKE_READY_POSE_SET_1);
+                    Shooter.StopShooter();
                 }
                 break;
 
@@ -161,6 +173,7 @@ public class autopathing extends OpMode {
                 break;
 
             case DRIVE_INTAKE_READY_POSE_SET_1_TO_ACTUALLY_DO_INTAKE_SET_1:
+                Intake.runIntake();
                 follower.followPath(driveIntakeReadyPoseSet1toActuallyDoIntakeSet1, true);
                 setPathState(PathState.DRIVE_ACTUALLY_DO_INTAKE_SET_1_TO_SHOOT_POSE);
                 break;
@@ -171,11 +184,10 @@ public class autopathing extends OpMode {
                 break;
 
             case PAUSE_FOR_SHOOT_3:
-
-                // TODO add flywheel logic
-
+                runShooterPID();
                 if (pathTimer.getElapsedTimeSeconds() >= 2.0) {
                     setPathState(PathState.DRIVE_EMPTY_GATE_TO_GO_TO_SHOOTING_LINE);
+                    Shooter.StopShooter();
                 }
                 break;
 
@@ -185,6 +197,7 @@ public class autopathing extends OpMode {
                 break;
 
             case DRIVE_INTAKE_READY_POSE_SET_3_TO_ACTUALLY_DO_INTAKE_SET_3:
+                Intake.runIntake();
                 follower.followPath(driveIntakeReadyPoseSet3toActuallyDoIntakeSet3, true);
                 setPathState(PathState.DRIVE_EMPTY_GATE_TO_GO_TO_SHOOTING_LINE);
                 break;
@@ -195,14 +208,17 @@ public class autopathing extends OpMode {
                 break;
 
             case PAUSE_FOR_SHOOT_4:
-
-                // TODO add flywheel logic
+                runShooterPID();
                 if (pathTimer.getElapsedTimeSeconds() >= 2.0) {
                     setPathState(PathState.DRIVE_EMPTY_GATE_TO_GO_TO_SHOOTING_LINE);
+                    Shooter.StopShooter();
+
                 }
                 break;
+
             case DRIVE_SHOOT_POSE_TO_READY_TO_EMPTY_END:
                 follower.followPath(driveShootPosetoReadyToEmptyEnd, true);
+                break;
         }
     }
 
