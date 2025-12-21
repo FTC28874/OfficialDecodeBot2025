@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.auto.auto;
+package org.firstinspires.ftc.teamcode.auto.auto.pedroPathing;
 
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
@@ -11,7 +11,7 @@ import org.firstinspires.ftc.teamcode.robot.Shooter;
 import org.firstinspires.ftc.teamcode.robot.Intake;
 
 @Autonomous
-public class autopathing extends OpMode {
+public class autopathingfrombluegoal extends OpMode {
 
     private double shooterEncSpeed = 1600;
     private Follower follower;
@@ -45,7 +45,7 @@ public class autopathing extends OpMode {
 
     PathState pathState;
 
-    private final Pose startPose = new Pose(56.8, 7.88571428571429, Math.toRadians(90));
+    private final Pose startPose = new Pose(21.137614678899084, 122.0697247706422, Math.toRadians(143));
     private final Pose shootPose = new Pose(56, 88, Math.toRadians(180));
     private final Pose intakeReadyPoseSet2 = new Pose(41.6, 59.8, Math.toRadians(180));
     private final Pose actuallyDoIntakeSet2 = new Pose(21.7, 59.8, Math.toRadians(180));
