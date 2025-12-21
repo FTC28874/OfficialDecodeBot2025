@@ -1081,7 +1081,6 @@ class CentripetalTuner extends OpMode {
                 Tuning.follower.followPath(forwards);
             }
         }
-
         Tuning.telemetryM.debug("Driving away from the origin along the curve?: " + forward);
         Tuning.telemetryM.update(telemetry);
     }
