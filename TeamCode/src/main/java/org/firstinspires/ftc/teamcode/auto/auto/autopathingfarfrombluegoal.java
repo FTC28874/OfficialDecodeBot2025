@@ -1,5 +1,4 @@
 package org.firstinspires.ftc.teamcode.auto.auto;
-
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
