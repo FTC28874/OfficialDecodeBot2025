@@ -6,17 +6,23 @@ import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.auto.auto.Constants;
 import org.firstinspires.ftc.teamcode.robot.Shooter;
 import org.firstinspires.ftc.teamcode.robot.Intake;
+import org.firstinspires.ftc.teamcode.robot.dynamicShooter;
 
 @Autonomous
 public class autopathingfarfrombluegoal extends OpMode {
 
-    private double shooterEncSpeed = 1600;
+    private double shooterEncSpeed = dynamicShooter.flywheelSpeed(67); // add logic to figure out goalDist
     private Follower follower;
     private Timer pathTimer, opModeTimer;
+    private double hoodAngle = dynamicShooter.hoodAngle(67);// add logic to figure out goalDist
+
+
 
     public enum PathState {
 
@@ -122,10 +128,10 @@ public class autopathingfarfrombluegoal extends OpMode {
                 break;
 
             case PAUSE_FOR_SHOOT_1:
-                runShooterPID();
+                Intake.runIntake();
                 if (pathTimer.getElapsedTimeSeconds() >= 2.0) {
                     setPathState(PathState.DRIVE_SHOOTPOS_TO_INTAKE_READY_SET_2_POS);
-                    Shooter.StopShooter();
+                    Intake.stopIntake();
                 }
                 break;
 
@@ -137,6 +143,7 @@ public class autopathingfarfrombluegoal extends OpMode {
             case DRIVE_INTAKE_READY_POSE_SET_2_TO_ACTUALLY_DO_INTAKE_SET_2:
                 Intake.runIntake();
                 follower.followPath(driveIntakeReadyPoseSet2ToActuallyDoIntakeSet2, true);
+                Intake.stopIntake();
                 setPathState(PathState.DRIVE_ACTUALLY_DO_INTAKE_SET_2_TO_READY_TO_EMPTY);
                 break;
 
@@ -161,10 +168,10 @@ public class autopathingfarfrombluegoal extends OpMode {
                 break;
 
             case PAUSE_FOR_SHOOT_2:
-                runShooterPID();
+                Intake.runIntake();
                 if (pathTimer.getElapsedTimeSeconds() >= 2.0) {
                     setPathState(PathState.DRIVE_SHOOT_POSE_TO_INTAKE_READY_POSE_SET_1);
-                    Shooter.StopShooter();
+                    Intake.stopIntake();
                 }
                 break;
 
@@ -177,6 +184,7 @@ public class autopathingfarfrombluegoal extends OpMode {
                 Intake.runIntake();
                 follower.followPath(driveIntakeReadyPoseSet1toActuallyDoIntakeSet1, true);
                 setPathState(PathState.DRIVE_ACTUALLY_DO_INTAKE_SET_1_TO_SHOOT_POSE);
+                Intake.stopIntake();
                 break;
 
             case DRIVE_ACTUALLY_DO_INTAKE_SET_1_TO_SHOOT_POSE:
@@ -185,10 +193,10 @@ public class autopathingfarfrombluegoal extends OpMode {
                 break;
 
             case PAUSE_FOR_SHOOT_3:
-                runShooterPID();
+                Intake.runIntake();
                 if (pathTimer.getElapsedTimeSeconds() >= 2.0) {
                     setPathState(PathState.DRIVE_EMPTY_GATE_TO_GO_TO_SHOOTING_LINE);
-                    Shooter.StopShooter();
+                    Intake.stopIntake();
                 }
                 break;
 
@@ -201,6 +209,7 @@ public class autopathingfarfrombluegoal extends OpMode {
                 Intake.runIntake();
                 follower.followPath(driveIntakeReadyPoseSet3toActuallyDoIntakeSet3, true);
                 setPathState(PathState.DRIVE_EMPTY_GATE_TO_GO_TO_SHOOTING_LINE);
+                Intake.stopIntake();
                 break;
 
             case DRIVE_ACTUALLY_DO_INTAKE_SET_3_TO_SHOOT_POSE:
@@ -209,10 +218,10 @@ public class autopathingfarfrombluegoal extends OpMode {
                 break;
 
             case PAUSE_FOR_SHOOT_4:
-                runShooterPID();
+               Intake.runIntake();
                 if (pathTimer.getElapsedTimeSeconds() >= 2.0) {
                     setPathState(PathState.DRIVE_EMPTY_GATE_TO_GO_TO_SHOOTING_LINE);
-                    Shooter.StopShooter();
+                    Intake.stopIntake();
 
                 }
                 break;
@@ -246,6 +255,7 @@ public class autopathingfarfrombluegoal extends OpMode {
     @Override
     public void loop() {
         follower.update();
+        runShooterPID();
         statePathUpdate();
 
         telemetry.addData("path state", pathState.toString());
