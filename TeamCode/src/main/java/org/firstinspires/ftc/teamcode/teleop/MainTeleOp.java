@@ -75,6 +75,9 @@ public class MainTeleOp extends LinearOpMode {
         driveFR.setDirection(DcMotor.Direction.FORWARD);
         driveBR.setDirection(DcMotor.Direction.FORWARD);
 
+        org.firstinspires.ftc.teamcode.robot.Shooter.init(hardwareMap);
+        org.firstinspires.ftc.teamcode.robot.Intake.init(hardwareMap);
+
         // Wait for the game to start (driver presses START)
         telemetry.addData("Status", "Initialized");
         telemetry.update();

@@ -2,9 +2,7 @@ package org.firstinspires.ftc.teamcode.robot;
 
 
 
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorImplEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -17,8 +15,8 @@ import com.qualcomm.robotcore.util.Range;
  */
 public class Shooter {
     private static ElapsedTime runtime = new ElapsedTime();
-    private static DcMotorEx shooterR = null;
-    private static DcMotorEx shooterL = null;
+    private static DcMotorEx shooterU = null;
+    private static DcMotorEx shooterD = null;
 
     private static final double COUNTS_PER_REVOLUTION = 28;
 
@@ -38,14 +36,14 @@ public class Shooter {
      * Initialize Outake hardware. Must be called once before using static methods.
      */
     public static void init(HardwareMap hardwareMap) {
-        shooterR = hardwareMap.get(DcMotorEx.class, "shooterR");
-        shooterL = hardwareMap.get(DcMotorEx.class, "shooterL");
+        shooterU = hardwareMap.get(DcMotorEx.class, "shooterU");
+        shooterD = hardwareMap.get(DcMotorEx.class, "shooterD");
         // Set directions - adjust if motors spin the wrong way
-        shooterL.setDirection(DcMotorSimple.Direction.REVERSE);
-        shooterR.setDirection(DcMotorSimple.Direction.FORWARD);
+        shooterD.setDirection(DcMotorSimple.Direction.FORWARD);
+        shooterU.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        shooterL.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
-        shooterR.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        shooterD.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        shooterU.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
 
     }
 
@@ -60,38 +58,30 @@ public class Shooter {
         }
     }
 
-
-    public static void RunShooter() {
-        if (shooterL != null && shooterR != null) {
-            shooterL.setPower(PowerState.SHOOTER_RUN.power);
-            shooterR.setPower(PowerState.SHOOTER_RUN.power);
-        }
-    }
-
     public static void SetShooterSpeed(double shooterSpeed) {
         double ticksPerSecond = (shooterSpeed * COUNTS_PER_REVOLUTION) / 60.0;
 
-        shooterL.setVelocity(ticksPerSecond);
-        shooterR.setVelocity(ticksPerSecond);
+        shooterD.setVelocity(ticksPerSecond);
+        shooterU.setVelocity(ticksPerSecond);
     }
 
     public static double GetCurrentRPM() {
-        double currentTicksPerSecond = shooterL.getVelocity();
+        double currentTicksPerSecond = shooterD.getVelocity();
 
         return (currentTicksPerSecond * 60.0) / COUNTS_PER_REVOLUTION;
     }
 
     public static void SetShooterPower(double shooterPower) {
-        if (shooterL != null && shooterR != null) {
-            shooterL.setPower(shooterPower);
-            shooterR.setPower(shooterPower);
+        if (shooterD != null && shooterU != null) {
+            shooterD.setPower(shooterPower);
+            shooterU.setPower(shooterPower);
         }
     }//asdfa
 
     public static void StopShooter() {
-        if (shooterL != null && shooterR != null) {
-            shooterL.setPower(PowerState.NOT_RUN.power);
-            shooterR.setPower(PowerState.NOT_RUN.power);
+        if (shooterD != null && shooterU != null) {
+            shooterD.setPower(PowerState.NOT_RUN.power);
+            shooterU.setPower(PowerState.NOT_RUN.power);
         }
     }
 

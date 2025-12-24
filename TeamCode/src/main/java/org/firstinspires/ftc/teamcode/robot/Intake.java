@@ -13,11 +13,9 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 public class Intake {
     private static ElapsedTime runtime = new ElapsedTime();
     private static DcMotor intake = null;
-    private static DcMotor feeder = null;
 
     public static void init(HardwareMap hardwareMap) {
         intake = hardwareMap.get(DcMotor.class, "intake");
-        feeder = hardwareMap.get(DcMotor.class, "feeder");
         intake.setDirection(DcMotorSimple.Direction.REVERSE);
     }
 
