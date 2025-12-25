@@ -82,6 +82,8 @@ public class MainTeleOp extends LinearOpMode {
         telemetry.addData("Status", "Initialized");
         telemetry.update();
 
+        Intake.raiseIntake();
+
         waitForStart();
         runtime.reset();
 
@@ -146,12 +148,14 @@ public class MainTeleOp extends LinearOpMode {
             // --- Shooter / Intake Controls ---
             if (gamepad2.left_bumper) {
                 Intake.runIntake();
+                Intake.raiseIntake();
             }
             if (gamepad2.a) {
                 Intake.reverseIntake();
             }
-            if (!gamepad2.a && gamepad2.left_bumper) {
+            if (!gamepad2.a && !gamepad2.left_bumper) {
                 Intake.stopIntake();
+                Intake.lowerIntake();
             }
 
             if (gamepad2.right_bumper) {
