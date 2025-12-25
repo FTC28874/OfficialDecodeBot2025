@@ -55,6 +55,7 @@ public class MainTeleOp extends LinearOpMode {
 
         // Initialize the hardware variables. Note that the strings used here must correspond
         // to the names assigned during the robot configuration step on the DS or RC devices.
+        // DT Hardware Mapping
         driveFL = hardwareMap.get(DcMotor.class, "driveFL");
         driveBL = hardwareMap.get(DcMotor.class, "driveBL");
         driveFR = hardwareMap.get(DcMotor.class, "driveFR");
@@ -75,6 +76,7 @@ public class MainTeleOp extends LinearOpMode {
         driveFR.setDirection(DcMotor.Direction.FORWARD);
         driveBR.setDirection(DcMotor.Direction.FORWARD);
 
+        // Init Helper Classes
         org.firstinspires.ftc.teamcode.robot.Shooter.init(hardwareMap);
         org.firstinspires.ftc.teamcode.robot.Intake.init(hardwareMap);
 
@@ -82,6 +84,7 @@ public class MainTeleOp extends LinearOpMode {
         telemetry.addData("Status", "Initialized");
         telemetry.update();
 
+        // Reset intake servo.
         Intake.raiseIntake();
 
         waitForStart();
