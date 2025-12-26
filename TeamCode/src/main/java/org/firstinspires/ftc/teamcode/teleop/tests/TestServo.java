@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.robot.Intake;
+import org.firstinspires.ftc.teamcode.robot.Shooter;
 
 @TeleOp(name="Test Servo 123", group = "Linear OpMode")
 public class TestServo extends LinearOpMode {
@@ -23,6 +24,7 @@ public class TestServo extends LinearOpMode {
         intakeServo = hardwareMap.get(Servo.class, "intakeServo");
 
         org.firstinspires.ftc.teamcode.robot.Intake.init(hardwareMap);
+        org.firstinspires.ftc.teamcode.robot.Shooter.init(hardwareMap);
 
         Intake.raiseIntake();
 
@@ -44,6 +46,14 @@ public class TestServo extends LinearOpMode {
             if (!gamepad1.left_bumper) {
                 Intake.stopIntake();
             }
+
+            if (gamepad2.dpadDownWasPressed()) {
+                Shooter.setShooterPosition(Shooter.AngleState.DOWN.angle);
+            }
+            if (gamepad2.dpadUpWasPressed()) {
+                Shooter.setShooterPosition(Shooter.AngleState.UP.angle);
+            }
+
         }
     }
 

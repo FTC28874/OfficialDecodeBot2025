@@ -11,8 +11,8 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 
 /**
- * Outake utility class. Designed for simple static-style access from OpModes.
- * Call Outake.init(hardwareMap) once during OpMode init before using other methods.
+ * Shooter utility class. Designed for simple static-style access from OpModes.
+ * Call Shooter.init(hardwareMap) once during OpMode init before using other methods.
  */
 public class Shooter {
     private static ElapsedTime runtime = new ElapsedTime();
@@ -63,8 +63,8 @@ public class Shooter {
     }
 
     public enum AngleState {
-        UP(0.4),
-        DOWN(0.2);
+        UP(0.5),
+        DOWN(0.1);
         public final double angle;
         AngleState(double angle) {
             this.angle = angle;
