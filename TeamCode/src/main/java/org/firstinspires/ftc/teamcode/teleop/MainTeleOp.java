@@ -144,8 +144,8 @@ public class MainTeleOp extends LinearOpMode {
 
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime.toString());
-            telemetry.addData("Front left/Right", "%4.2f, %4.2f", powerFL, powerFR);
-            telemetry.addData("Back  left/Right", "%4.2f, %4.2f", powerBL, powerBR);
+            telemetry.addData("Shooter RPM: ", Shooter.GetCurrentRPM());
+            telemetry.addData("Shooter Target Speed: ", shooterEncSpeed);
             telemetry.update();
 
             // --- Shooter / Intake Controls ---

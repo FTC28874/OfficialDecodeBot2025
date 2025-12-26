@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
+import com.qualcomm.robotcore.hardware.Servo;
 
 
 /**
@@ -17,6 +18,7 @@ public class Shooter {
     private static ElapsedTime runtime = new ElapsedTime();
     private static DcMotorEx shooterU = null;
     private static DcMotorEx shooterD = null;
+    private static Servo shooterServo = null;
 
     private static final double COUNTS_PER_REVOLUTION = 28;
 
@@ -38,6 +40,9 @@ public class Shooter {
     public static void init(HardwareMap hardwareMap) {
         shooterU = hardwareMap.get(DcMotorEx.class, "shooterU");
         shooterD = hardwareMap.get(DcMotorEx.class, "shooterD");
+
+        shooterServo = hardwareMap.get(Servo.class, "shooterServo");
+
         // Set directions - adjust if motors spin the wrong way
         shooterD.setDirection(DcMotorSimple.Direction.FORWARD);
         shooterU.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -55,6 +60,15 @@ public class Shooter {
         private final double power;
         PowerState(double power) {
             this.power = power;
+        }
+    }
+
+    public enum AngleState {
+        UP(0.4),
+        DOWN(0.2);
+        private final double angle;
+        AngleState(double angle) {
+            this.angle = angle;
         }
     }
 
@@ -83,6 +97,18 @@ public class Shooter {
             shooterD.setPower(PowerState.NOT_RUN.power);
             shooterU.setPower(PowerState.NOT_RUN.power);
         }
+    }
+
+    public static void RaiseShooter() {
+        shooterServo.setPosition(AngleState.UP.angle);
+    }
+
+    public static void LowerShooter() {
+        shooterServo.setPosition(AngleState.DOWN.angle);
+    }
+
+    public static void SetShooterPosition(double shooterPosition) {
+        shooterServo.setPosition(shooterPosition);
     }
 
     public static double PIDControl(double reference, double state) {
