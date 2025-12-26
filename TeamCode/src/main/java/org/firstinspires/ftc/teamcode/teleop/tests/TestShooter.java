@@ -38,11 +38,11 @@ public class TestShooter extends LinearOpMode {
             if (gamepad1.a) {
 //                shooterU.setPower(0.7);
 //                shooterD.setPower(0.7);
-                Shooter.SetShooterPower(Shooter.PIDControl(shooterEncSpeed, Shooter.GetCurrentRPM()));
+                Shooter.setShooterPower(Shooter.PIDControl(shooterEncSpeed, Shooter.getCurrentRPM()));
             } else if (!gamepad1.a) {
 //                shooterU.setPower(0);
 //                shooterD.setPower(0);
-                Shooter.StopShooter();
+                Shooter.stopShooter();
             }
 
             if (gamepad1.dpad_up) {
@@ -58,7 +58,7 @@ public class TestShooter extends LinearOpMode {
 
             telemetry.addData("Shooter Power: ", gamepad1.right_stick_y);
             telemetry.addData("Shooter rpm: ", shooterEncSpeed);
-            telemetry.addData("Current Shooter RPM: ", Shooter.GetCurrentRPM());
+            telemetry.addData("Current Shooter RPM: ", Shooter.getCurrentRPM());
             telemetry.addData("Intake Power: ", gamepad1.left_stick_y);
 
             telemetry.update();

@@ -20,12 +20,11 @@ public class Shooter {
     private static DcMotorEx shooterD = null;
     private static Servo shooterServo = null;
 
+    // Shooter Control Variables
     private static final double COUNTS_PER_REVOLUTION = 28;
 
     private static final double SHOOTER_RPM_HIGH = 6000.0;
     private static final double SHOOTER_RPM_LOW = 100.0;
-
-
     private static double Kp  = 0.001;     // Start small. Use to fix residual error.
     private static double Ki  = 0.0;       // Start at 0. Use to eliminate steady-state error.
     private static double Kd  = 0.0;       // Start at 0. Use to dampen overshoot/oscillations.
@@ -35,7 +34,7 @@ public class Shooter {
 
 
     /**
-     * Initialize Outake hardware. Must be called once before using static methods.
+     * Initialize Shooter hardware. Must be called once before using static methods.
      */
     public static void init(HardwareMap hardwareMap) {
         shooterU = hardwareMap.get(DcMotorEx.class, "shooterU");
@@ -66,48 +65,48 @@ public class Shooter {
     public enum AngleState {
         UP(0.4),
         DOWN(0.2);
-        private final double angle;
+        public final double angle;
         AngleState(double angle) {
             this.angle = angle;
         }
     }
 
-    public static void SetShooterSpeed(double shooterSpeed) {
+    public static void setShooterSpeed(double shooterSpeed) {
         double ticksPerSecond = (shooterSpeed * COUNTS_PER_REVOLUTION) / 60.0;
 
         shooterD.setVelocity(ticksPerSecond);
         shooterU.setVelocity(ticksPerSecond);
     }
 
-    public static double GetCurrentRPM() {
+    public static double getCurrentRPM() {
         double currentTicksPerSecond = shooterD.getVelocity();
 
         return (currentTicksPerSecond * 60.0) / COUNTS_PER_REVOLUTION;
     }
 
-    public static void SetShooterPower(double shooterPower) {
+    public static void setShooterPower(double shooterPower) {
         if (shooterD != null && shooterU != null) {
             shooterD.setPower(shooterPower);
             shooterU.setPower(shooterPower);
         }
     }//asdfa
 
-    public static void StopShooter() {
+    public static void stopShooter() {
         if (shooterD != null && shooterU != null) {
             shooterD.setPower(PowerState.NOT_RUN.power);
             shooterU.setPower(PowerState.NOT_RUN.power);
         }
     }
 
-    public static void RaiseShooter() {
+    public static void raiseShooter() {
         shooterServo.setPosition(AngleState.UP.angle);
     }
 
-    public static void LowerShooter() {
+    public static void lowerShooter() {
         shooterServo.setPosition(AngleState.DOWN.angle);
     }
 
-    public static void SetShooterPosition(double shooterPosition) {
+    public static void setShooterPosition(double shooterPosition) {
         shooterServo.setPosition(shooterPosition);
     }
 
