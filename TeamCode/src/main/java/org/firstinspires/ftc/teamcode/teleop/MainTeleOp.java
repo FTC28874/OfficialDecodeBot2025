@@ -51,7 +51,7 @@ public class MainTeleOp extends LinearOpMode {
     private double shooterHoodAngle = Shooter.AngleState.DOWN.angle;
 
     @Override
-    public void runOpMode() {
+    public void runOpMode() throws InterruptedException {
 
         // Initialize the hardware variables. Note that the strings used here must correspond
         // to the names assigned during the robot configuration step on the DS or RC devices.
@@ -84,8 +84,15 @@ public class MainTeleOp extends LinearOpMode {
         telemetry.addData("Status", "Initialized");
         telemetry.update();
 
-        // Reset servo.
+        // Reset servos
         Intake.raiseIntake();
+        sleep(1500);
+        Intake.lowerIntake();
+        sleep(1500);
+        Shooter.lowerShooter();
+        sleep(1500);
+        Shooter.raiseShooter();
+        sleep(1500);
         Shooter.lowerShooter();
 
         waitForStart();
@@ -147,6 +154,7 @@ public class MainTeleOp extends LinearOpMode {
             telemetry.addData("Status", "Run Time: " + runtime.toString());
             telemetry.addData("Shooter RPM: ", Shooter.getCurrentRPM());
             telemetry.addData("Shooter Target Speed: ", shooterEncSpeed);
+            telemetry.addData("Shooter RPM Error: ", Math.abs(Shooter.getCurrentRPM() - shooterEncSpeed));
             telemetry.update();
 
             // --- Shooter / Intake Controls ---
@@ -182,10 +190,14 @@ public class MainTeleOp extends LinearOpMode {
                 shooterHoodAngle = Shooter.AngleState.DOWN.angle;
             }
             if (gamepad2.dpadRightWasPressed()) {
-                shooterHoodAngle = shooterHoodAngle + 0.05;
+                if (shooterHoodAngle < Shooter.AngleState.UP.angle && shooterHoodAngle >= Shooter.AngleState.DOWN.angle) {
+                    shooterHoodAngle = shooterHoodAngle + 0.05;
+                }
             }
             if (gamepad2.dpadLeftWasPressed()) {
-                shooterHoodAngle = shooterHoodAngle - 0.05;
+                if (shooterHoodAngle <= Shooter.AngleState.UP.angle && shooterHoodAngle > Shooter.AngleState.DOWN.angle) {
+                    shooterHoodAngle = shooterHoodAngle - 0.05;
+                }
             }
 
 

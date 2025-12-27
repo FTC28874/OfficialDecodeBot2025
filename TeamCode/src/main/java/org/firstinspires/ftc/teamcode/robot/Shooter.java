@@ -26,7 +26,7 @@ public class Shooter {
     private static final double SHOOTER_RPM_HIGH = 6000.0;
     private static final double SHOOTER_RPM_LOW = 100.0;
     private static double Kp  = 0.001;     // Start small. Use to fix residual error.
-    private static double Ki  = 0.0;       // Start at 0. Use to eliminate steady-state error.
+    private static double Ki  = 0.001;       // Start at 0. Use to eliminate steady-state error.
     private static double Kd  = 0.0;       // Start at 0. Use to dampen overshoot/oscillations.
     private static double Kf  = 0.0004;
     private static double integralSum = 0;
@@ -51,7 +51,7 @@ public class Shooter {
 
     }
 
-    public enum PowerState {
+    private enum PowerState {
         RUN(1.0),
         NOT_RUN(0.0),
         SHOOTER_RUN(0.5),
@@ -62,8 +62,11 @@ public class Shooter {
         }
     }
 
+    /**
+     * Enums for the servo controlling the Shooter Hood.
+     */
     public enum AngleState {
-        UP(0.5),
+        UP(0.6),
         DOWN(0.1);
         public final double angle;
         AngleState(double angle) {
@@ -78,19 +81,30 @@ public class Shooter {
         shooterU.setVelocity(ticksPerSecond);
     }
 
+    /**
+    * Gets the current shooter motor RPM using the Encoders.
+     */
     public static double getCurrentRPM() {
         double currentTicksPerSecond = shooterD.getVelocity();
 
         return (currentTicksPerSecond * 60.0) / COUNTS_PER_REVOLUTION;
     }
 
+    /**
+     * Sets the shooter motor power level.
+     * Input ranges from 0.0 to 1.0.
+     * @param shooterPower
+     */
     public static void setShooterPower(double shooterPower) {
         if (shooterD != null && shooterU != null) {
             shooterD.setPower(shooterPower);
             shooterU.setPower(shooterPower);
         }
-    }//asdfa
+    }
 
+    /**
+     * Stops the shooter from running.
+     */
     public static void stopShooter() {
         if (shooterD != null && shooterU != null) {
             shooterD.setPower(PowerState.NOT_RUN.power);
@@ -98,18 +112,37 @@ public class Shooter {
         }
     }
 
+    /**
+     * Raises the Shooter Hood using the servo.
+     */
     public static void raiseShooter() {
         shooterServo.setPosition(AngleState.UP.angle);
     }
 
+    /**
+     * Lowers the Shooter Hood using the servo.
+     */
     public static void lowerShooter() {
         shooterServo.setPosition(AngleState.DOWN.angle);
     }
 
+    /**
+     * Sets the shooter hood to a certain position.
+     * Input ranges from 0.0 to 1.0.
+     * @param shooterPosition
+     */
     public static void setShooterPosition(double shooterPosition) {
         shooterServo.setPosition(shooterPosition);
     }
 
+    /**
+     * Main computational method for the PID in the shooter.
+     * Returns a double ranging from -1.0 to 1.0
+     *
+     * @param reference
+     * @param state
+     * @return Double ranging from -1.0 to 1.0
+     */
     public static double PIDControl(double reference, double state) {
         // 1. Calculate Error
         double error = reference - state;
