@@ -92,8 +92,7 @@ public class Shooter {
 
     /**
      * Sets the shooter motor power level.
-     * Input ranges from 0.0 to 1.0.
-     * @param shooterPower
+     * @param shooterPower Ranges from -1.0 to 1.0
      */
     public static void setShooterPower(double shooterPower) {
         if (shooterD != null && shooterU != null) {
@@ -141,7 +140,7 @@ public class Shooter {
      *
      * @param reference
      * @param state
-     * @return Double ranging from -1.0 to 1.0
+     * @return <code>Range.clip(output, -1.0, 1.0);</code> - Equals a double ranging from -1.0 to 1.0
      */
     public static double PIDControl(double reference, double state) {
         // 1. Calculate Error
