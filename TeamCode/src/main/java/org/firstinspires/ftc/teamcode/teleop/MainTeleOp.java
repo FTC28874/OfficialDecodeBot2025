@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.teleop;
 
+import androidx.appcompat.widget.ThemedSpinnerAdapter;
+
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -7,6 +9,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.robot.Intake;
 import org.firstinspires.ftc.teamcode.robot.Shooter;
+import org.firstinspires.ftc.teamcode.robot.HelperServos;
 
 
 /*
@@ -79,6 +82,7 @@ public class MainTeleOp extends LinearOpMode {
         // Init Helper Classes
         org.firstinspires.ftc.teamcode.robot.Shooter.init(hardwareMap);
         org.firstinspires.ftc.teamcode.robot.Intake.init(hardwareMap);
+        HelperServos.init(hardwareMap);
 
         // Wait for the game to start (driver presses START)
         telemetry.addData("Status", "Initialized");
@@ -224,13 +228,19 @@ public class MainTeleOp extends LinearOpMode {
                 Shooter.turnTurretDirection(false, 0.0);
             }
 
-            // Stopper Servo Control
-            if (gamepad2.bWasPressed()) {
-                Shooter.setStopperServoBlock();
+
+            if (gamepad1.aWasPressed()) {
+                HelperServos.setPusherRest();
             }
-            if (gamepad2.xWasPressed()) {
-                Shooter.setStopperServoPass();
+            if (gamepad1.bWasPressed()) {
+                HelperServos.setPusherPush();
             }
+
+
+
+
+
+
 
         }
     }

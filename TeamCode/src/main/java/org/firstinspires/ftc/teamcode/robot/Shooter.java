@@ -15,7 +15,8 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 /**
  * Shooter utility class. Designed for simple static-style access from OpModes.
- * Call Shooter.init(hardwareMap) once during OpMode init before using other methods.
+ *
+ * Call <code>Shooter.init(hardwareMap)</code> once during OpMode init before using other methods.
  */
 public class Shooter {
     private static ElapsedTime runtime = new ElapsedTime();
@@ -23,7 +24,6 @@ public class Shooter {
     private static DcMotorEx shooterD = null;
     private static Servo shooterServo = null;
     private static DcMotor turret = null;
-    private static Servo stopperServo = null;
 
     // Shooter Control Variables
     private static final double COUNTS_PER_REVOLUTION = 28;
@@ -48,7 +48,6 @@ public class Shooter {
         turret = hardwareMap.get(DcMotor.class, "turret");
 
         shooterServo = hardwareMap.get(Servo.class, "shooterServo");
-        stopperServo = hardwareMap.get(Servo.class, "stopperServo");
 
         // Set directions - adjust if motors spin the wrong way
         shooterD.setDirection(DcMotorSimple.Direction.FORWARD);
@@ -82,17 +81,7 @@ public class Shooter {
         }
     }
 
-    /**
-     * Enums for the Stopper Servo.
-     */
-    public enum StopperServoState {
-        PASS(0.0),
-        STOP(0.3);
-        public final double angle;
-        StopperServoState(double angle) {
-            this.angle = angle;
-        }
-    }
+
 
     public static void setShooterSpeed(double shooterSpeed) {
         double ticksPerSecond = (shooterSpeed * COUNTS_PER_REVOLUTION) / 60.0;
@@ -198,11 +187,5 @@ public class Shooter {
         }
         turret.setPower(turretPower);
     }
-
-    public static void setStopperServoBlock() {
-        stopperServo.setPosition(StopperServoState.STOP.angle);
-    }
-    public static void setStopperServoPass() {
-        stopperServo.setPosition(StopperServoState.PASS.angle);
-    }
 }
+
