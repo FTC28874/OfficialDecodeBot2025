@@ -48,7 +48,7 @@ public class MainTeleOp extends LinearOpMode {
     private DcMotor driveBR = null;
 
     private double shooterEncSpeed = 1600;
-    private double shooterHoodAngle = Shooter.AngleState.DOWN.angle;
+    private double shooterHoodAngle = Shooter.HoodState.DOWN.angle;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -159,13 +159,25 @@ public class MainTeleOp extends LinearOpMode {
 
             // --- Shooter / Intake Controls ---
 
+            // Shooter Speed Control
+            if (gamepad1.dpadUpWasPressed()) {
+                shooterEncSpeed = shooterEncSpeed + 50;
+            }
+            if (gamepad1.dpadDownWasPressed()) {
+                shooterEncSpeed = shooterEncSpeed - 50;
+            }
+
             // Intake Controls
-            if (gamepad2.left_bumper) {
+            if (gamepad2.left_bumper && !gamepad2.a) {
                 Intake.runIntake();
                 Intake.raiseIntake();
             }
-            if (gamepad2.a) {
+            if (gamepad2.a && !gamepad2.left_bumper) {
                 Intake.reverseIntake();
+            }
+            if (gamepad2.a && gamepad2.left_bumper) {
+                Intake.reverseIntake();
+                Intake.raiseIntake();
             }
             if (!gamepad2.a && !gamepad2.left_bumper) {
                 Intake.stopIntake();
@@ -184,22 +196,42 @@ public class MainTeleOp extends LinearOpMode {
             Shooter.setShooterPosition(shooterHoodAngle);
 
             if (gamepad2.dpadUpWasPressed()) {
-                shooterHoodAngle = Shooter.AngleState.UP.angle;
+                shooterHoodAngle = Shooter.HoodState.UP.angle;
             }
             if (gamepad2.dpadDownWasPressed()) {
-                shooterHoodAngle = Shooter.AngleState.DOWN.angle;
+                shooterHoodAngle = Shooter.HoodState.DOWN.angle;
             }
             if (gamepad2.dpadRightWasPressed()) {
-                if (shooterHoodAngle < Shooter.AngleState.UP.angle && shooterHoodAngle >= Shooter.AngleState.DOWN.angle) {
+                if (shooterHoodAngle < Shooter.HoodState.UP.angle && shooterHoodAngle >= Shooter.HoodState.DOWN.angle) {
                     shooterHoodAngle = shooterHoodAngle + 0.05;
                 }
             }
             if (gamepad2.dpadLeftWasPressed()) {
-                if (shooterHoodAngle <= Shooter.AngleState.UP.angle && shooterHoodAngle > Shooter.AngleState.DOWN.angle) {
+                if (shooterHoodAngle <= Shooter.HoodState.UP.angle && shooterHoodAngle > Shooter.HoodState.DOWN.angle) {
                     shooterHoodAngle = shooterHoodAngle - 0.05;
                 }
             }
 
+            // Turret Control
+            if (gamepad1.rightBumperWasPressed()) {
+                Shooter.turnTurretDirection(true, 0.25);
+                sleep(250);
+                Shooter.turnTurretDirection(true, 0.0);
+            }
+            if (gamepad1.leftBumperWasPressed()) {
+                Shooter.turnTurretDirection(false, 0.25);
+                sleep(250);
+                Shooter.turnTurretDirection(false, 0.0);
+            }
+
+            // Stopper Servo Control
+            if (gamepad2.bWasPressed()) {
+                Shooter.setStopperServoBlock();
+            }
+            if (gamepad2.xWasPressed()) {
+                Shooter.setStopperServoPass();
+            }
 
         }
-    }}
+    }
+}

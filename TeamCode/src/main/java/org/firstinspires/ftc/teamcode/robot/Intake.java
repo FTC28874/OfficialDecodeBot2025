@@ -42,7 +42,7 @@ public class Intake {
      */
     public enum AngleState {
         REST(0.4),
-        DOWN(0.32);
+        DOWN(0.36);
         private final double angle;
         AngleState(double angle) {
             this.angle = angle;

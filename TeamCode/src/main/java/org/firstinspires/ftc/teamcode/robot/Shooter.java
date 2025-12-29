@@ -2,7 +2,10 @@ package org.firstinspires.ftc.teamcode.robot;
 
 
 
+import static java.lang.Thread.sleep;
+
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -19,16 +22,18 @@ public class Shooter {
     private static DcMotorEx shooterU = null;
     private static DcMotorEx shooterD = null;
     private static Servo shooterServo = null;
+    private static DcMotor turret = null;
+    private static Servo stopperServo = null;
 
     // Shooter Control Variables
     private static final double COUNTS_PER_REVOLUTION = 28;
 
     private static final double SHOOTER_RPM_HIGH = 6000.0;
     private static final double SHOOTER_RPM_LOW = 100.0;
-    private static double Kp  = 0.001;     // Start small. Use to fix residual error.
-    private static double Ki  = 0.001;       // Start at 0. Use to eliminate steady-state error.
-    private static double Kd  = 0.0;       // Start at 0. Use to dampen overshoot/oscillations.
-    private static double Kf  = 0.0004;
+    private final static double Kp  = 0.001;     // Start small. Use to fix residual error.
+    private final static double Ki  = 0.001;       // Start at 0. Use to eliminate steady-state error.
+    private final static double Kd  = 0.0;       // Start at 0. Use to dampen overshoot/oscillations.
+    private final static double Kf  = 0.0004;
     private static double integralSum = 0;
     private static double lastError = 0;
 
@@ -40,7 +45,10 @@ public class Shooter {
         shooterU = hardwareMap.get(DcMotorEx.class, "shooterU");
         shooterD = hardwareMap.get(DcMotorEx.class, "shooterD");
 
+        turret = hardwareMap.get(DcMotor.class, "turret");
+
         shooterServo = hardwareMap.get(Servo.class, "shooterServo");
+        stopperServo = hardwareMap.get(Servo.class, "stopperServo");
 
         // Set directions - adjust if motors spin the wrong way
         shooterD.setDirection(DcMotorSimple.Direction.FORWARD);
@@ -65,11 +73,23 @@ public class Shooter {
     /**
      * Enums for the servo controlling the Shooter Hood.
      */
-    public enum AngleState {
+    public enum HoodState {
         UP(0.6),
         DOWN(0.1);
         public final double angle;
-        AngleState(double angle) {
+        HoodState(double angle) {
+            this.angle = angle;
+        }
+    }
+
+    /**
+     * Enums for the Stopper Servo.
+     */
+    public enum StopperServoState {
+        PASS(0.0),
+        STOP(0.3);
+        public final double angle;
+        StopperServoState(double angle) {
             this.angle = angle;
         }
     }
@@ -115,14 +135,14 @@ public class Shooter {
      * Raises the Shooter Hood using the servo.
      */
     public static void raiseShooter() {
-        shooterServo.setPosition(AngleState.UP.angle);
+        shooterServo.setPosition(HoodState.UP.angle);
     }
 
     /**
      * Lowers the Shooter Hood using the servo.
      */
     public static void lowerShooter() {
-        shooterServo.setPosition(AngleState.DOWN.angle);
+        shooterServo.setPosition(HoodState.DOWN.angle);
     }
 
     /**
@@ -168,5 +188,21 @@ public class Shooter {
 
         // 5. Clamp Output Power
         return Range.clip(output, -1.0, 1.0);
+    }
+
+    public static void turnTurretDirection(boolean right, double turretPower) {
+        if (right) {
+            turret.setDirection(DcMotorSimple.Direction.FORWARD);
+        } else {
+            turret.setDirection(DcMotorSimple.Direction.REVERSE);
+        }
+        turret.setPower(turretPower);
+    }
+
+    public static void setStopperServoBlock() {
+        stopperServo.setPosition(StopperServoState.STOP.angle);
+    }
+    public static void setStopperServoPass() {
+        stopperServo.setPosition(StopperServoState.PASS.angle);
     }
 }

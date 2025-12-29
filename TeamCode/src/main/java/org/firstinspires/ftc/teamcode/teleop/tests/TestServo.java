@@ -48,10 +48,10 @@ public class TestServo extends LinearOpMode {
             }
 
             if (gamepad2.dpadDownWasPressed()) {
-                Shooter.setShooterPosition(Shooter.AngleState.DOWN.angle);
+                Shooter.setShooterPosition(Shooter.HoodState.DOWN.angle);
             }
             if (gamepad2.dpadUpWasPressed()) {
-                Shooter.setShooterPosition(Shooter.AngleState.UP.angle);
+                Shooter.setShooterPosition(Shooter.HoodState.UP.angle);
             }
 
         }
