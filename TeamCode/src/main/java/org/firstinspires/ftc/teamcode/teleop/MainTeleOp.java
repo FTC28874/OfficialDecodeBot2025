@@ -209,12 +209,6 @@ public class MainTeleOp extends LinearOpMode {
                 HelperServos.setPusherPush();
             }
 
-
-
-
-
-
-
         }
     }
 }
