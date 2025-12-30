@@ -6,13 +6,15 @@ import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.robot.Intake;
 import org.firstinspires.ftc.teamcode.robot.Shooter;
 
-@Autonomous
-public class autopathingfarfrombluegoal extends OpMode {
+@Autonomous(name="Far From Blue Goal", group = "Linear OpMode")
+public class autopathingfarfrombluegoal extends LinearOpMode {
 
     private double shooterEncSpeed = 1600;
     private Follower follower;
@@ -59,6 +61,8 @@ public class autopathingfarfrombluegoal extends OpMode {
     private final Pose actuallyDoIntakeSet3 = new Pose(21.7, 35.5, Math.toRadians(180));
 
     private final Pose readyToEmptyEnd = new Pose(35, 69.7, Math.toRadians(180));
+
+
 
     private PathChain driveStartToShoot,
             driveShootToIntakeReadyPoseSet2,
@@ -226,25 +230,23 @@ public class autopathingfarfrombluegoal extends OpMode {
         pathTimer.resetTimer();
     }
 
+
     @Override
-    public void init() {
+    public void runOpMode() {
+
         pathState = PathState.DRIVE_STARTPOS_TO_SHOOTING_POS;
         pathTimer = new Timer();
         opModeTimer = new Timer();
         follower = Constants.createFollower(hardwareMap);
         buildPaths();
         follower.setPose(startPose);
-    }
 
-    public void start() {
-        opModeTimer.resetTimer();
-        setPathState(pathState);
-    }
-
-    @Override
-    public void loop() {
+        waitForStart();
         follower.update();
         statePathUpdate();
+
+        opModeTimer.resetTimer();
+        setPathState(pathState);
 
         telemetry.addData("path state", pathState.toString());
         telemetry.addData("x", follower.getPose().getX());
