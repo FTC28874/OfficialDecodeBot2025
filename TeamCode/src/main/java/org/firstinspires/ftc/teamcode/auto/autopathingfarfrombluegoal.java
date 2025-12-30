@@ -233,7 +233,7 @@ public class autopathingfarfrombluegoal extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-
+        Shooter.init(hardwareMap);
         pathState = PathState.DRIVE_STARTPOS_TO_SHOOTING_POS;
         pathTimer = new Timer();
         opModeTimer = new Timer();

@@ -6,13 +6,14 @@ import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
-import org.firstinspires.ftc.teamcode.auto.auto.Constants;
+import org.firstinspires.ftc.teamcode.auto.Constants;
 import org.firstinspires.ftc.teamcode.robot.Intake;
 import org.firstinspires.ftc.teamcode.robot.Shooter;
-@Autonomous
-public class autopathingfrombluegoal extends OpMode {
+@Autonomous(name="From Blue Goal", group = "Linear OpMode")
+public class autopathingfrombluegoal extends LinearOpMode {
 
     private double shooterEncSpeed = 1600;
     private Follower follower;
@@ -108,8 +109,8 @@ public class autopathingfrombluegoal extends OpMode {
     }
 
     private void runShooterPID() {
-        Shooter.SetShooterPower(
-                Shooter.PIDControl(shooterEncSpeed, Shooter.GetCurrentRPM())
+        Shooter.setShooterPower(
+                Shooter.PIDControl(shooterEncSpeed, Shooter.getCurrentRPM())
         );
     }
 
@@ -125,7 +126,7 @@ public class autopathingfrombluegoal extends OpMode {
                 runShooterPID();
                 if (pathTimer.getElapsedTimeSeconds() >= 2.0) {
                     setPathState(PathState.DRIVE_SHOOTPOS_TO_INTAKE_READY_SET_2_POS);
-                    Shooter.StopShooter();
+                    Shooter.stopShooter();
                 }
                 break;
 
@@ -164,7 +165,7 @@ public class autopathingfrombluegoal extends OpMode {
                 runShooterPID();
                 if (pathTimer.getElapsedTimeSeconds() >= 2.0) {
                     setPathState(PathState.DRIVE_SHOOT_POSE_TO_INTAKE_READY_POSE_SET_1);
-                    Shooter.StopShooter();
+                    Shooter.stopShooter();
                 }
                 break;
 
@@ -188,7 +189,7 @@ public class autopathingfrombluegoal extends OpMode {
                 runShooterPID();
                 if (pathTimer.getElapsedTimeSeconds() >= 2.0) {
                     setPathState(PathState.DRIVE_EMPTY_GATE_TO_GO_TO_SHOOTING_LINE);
-                    Shooter.StopShooter();
+                    Shooter.stopShooter();
                 }
                 break;
 
@@ -212,7 +213,7 @@ public class autopathingfrombluegoal extends OpMode {
                 runShooterPID();
                 if (pathTimer.getElapsedTimeSeconds() >= 2.0) {
                     setPathState(PathState.DRIVE_EMPTY_GATE_TO_GO_TO_SHOOTING_LINE);
-                    Shooter.StopShooter();
+                    Shooter.stopShooter();
 
                 }
                 break;
@@ -229,23 +230,21 @@ public class autopathingfrombluegoal extends OpMode {
     }
 
     @Override
-    public void init() {
-        pathState = PathState.DRIVE_STARTPOS_TO_SHOOTING_POS;
+    public void runOpMode() {
+        Shooter.init(hardwareMap);
+        pathState = autopathingfrombluegoal.PathState.DRIVE_STARTPOS_TO_SHOOTING_POS;
         pathTimer = new Timer();
         opModeTimer = new Timer();
         follower = Constants.createFollower(hardwareMap);
         buildPaths();
         follower.setPose(startPose);
-    }
-    public void start() {
-        opModeTimer.resetTimer();
-        setPathState(pathState);
-    }
 
-    @Override
-    public void loop() {
+
         follower.update();
         statePathUpdate();
+
+        opModeTimer.resetTimer();
+        setPathState(pathState);
 
         telemetry.addData("path state", pathState.toString());
         telemetry.addData("x", follower.getPose().getX());
