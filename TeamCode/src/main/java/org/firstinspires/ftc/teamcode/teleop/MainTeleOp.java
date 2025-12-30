@@ -145,20 +145,23 @@ public class MainTeleOp extends LinearOpMode {
             }
 
             // Intake Controls
-            if (gamepad2.left_bumper && !gamepad2.a) {
+            if (gamepad2.left_bumper && !gamepad2.a && !gamepad2.x) {
                 Intake.runIntake();
                 Intake.raiseIntake();
             }
-            if (gamepad2.a && !gamepad2.left_bumper) {
-                Intake.reverseIntake();
+            if (gamepad2.a && !gamepad2.left_bumper && !gamepad2.x) {
+                Intake.runIntakeReverseSlow();
             }
-            if (gamepad2.a && gamepad2.left_bumper) {
+            if (gamepad2.a && gamepad2.left_bumper && !gamepad2.x) {
                 Intake.reverseIntake();
                 Intake.raiseIntake();
             }
-            if (!gamepad2.a && !gamepad2.left_bumper) {
+            if (!gamepad2.a && !gamepad2.left_bumper && !gamepad2.x) {
                 Intake.stopIntake();
                 Intake.lowerIntake();
+            }
+            if (gamepad2.x && !gamepad2.a && !gamepad2.left_bumper) {
+                Intake.runIntakeSlow();
             }
 
             // Shooter FlyWheel Control

@@ -23,14 +23,14 @@ public class HelperServos {
 
     private enum StopperState {
         PASS(0.0),
-        BLOCK(0.4);
+        BLOCK(0.5);
         private final double angle;
         StopperState(double angle) {
             this.angle = angle;
         }
     }
     private enum PusherState {
-        REST(0.3),
+        REST(0.4),
         PUSH(0.0);
         private final double angle;
         PusherState(double angle) {
