@@ -4,7 +4,24 @@
             "outputFile": "org.firstinspires.ftc.teamcode.TeamCode-mergeDebugResources-40:/values-ja/values-ja.xml",
             "map": [
                 {
-                    "source": "/Users/hrishaan/.gradle/caches/8.13/transforms/18336788062ca07195c6f0c367970d61/transformed/material-1.12.0/res/values-ja/values-ja.xml",
+                    "source": "C:\\Users\\johan\\.gradle\\caches\\8.13\\transforms\\d68b53c419765960f699bc79d9d4f709\\transformed\\zxing-android-embedded-4.3.0\\res\\values-ja\\values-ja.xml",
+                    "from": {
+                        "startLines": "2,3,4,5",
+                        "startColumns": "4,4,4,4",
+                        "startOffsets": "55,109,156,256",
+                        "endColumns": "53,46,99,81",
+                        "endOffsets": "104,151,251,333"
+                    },
+                    "to": {
+                        "startLines": "117,118,119,120",
+                        "startColumns": "4,4,4,4",
+                        "startOffsets": "9088,9142,9189,9289",
+                        "endColumns": "53,46,99,81",
+                        "endOffsets": "9137,9184,9284,9366"
+                    }
+                },
+                {
+                    "source": "C:\\Users\\johan\\.gradle\\caches\\8.13\\transforms\\18336788062ca07195c6f0c367970d61\\transformed\\material-1.12.0\\res\\values-ja\\values-ja.xml",
                     "from": {
                         "startLines": "2,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80",
                         "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4",
@@ -23,24 +40,7 @@
                     }
                 },
                 {
-                    "source": "/Users/hrishaan/.gradle/caches/8.13/transforms/d68b53c419765960f699bc79d9d4f709/transformed/zxing-android-embedded-4.3.0/res/values-ja/values-ja.xml",
-                    "from": {
-                        "startLines": "2,3,4,5",
-                        "startColumns": "4,4,4,4",
-                        "startOffsets": "55,109,156,256",
-                        "endColumns": "53,46,99,81",
-                        "endOffsets": "104,151,251,333"
-                    },
-                    "to": {
-                        "startLines": "117,118,119,120",
-                        "startColumns": "4,4,4,4",
-                        "startOffsets": "9088,9142,9189,9289",
-                        "endColumns": "53,46,99,81",
-                        "endOffsets": "9137,9184,9284,9366"
-                    }
-                },
-                {
-                    "source": "/Users/hrishaan/.gradle/caches/8.13/transforms/c7f8d5cc7c08b2e2224f51f12651109c/transformed/appcompat-1.6.1/res/values-ja/values-ja.xml",
+                    "source": "C:\\Users\\johan\\.gradle\\caches\\8.13\\transforms\\c7f8d5cc7c08b2e2224f51f12651109c\\transformed\\appcompat-1.6.1\\res\\values-ja\\values-ja.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29",
                         "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4",
@@ -57,7 +57,7 @@
                     }
                 },
                 {
-                    "source": "/Users/hrishaan/.gradle/caches/8.13/transforms/794348dbaeae761c696bf75f151aa8ce/transformed/core-1.13.1/res/values-ja/values-ja.xml",
+                    "source": "C:\\Users\\johan\\.gradle\\caches\\8.13\\transforms\\794348dbaeae761c696bf75f151aa8ce\\transformed\\core-1.13.1\\res\\values-ja\\values-ja.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,7,8,9",
                         "startColumns": "4,4,4,4,4,4,4,4",
