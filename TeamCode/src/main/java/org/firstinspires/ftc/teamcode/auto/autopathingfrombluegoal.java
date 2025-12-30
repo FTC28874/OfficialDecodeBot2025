@@ -239,7 +239,7 @@ public class autopathingfrombluegoal extends LinearOpMode {
         buildPaths();
         follower.setPose(startPose);
 
-
+        waitForStart();
         follower.update();
         statePathUpdate();
 

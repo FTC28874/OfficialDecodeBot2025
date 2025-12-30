@@ -241,7 +241,7 @@ public class autopathingfromredgoal extends LinearOpMode {
         buildPaths();
         follower.setPose(startPose);
 
-
+        waitForStart();
         follower.update();
         statePathUpdate();
 
