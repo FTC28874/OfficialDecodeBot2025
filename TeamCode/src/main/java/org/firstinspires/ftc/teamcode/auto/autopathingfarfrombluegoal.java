@@ -137,7 +137,7 @@ public class autopathingfarfrombluegoal extends LinearOpMode {
                 break;
 
             case DRIVE_INTAKE_READY_POSE_SET_2_TO_ACTUALLY_DO_INTAKE_SET_2:
-                Intake.runIntake();
+                //Intake.runIntake();
                 follower.followPath(driveIntakeReadyPoseSet2ToActuallyDoIntakeSet2, true);
                 setPathState(PathState.DRIVE_ACTUALLY_DO_INTAKE_SET_2_TO_READY_TO_EMPTY);
                 break;
@@ -163,10 +163,10 @@ public class autopathingfarfrombluegoal extends LinearOpMode {
                 break;
 
             case PAUSE_FOR_SHOOT_2:
-                runShooterPID();
+                //runShooterPID();
                 if (pathTimer.getElapsedTimeSeconds() >= 2.0) {
                     setPathState(PathState.DRIVE_SHOOT_POSE_TO_INTAKE_READY_POSE_SET_1);
-                    Shooter.stopShooter();
+                    //Shooter.stopShooter();
                 }
                 break;
 
@@ -176,7 +176,7 @@ public class autopathingfarfrombluegoal extends LinearOpMode {
                 break;
 
             case DRIVE_INTAKE_READY_POSE_SET_1_TO_ACTUALLY_DO_INTAKE_SET_1:
-                Intake.runIntake();
+                //Intake.runIntake();
                 follower.followPath(driveIntakeReadyPoseSet1toActuallyDoIntakeSet1, true);
                 setPathState(PathState.DRIVE_ACTUALLY_DO_INTAKE_SET_1_TO_SHOOT_POSE);
                 break;
@@ -187,10 +187,10 @@ public class autopathingfarfrombluegoal extends LinearOpMode {
                 break;
 
             case PAUSE_FOR_SHOOT_3:
-                runShooterPID();
+               // runShooterPID();
                 if (pathTimer.getElapsedTimeSeconds() >= 2.0) {
                     setPathState(PathState.DRIVE_EMPTY_GATE_TO_GO_TO_SHOOTING_LINE);
-                    Shooter.stopShooter();
+                   // Shooter.stopShooter();
                 }
                 break;
 
@@ -200,7 +200,7 @@ public class autopathingfarfrombluegoal extends LinearOpMode {
                 break;
 
             case DRIVE_INTAKE_READY_POSE_SET_3_TO_ACTUALLY_DO_INTAKE_SET_3:
-                Intake.runIntake();
+               // Intake.runIntake();
                 follower.followPath(driveIntakeReadyPoseSet3toActuallyDoIntakeSet3, true);
                 setPathState(PathState.DRIVE_EMPTY_GATE_TO_GO_TO_SHOOTING_LINE);
                 break;
@@ -211,7 +211,7 @@ public class autopathingfarfrombluegoal extends LinearOpMode {
                 break;
 
             case PAUSE_FOR_SHOOT_4:
-                runShooterPID();
+               // runShooterPID();
                 if (pathTimer.getElapsedTimeSeconds() >= 2.0) {
                     setPathState(PathState.DRIVE_EMPTY_GATE_TO_GO_TO_SHOOTING_LINE);
                     Shooter.stopShooter();
@@ -224,7 +224,6 @@ public class autopathingfarfrombluegoal extends LinearOpMode {
                 break;
         }
     }
-
     public void setPathState(PathState newState) {
         pathState = newState;
         pathTimer.resetTimer();
