@@ -14,7 +14,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 public class Constants {
     public static FollowerConstants followerConstants = new FollowerConstants()
-            .mass(9.07185) // robot weight
+            .mass(10.5) // robot weight 9.07185
             .forwardZeroPowerAcceleration(-31.108642686848118)
             .lateralZeroPowerAcceleration(-52.132651227924235)
             .translationalPIDFCoefficients(new PIDFCoefficients(0.1, 0, 0, 0))
