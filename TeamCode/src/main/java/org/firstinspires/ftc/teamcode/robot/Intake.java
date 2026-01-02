@@ -29,6 +29,8 @@ public class Intake {
 
     public enum PowerState {
         RUN(1.0),
+        RUN_SLOW(0.5),
+        RUN_SLOW_REVERSE(-0.5),
         NOT_RUN(0.0),
         REVERSE(-1.0);
         private final double power;
@@ -61,6 +63,13 @@ public class Intake {
      */
     public static void stopIntake() {
         if (intake != null) intake.setPower(PowerState.NOT_RUN.power);
+    }
+
+    public static void runIntakeSlow() {
+        if (intake != null) intake.setPower(PowerState.RUN_SLOW.power);
+    }
+    public static void runIntakeReverseSlow() {
+        if (intake != null) intake.setPower(PowerState.RUN_SLOW_REVERSE.power);
     }
 
     /**
