@@ -172,7 +172,7 @@ public class autopathingfarfromredgoal extends LinearOpMode {
                 break;
 
             case DRIVE_SHOOTPOS_TO_INTAKE_READY_SET_2_POS:
-                follower.followPath(driveShootToIntakeReadyPoseSet2, true);
+                follower.followPath(driveShootToIntakeReadyPoseSet2, false);
                 setPathState(PathState.PAUSE_2S_AFTER_SHOOTPOS_TO_INTAKE_READY_SET_2_POS);
                 break;
 //
@@ -183,7 +183,7 @@ public class autopathingfarfromredgoal extends LinearOpMode {
 
             case DRIVE_INTAKE_READY_POSE_SET_2_TO_ACTUALLY_DO_INTAKE_SET_2:
                 // Intake.runIntake();
-                follower.followPath(driveIntakeReadyPoseSet2ToActuallyDoIntakeSet2, true);
+                follower.followPath(driveIntakeReadyPoseSet2ToActuallyDoIntakeSet2, false);
                 setPathState(PathState.PAUSE_2S_AFTER_INTAKE_READY_SET_2);
                 break;
 
@@ -192,7 +192,7 @@ public class autopathingfarfromredgoal extends LinearOpMode {
                     setPathState(PathState.DRIVEBACK_INTAKE_READY_SET_2_POS);
                 break;
             case DRIVEBACK_INTAKE_READY_SET_2_POS:
-                follower.followPath(driveActuallyDoIntakeSet2toIntakeReadyPoseSet2, true);
+                follower.followPath(driveActuallyDoIntakeSet2toIntakeReadyPoseSet2, false);
                 setPathState(PathState.PAUSE_2S_AFTER_DRIVEBACK_INTAKE_READY_SET_2_POS);
                 break;
             case PAUSE_2S_AFTER_DRIVEBACK_INTAKE_READY_SET_2_POS:
@@ -201,7 +201,7 @@ public class autopathingfarfromredgoal extends LinearOpMode {
                 break;
 //
             case DRIVE_ACTUALLY_DO_INTAKE_SET_2_TO_READY_TO_EMPTY:
-                follower.followPath(driveActuallyDoIntakeSet2ToReadyToEmpty, true);
+                follower.followPath(driveActuallyDoIntakeSet2ToReadyToEmpty, false);
                 setPathState(PathState.PAUSE_2S_AFTER_ACTUALLY_DO_INTAKE_SET_2);
                 break;
 
@@ -211,7 +211,7 @@ public class autopathingfarfromredgoal extends LinearOpMode {
                 break;
 
             case DRIVE_READY_TO_EMPTY_TO_EMPTY_GATE:
-                follower.followPath(driveReadyToEmptyToEmptyGate, true);
+                follower.followPath(driveReadyToEmptyToEmptyGate, false);
                 setPathState(PathState.PAUSE_2S_AFTER_READY_TO_EMPTY);
                 break;
 
@@ -221,7 +221,7 @@ public class autopathingfarfromredgoal extends LinearOpMode {
                 break;
 
             case DRIVE_EMPTY_GATE_TO_GO_TO_SHOOTING_LINE:
-                follower.followPath(driveEmptyGateToGoToShootingLine, true);
+                follower.followPath(driveEmptyGateToGoToShootingLine, false);
                 setPathState(PathState.PAUSE_2S_AFTER_EMPTY_GATE);
                 break;
 
@@ -248,7 +248,7 @@ public class autopathingfarfromredgoal extends LinearOpMode {
                 break;
 
             case DRIVE_SHOOT_POSE_TO_INTAKE_READY_POSE_SET_1:
-                follower.followPath(driveShootPosetoIntakeReadyPoseSet1, true);
+                follower.followPath(driveShootPosetoIntakeReadyPoseSet1, false);
                 setPathState(PathState.PAUSE_2S_AFTER_SHOOT_TO_INTAKE_READY_SET_1);
                 break;
 
@@ -259,7 +259,7 @@ public class autopathingfarfromredgoal extends LinearOpMode {
 
             case DRIVE_INTAKE_READY_POSE_SET_1_TO_ACTUALLY_DO_INTAKE_SET_1:
                 // Intake.runIntake();
-                follower.followPath(driveIntakeReadyPoseSet1toActuallyDoIntakeSet1, true);
+                follower.followPath(driveIntakeReadyPoseSet1toActuallyDoIntakeSet1, false);
                 setPathState(PathState.PAUSE_2S_AFTER_INTAKE_READY_SET_1);
                 break;
 
@@ -286,7 +286,7 @@ public class autopathingfarfromredgoal extends LinearOpMode {
                 break;
 
             case DRIVE_SHOOT_POSE_TO_INTAKE_READY_POSE_SET_3:
-                follower.followPath(driveShootPosetoIntakeReadyPoseSet3, true);
+                follower.followPath(driveShootPosetoIntakeReadyPoseSet3, false);
                 setPathState(PathState.PAUSE_2S_AFTER_SHOOT_TO_INTAKE_READY_SET_3);
                 break;
 
@@ -297,7 +297,7 @@ public class autopathingfarfromredgoal extends LinearOpMode {
 
             case DRIVE_INTAKE_READY_POSE_SET_3_TO_ACTUALLY_DO_INTAKE_SET_3:
                 // Intake.runIntake();
-                follower.followPath(driveIntakeReadyPoseSet3toActuallyDoIntakeSet3, true);
+                follower.followPath(driveIntakeReadyPoseSet3toActuallyDoIntakeSet3, false);
                 setPathState(PathState.PAUSE_2S_AFTER_INTAKE_READY_SET_3);
                 break;
 

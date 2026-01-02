@@ -13,6 +13,10 @@
 *.class
 *.hprof
 
+*.bin
+*.class
+*.lock
+
 # Generated files
 bin/
 gen/
@@ -23,6 +27,12 @@ out/
 # Gradle files
 .gradle/
 build/
+**/.gradle/
+**/build/
+**/.idea/
+
+
+
 
 # Local configuration file (sdk path, etc)
 local.properties

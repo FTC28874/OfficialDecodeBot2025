@@ -14,9 +14,9 @@ public class testAprilTag extends OpMode {
     private DcMotor alignMotor;
 
     // Tunables
-    private static final int TARGET_TAG_ID = 24;
-    private static final double MOTOR_SPEED = 0.3;
-    private static final double DEADZONE_CM = 1.0; // stop when |x| <= this
+    private static final int TARGET_TAG_ID = 21;
+    private static final double MOTOR_SPEED = 0.4;
+    private static final double DEADZONE_CM = 10; // stop when |x| <= this
 
     @Override
     public void init() {
@@ -28,7 +28,7 @@ public class testAprilTag extends OpMode {
         alignMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         // Flip this if the motor spins the wrong way
-        // alignMotor.setDirection(DcMotor.Direction.REVERSE);
+        alignMotor.setDirection(DcMotor.Direction.REVERSE);
 
         telemetry.addLine("Initialized. Start OpMode.");
     }
