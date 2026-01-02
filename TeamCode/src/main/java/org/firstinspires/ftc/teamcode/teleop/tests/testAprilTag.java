@@ -1,33 +1,78 @@
 package org.firstinspires.ftc.teamcode.teleop.tests;
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.teamcode.robot.aprilTagWebcam;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
-@TeleOp
 
+@TeleOp(name = "AprilTag X Align Test")
 public class testAprilTag extends OpMode {
-    aprilTagWebcam aprilTagWebcam = new aprilTagWebcam();
+
+    private aprilTagWebcam aprilTagWebcam;
+    private DcMotor alignMotor;
+
+    // Tunables
+    private static final int TARGET_TAG_ID = 24;
+    private static final double MOTOR_SPEED = 0.3;
+    private static final double DEADZONE_CM = 1.0; // stop when |x| <= this
+
     @Override
     public void init() {
+        aprilTagWebcam = new aprilTagWebcam();
         aprilTagWebcam.init(hardwareMap, telemetry);
+
+        alignMotor = hardwareMap.get(DcMotor.class, "alignMotor");
+        alignMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        alignMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        // Flip this if the motor spins the wrong way
+        // alignMotor.setDirection(DcMotor.Direction.REVERSE);
+
+        telemetry.addLine("Initialized. Start OpMode.");
     }
 
     @Override
     public void loop() {
         aprilTagWebcam.update();
 
-        AprilTagDetection id24 = aprilTagWebcam.getTagBySpecificId(24);
+        AprilTagDetection tag = aprilTagWebcam.getTagBySpecificId(TARGET_TAG_ID);
 
-        aprilTagWebcam.displayDetectionTelemetry(id24);
+        if (tag != null) {
+            double x = tag.ftcPose.x;
 
-        if (id24 != null) {
-            telemetry.addData("id24 string", id24.toString());
-        } else {
-            telemetry.addData("id24 string", "Tag 24 not detected");
+            if (Math.abs(x) <= DEADZONE_CM) {
+                // Centered
+                alignMotor.setPower(0);
+                telemetry.addLine("Aligned: motor stopped");
+            }
+            else if (x > 0) {
+                // Tag is to the right → move left
+                alignMotor.setPower(-MOTOR_SPEED);
+                telemetry.addLine("Tag right → motor left");
+            }
+            else {
+                // Tag is to the left → move right
+                alignMotor.setPower(MOTOR_SPEED);
+                telemetry.addLine("Tag left → motor right");
+            }
+
+            telemetry.addData("Tag X (cm)", x);
+            aprilTagWebcam.displayDetectionTelemetry(tag);
         }
+        else {
+            // No tag detected → stop motor for safety
+            alignMotor.setPower(0);
+            telemetry.addLine("Tag not detected");
+        }
+
+        telemetry.update();
     }
 
-}//asdfa
+    @Override
+    public void stop() {
+        alignMotor.setPower(0);
+        aprilTagWebcam.stop();
+    }
+}

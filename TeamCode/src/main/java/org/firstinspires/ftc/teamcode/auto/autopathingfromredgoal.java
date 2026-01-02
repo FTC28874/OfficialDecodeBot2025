@@ -7,10 +7,7 @@ import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
-import org.firstinspires.ftc.teamcode.auto.Constants;
-import org.firstinspires.ftc.teamcode.robot.Intake;
 import org.firstinspires.ftc.teamcode.robot.Shooter;
 
 @Autonomous(name="From Red Goal", group = "Linear OpMode")
@@ -23,51 +20,95 @@ public class autopathingfromredgoal extends LinearOpMode {
     public enum PathState {
 
         DRIVE_STARTPOS_TO_SHOOTING_POS,
+        PAUSE_2S_AFTER_STARTPOS_TO_SHOOTING_POS,
+
         PAUSE_FOR_SHOOT_1,
 
         DRIVE_SHOOTPOS_TO_INTAKE_READY_SET_2_POS,
+        PAUSE_2S_AFTER_SHOOTPOS_TO_INTAKE_READY_SET_2_POS,
+
         DRIVE_INTAKE_READY_POSE_SET_2_TO_ACTUALLY_DO_INTAKE_SET_2,
+        PAUSE_2S_AFTER_INTAKE_READY_SET_2,
+
+
+        DRIVEBACK_INTAKE_READY_SET_2_POS,
+        PAUSE_2S_AFTER_DRIVEBACK_INTAKE_READY_SET_2_POS,
+
         DRIVE_ACTUALLY_DO_INTAKE_SET_2_TO_READY_TO_EMPTY,
+        PAUSE_2S_AFTER_ACTUALLY_DO_INTAKE_SET_2,
+
         DRIVE_READY_TO_EMPTY_TO_EMPTY_GATE,
+        PAUSE_2S_AFTER_READY_TO_EMPTY,
+
         DRIVE_EMPTY_GATE_TO_GO_TO_SHOOTING_LINE,
+        PAUSE_2S_AFTER_EMPTY_GATE,
+
         DRIVE_GO_TO_SHOOTING_LINE_TO_SHOOT_POSE,
+        PAUSE_2S_AFTER_GO_TO_SHOOTING_LINE,
+
         PAUSE_FOR_SHOOT_2,
 
         DRIVE_SHOOT_POSE_TO_INTAKE_READY_POSE_SET_1,
+        PAUSE_2S_AFTER_SHOOT_TO_INTAKE_READY_SET_1,
+
         DRIVE_INTAKE_READY_POSE_SET_1_TO_ACTUALLY_DO_INTAKE_SET_1,
+        PAUSE_2S_AFTER_INTAKE_READY_SET_1,
+
         DRIVE_ACTUALLY_DO_INTAKE_SET_1_TO_SHOOT_POSE,
+        PAUSE_2S_AFTER_ACTUALLY_DO_INTAKE_SET_1,
+
         PAUSE_FOR_SHOOT_3,
 
         DRIVE_SHOOT_POSE_TO_INTAKE_READY_POSE_SET_3,
+        PAUSE_2S_AFTER_SHOOT_TO_INTAKE_READY_SET_3,
+
         DRIVE_INTAKE_READY_POSE_SET_3_TO_ACTUALLY_DO_INTAKE_SET_3,
+        PAUSE_2S_AFTER_INTAKE_READY_SET_3,
+
         DRIVE_ACTUALLY_DO_INTAKE_SET_3_TO_SHOOT_POSE,
+        PAUSE_2S_AFTER_ACTUALLY_DO_INTAKE_SET_3,
+
         PAUSE_FOR_SHOOT_4,
 
-        DRIVE_SHOOT_POSE_TO_READY_TO_EMPTY_END
+        DRIVE_SHOOT_POSE_TO_READY_TO_EMPTY_END,
+        PAUSE_2S_AFTER_READY_TO_EMPTY_END
     }
 
     PathState pathState;
+    private final double start_x = 123;
+    private final double start_y = 122;
+    private final double shoot_x = 77;
+    private final double shoot_y = 101;
 
-    private final Pose startPose = new Pose(123.1, 122.0697247706422, Math.toRadians(216));
+    private final double gate_x = 110;
+    private final double gate_y = 66;
 
-    private final Pose shootPose = new Pose(83.75779816513761, 83.22935779816514, Math.toRadians(0));
-    private final Pose intakeReadyPoseSet2 = new Pose(95.64770642201836, 58.92110091743119, Math.toRadians(0));
-    private final Pose actuallyDoIntakeSet2 = new Pose(119.69174311926605, 58.92110091743119, Math.toRadians(0));
-    private final Pose readyToEmpty = new Pose(119.69174311926605, 68.43302752293577, Math.toRadians(90));
-    private final Pose emptyGate = new Pose(127.08990825688073, 68.69724770642202, Math.toRadians(90));
-    private final Pose goToShootingLine = new Pose(84.55045871559633, 68.16880733944954, Math.toRadians(90));
+    private final double ready_intake_x = 75;
+    private final double do_intake_x = ready_intake_x + 30;
+    private final double set_1_y = 84;
+    private final double set_2_y = 70;
+    private final double set_3_y = set_2_y - 24;
 
-    private final Pose intakeReadyPoseSet1 = new Pose(84.28623853211009, 84.02201834862385, Math.toRadians(0));
-    private final Pose actuallyDoIntakeSet1 = new Pose(118.89908256880734, 83.75779816513761, Math.toRadians(0));
+    private final Pose startPose = new Pose(start_x, start_y, Math.toRadians(216));
+    private final Pose shootPose = new Pose(shoot_x, shoot_y, Math.toRadians(-10));
+    private final Pose intakeReadyPoseSet2 = new Pose(ready_intake_x, set_2_y, Math.toRadians(-10));
+    private final Pose actuallyDoIntakeSet2 = new Pose(do_intake_x, set_2_y-5, Math.toRadians(-10));
+    private final Pose readyToEmpty = new Pose(gate_x, gate_y, Math.toRadians(80));
+    private final Pose emptyGate = new Pose(gate_x + 10, gate_y, Math.toRadians(80));
+    private final Pose goToShootingLine = new Pose(ready_intake_x, gate_y, Math.toRadians(80));
 
-    private final Pose IntakeReadyPoseSet3 = new Pose(84.02201834862386, 83.75779816513761, Math.toRadians(0));
-    private final Pose actuallyDoIntakeSet3 = new Pose(98.02568807339449, 35.40550458715597, Math.toRadians(0));
+    private final Pose intakeReadyPoseSet1 = new Pose(ready_intake_x, set_1_y, Math.toRadians(-10));
+    private final Pose actuallyDoIntakeSet1 = new Pose(do_intake_x, set_1_y, Math.toRadians(-10));
 
-    private final Pose readyToEmptyEnd = new Pose(119.9559633027523, 35.40550458715597, Math.toRadians(0));
+    private final Pose IntakeReadyPoseSet3 = new Pose(ready_intake_x, set_3_y, Math.toRadians(-10));
+    private final Pose actuallyDoIntakeSet3 = new Pose(do_intake_x, set_3_y, Math.toRadians(-10));
 
-    private PathChain driveStartToShoot,
+    private final Pose readyToEmptyEnd =  new Pose(gate_x, gate_y, Math.toRadians(80));
+    private PathChain
+            driveStartToShoot,
             driveShootToIntakeReadyPoseSet2,
             driveIntakeReadyPoseSet2ToActuallyDoIntakeSet2,
+            driveActuallyDoIntakeSet2toIntakeReadyPoseSet2,
             driveActuallyDoIntakeSet2ToReadyToEmpty,
             driveReadyToEmptyToEmptyGate,
             driveEmptyGateToGoToShootingLine,
@@ -80,13 +121,11 @@ public class autopathingfromredgoal extends LinearOpMode {
             driveActuallyDoIntakeSet3toShootPose,
             driveShootPosetoReadyToEmptyEnd;
 
-    public PathChain pathChain = new PathChain();
-
     public void buildPaths() {
-
         driveStartToShoot = driveReadyPose(startPose, shootPose);
         driveShootToIntakeReadyPoseSet2 = driveReadyPose(shootPose, intakeReadyPoseSet2);
         driveIntakeReadyPoseSet2ToActuallyDoIntakeSet2 = driveReadyPose(intakeReadyPoseSet2, actuallyDoIntakeSet2);
+        driveActuallyDoIntakeSet2toIntakeReadyPoseSet2 = driveReadyPose(actuallyDoIntakeSet2, intakeReadyPoseSet2);
         driveActuallyDoIntakeSet2ToReadyToEmpty = driveReadyPose(actuallyDoIntakeSet2, readyToEmpty);
         driveReadyToEmptyToEmptyGate = driveReadyPose(readyToEmpty, emptyGate);
         driveEmptyGateToGoToShootingLine = driveReadyPose(emptyGate, goToShootingLine);
@@ -100,20 +139,16 @@ public class autopathingfromredgoal extends LinearOpMode {
         driveShootPosetoReadyToEmptyEnd = driveReadyPose(shootPose, readyToEmptyEnd);
     }
 
-    public PathChain driveReadyPose(Pose poseObj1, Pose poseObj2) {
-
-        pathChain = follower.pathBuilder()
-                .addPath(new BezierLine(poseObj1, poseObj2))
-                .setLinearHeadingInterpolation(poseObj1.getHeading(), poseObj2.getHeading())
+    public PathChain driveReadyPose(Pose p1, Pose p2) {
+        return follower.pathBuilder()
+                .addPath(new BezierLine(p1, p2))
+                .setLinearHeadingInterpolation(p1.getHeading(), p2.getHeading())
                 .build();
-
-        return pathChain;
     }
 
-    private void runShooterPID() {
-        Shooter.setShooterPower(
-                Shooter.PIDControl(shooterEncSpeed, Shooter.getCurrentRPM())
-        );
+    public void setPathState(PathState newState) {
+        pathState = newState;
+        if (pathTimer != null) pathTimer.resetTimer();
     }
 
     public void statePathUpdate() {
@@ -121,137 +156,207 @@ public class autopathingfromredgoal extends LinearOpMode {
 
             case DRIVE_STARTPOS_TO_SHOOTING_POS:
                 follower.followPath(driveStartToShoot, true);
-                setPathState(PathState.PAUSE_FOR_SHOOT_1);
+                setPathState(PathState.PAUSE_2S_AFTER_STARTPOS_TO_SHOOTING_POS);
+                break;
+
+            case PAUSE_2S_AFTER_STARTPOS_TO_SHOOTING_POS:
+                if (pathTimer.getElapsedTimeSeconds() >= 2.0)
+                    setPathState(PathState.PAUSE_FOR_SHOOT_1);
                 break;
 
             case PAUSE_FOR_SHOOT_1:
-                runShooterPID();
-                if (pathTimer.getElapsedTimeSeconds() >= 2.0) {
+                // runShooterPID();
+                if (pathTimer.getElapsedTimeSeconds() >= 2.0)
                     setPathState(PathState.DRIVE_SHOOTPOS_TO_INTAKE_READY_SET_2_POS);
-                    Shooter.stopShooter();
-                }
+                // Shooter.stopShooter();
                 break;
 
             case DRIVE_SHOOTPOS_TO_INTAKE_READY_SET_2_POS:
                 follower.followPath(driveShootToIntakeReadyPoseSet2, true);
-                setPathState(PathState.DRIVE_INTAKE_READY_POSE_SET_2_TO_ACTUALLY_DO_INTAKE_SET_2);
+                setPathState(PathState.PAUSE_2S_AFTER_SHOOTPOS_TO_INTAKE_READY_SET_2_POS);
+                break;
+//
+            case PAUSE_2S_AFTER_SHOOTPOS_TO_INTAKE_READY_SET_2_POS:
+                if (pathTimer.getElapsedTimeSeconds() >= 2.0)
+                    setPathState(PathState.DRIVE_INTAKE_READY_POSE_SET_2_TO_ACTUALLY_DO_INTAKE_SET_2);
                 break;
 
             case DRIVE_INTAKE_READY_POSE_SET_2_TO_ACTUALLY_DO_INTAKE_SET_2:
-                Intake.runIntake();
+                // Intake.runIntake();
                 follower.followPath(driveIntakeReadyPoseSet2ToActuallyDoIntakeSet2, true);
-                setPathState(PathState.DRIVE_ACTUALLY_DO_INTAKE_SET_2_TO_READY_TO_EMPTY);
+                setPathState(PathState.PAUSE_2S_AFTER_INTAKE_READY_SET_2);
                 break;
 
-            case DRIVE_ACTUALLY_DO_INTAKE_SET_2_TO_READY_TO_EMPTY:
-                follower.followPath(driveActuallyDoIntakeSet2ToReadyToEmpty, true);
-                setPathState(PathState.DRIVE_READY_TO_EMPTY_TO_EMPTY_GATE);
+            case PAUSE_2S_AFTER_INTAKE_READY_SET_2:
+                if (pathTimer.getElapsedTimeSeconds() >= 2.0)
+                    setPathState(PathState.DRIVEBACK_INTAKE_READY_SET_2_POS);
                 break;
-
-            case DRIVE_READY_TO_EMPTY_TO_EMPTY_GATE:
-                follower.followPath(driveReadyToEmptyToEmptyGate, true);
-                setPathState(PathState.DRIVE_EMPTY_GATE_TO_GO_TO_SHOOTING_LINE);
-                break;
-
-            case DRIVE_EMPTY_GATE_TO_GO_TO_SHOOTING_LINE:
-                follower.followPath(driveEmptyGateToGoToShootingLine, true);
-                setPathState(PathState.DRIVE_GO_TO_SHOOTING_LINE_TO_SHOOT_POSE);
-                break;
-
-            case DRIVE_GO_TO_SHOOTING_LINE_TO_SHOOT_POSE:
-                follower.followPath(driveGoToShootingLineToShootPose, true);
-                setPathState(PathState.PAUSE_FOR_SHOOT_2);
-                break;
-
-            case PAUSE_FOR_SHOOT_2:
-                runShooterPID();
-                if (pathTimer.getElapsedTimeSeconds() >= 2.0) {
-                    setPathState(PathState.DRIVE_SHOOT_POSE_TO_INTAKE_READY_POSE_SET_1);
-                    Shooter.stopShooter();
-                }
-                break;
-
-            case DRIVE_SHOOT_POSE_TO_INTAKE_READY_POSE_SET_1:
-                follower.followPath(driveShootPosetoIntakeReadyPoseSet1, true);
-                setPathState(PathState.DRIVE_INTAKE_READY_POSE_SET_1_TO_ACTUALLY_DO_INTAKE_SET_1);
-                break;
-
-            case DRIVE_INTAKE_READY_POSE_SET_1_TO_ACTUALLY_DO_INTAKE_SET_1:
-                Intake.runIntake();
-                follower.followPath(driveIntakeReadyPoseSet1toActuallyDoIntakeSet1, true);
-                setPathState(PathState.DRIVE_ACTUALLY_DO_INTAKE_SET_1_TO_SHOOT_POSE);
-                break;
-
-            case DRIVE_ACTUALLY_DO_INTAKE_SET_1_TO_SHOOT_POSE:
-                follower.followPath(driveActuallyDoIntakeSet1toShootPose, true);
-                setPathState(PathState.PAUSE_FOR_SHOOT_3);
-                break;
-
-            case PAUSE_FOR_SHOOT_3:
-                runShooterPID();
-                if (pathTimer.getElapsedTimeSeconds() >= 2.0) {
-                    setPathState(PathState.DRIVE_EMPTY_GATE_TO_GO_TO_SHOOTING_LINE);
-                    Shooter.stopShooter();
-                }
-                break;
-
-            case DRIVE_SHOOT_POSE_TO_INTAKE_READY_POSE_SET_3:
-                follower.followPath(driveShootPosetoIntakeReadyPoseSet3, true);
-                setPathState(PathState.DRIVE_EMPTY_GATE_TO_GO_TO_SHOOTING_LINE);
-                break;
-
-            case DRIVE_INTAKE_READY_POSE_SET_3_TO_ACTUALLY_DO_INTAKE_SET_3:
-                Intake.runIntake();
-                follower.followPath(driveIntakeReadyPoseSet3toActuallyDoIntakeSet3, true);
-                setPathState(PathState.DRIVE_EMPTY_GATE_TO_GO_TO_SHOOTING_LINE);
-                break;
-
-            case DRIVE_ACTUALLY_DO_INTAKE_SET_3_TO_SHOOT_POSE:
-                follower.followPath(driveActuallyDoIntakeSet3toShootPose, true);
-                setPathState(PathState.PAUSE_FOR_SHOOT_4);
-                break;
-
-            case PAUSE_FOR_SHOOT_4:
-                runShooterPID();
-                if (pathTimer.getElapsedTimeSeconds() >= 2.0) {
-                    setPathState(PathState.DRIVE_EMPTY_GATE_TO_GO_TO_SHOOTING_LINE);
-                    Shooter.stopShooter();
-
-                }
-                break;
-
-            case DRIVE_SHOOT_POSE_TO_READY_TO_EMPTY_END:
-                follower.followPath(driveShootPosetoReadyToEmptyEnd, true);
-                break;
+//            case DRIVEBACK_INTAKE_READY_SET_2_POS:
+//                follower.followPath(driveActuallyDoIntakeSet2toIntakeReadyPoseSet2, true);
+//                setPathState(PathState.PAUSE_2S_AFTER_DRIVEBACK_INTAKE_READY_SET_2_POS);
+//                break;
+//            case PAUSE_2S_AFTER_DRIVEBACK_INTAKE_READY_SET_2_POS:
+//                if (pathTimer.getElapsedTimeSeconds() >= 2.0)
+//                    setPathState(PathState.DRIVE_ACTUALLY_DO_INTAKE_SET_2_TO_READY_TO_EMPTY);
+//                break;
+//
+//            case DRIVE_ACTUALLY_DO_INTAKE_SET_2_TO_READY_TO_EMPTY:
+//                follower.followPath(driveActuallyDoIntakeSet2ToReadyToEmpty, true);
+//                setPathState(PathState.PAUSE_2S_AFTER_ACTUALLY_DO_INTAKE_SET_2);
+//                break;
+//
+//            case PAUSE_2S_AFTER_ACTUALLY_DO_INTAKE_SET_2:
+//                if (pathTimer.getElapsedTimeSeconds() >= 2.0)
+//                    setPathState(PathState.DRIVE_READY_TO_EMPTY_TO_EMPTY_GATE);
+//                break;
+//
+//            case DRIVE_READY_TO_EMPTY_TO_EMPTY_GATE:
+//                follower.followPath(driveReadyToEmptyToEmptyGate, true);
+//                setPathState(PathState.PAUSE_2S_AFTER_READY_TO_EMPTY);
+//                break;
+//
+//            case PAUSE_2S_AFTER_READY_TO_EMPTY:
+//                if (pathTimer.getElapsedTimeSeconds() >= 2.0)
+//                    setPathState(PathState.DRIVE_EMPTY_GATE_TO_GO_TO_SHOOTING_LINE);
+//                break;
+//
+//            case DRIVE_EMPTY_GATE_TO_GO_TO_SHOOTING_LINE:
+//                follower.followPath(driveEmptyGateToGoToShootingLine, true);
+//                setPathState(PathState.PAUSE_2S_AFTER_EMPTY_GATE);
+//                break;
+//
+//            case PAUSE_2S_AFTER_EMPTY_GATE:
+//                if (pathTimer.getElapsedTimeSeconds() >= 2.0)
+//                    setPathState(PathState.DRIVE_GO_TO_SHOOTING_LINE_TO_SHOOT_POSE);
+//                break;
+//
+//            case DRIVE_GO_TO_SHOOTING_LINE_TO_SHOOT_POSE:
+//                follower.followPath(driveGoToShootingLineToShootPose, true);
+//                setPathState(PathState.PAUSE_2S_AFTER_GO_TO_SHOOTING_LINE);
+//                break;
+////
+//            case PAUSE_2S_AFTER_GO_TO_SHOOTING_LINE:
+//                if (pathTimer.getElapsedTimeSeconds() >= 2.0)
+//                    setPathState(PathState.PAUSE_FOR_SHOOT_2);
+//                break;
+//
+//            case PAUSE_FOR_SHOOT_2:
+//                // runShooterPID();
+//                if (pathTimer.getElapsedTimeSeconds() >= 2.0)
+//                    setPathState(PathState.DRIVE_SHOOT_POSE_TO_INTAKE_READY_POSE_SET_1);
+//                // Shooter.stopShooter();
+//                break;
+//
+//            case DRIVE_SHOOT_POSE_TO_INTAKE_READY_POSE_SET_1:
+//                follower.followPath(driveShootPosetoIntakeReadyPoseSet1, true);
+//                setPathState(PathState.PAUSE_2S_AFTER_SHOOT_TO_INTAKE_READY_SET_1);
+//                break;
+//
+//            case PAUSE_2S_AFTER_SHOOT_TO_INTAKE_READY_SET_1:
+//                if (pathTimer.getElapsedTimeSeconds() >= 2.0)
+//                    setPathState(PathState.DRIVE_INTAKE_READY_POSE_SET_1_TO_ACTUALLY_DO_INTAKE_SET_1);
+//                break;
+//
+//            case DRIVE_INTAKE_READY_POSE_SET_1_TO_ACTUALLY_DO_INTAKE_SET_1:
+//                // Intake.runIntake();
+//                follower.followPath(driveIntakeReadyPoseSet1toActuallyDoIntakeSet1, true);
+//                setPathState(PathState.PAUSE_2S_AFTER_INTAKE_READY_SET_1);
+//                break;
+//
+//            case PAUSE_2S_AFTER_INTAKE_READY_SET_1:
+//                if (pathTimer.getElapsedTimeSeconds() >= 2.0)
+//                    setPathState(PathState.DRIVE_ACTUALLY_DO_INTAKE_SET_1_TO_SHOOT_POSE);
+//                break;
+//
+//            case DRIVE_ACTUALLY_DO_INTAKE_SET_1_TO_SHOOT_POSE:
+//                follower.followPath(driveActuallyDoIntakeSet1toShootPose, true);
+//                setPathState(PathState.PAUSE_2S_AFTER_ACTUALLY_DO_INTAKE_SET_1);
+//                break;
+////
+//            case PAUSE_2S_AFTER_ACTUALLY_DO_INTAKE_SET_1:
+//                if (pathTimer.getElapsedTimeSeconds() >= 2.0)
+//                    setPathState(PathState.PAUSE_FOR_SHOOT_3);
+//                break;
+//
+//            case PAUSE_FOR_SHOOT_3:
+//                // runShooterPID();
+//                if (pathTimer.getElapsedTimeSeconds() >= 2.0)
+//                    setPathState(PathState.DRIVE_SHOOT_POSE_TO_INTAKE_READY_POSE_SET_3);
+//                // Shooter.stopShooter();
+//                break;
+//
+//            case DRIVE_SHOOT_POSE_TO_INTAKE_READY_POSE_SET_3:
+//                follower.followPath(driveShootPosetoIntakeReadyPoseSet3, true);
+//                setPathState(PathState.PAUSE_2S_AFTER_SHOOT_TO_INTAKE_READY_SET_3);
+//                break;
+//
+//            case PAUSE_2S_AFTER_SHOOT_TO_INTAKE_READY_SET_3:
+//                if (pathTimer.getElapsedTimeSeconds() >= 2.0)
+//                    setPathState(PathState.DRIVE_INTAKE_READY_POSE_SET_3_TO_ACTUALLY_DO_INTAKE_SET_3);
+//                break;
+//
+//            case DRIVE_INTAKE_READY_POSE_SET_3_TO_ACTUALLY_DO_INTAKE_SET_3:
+//                // Intake.runIntake();
+//                follower.followPath(driveIntakeReadyPoseSet3toActuallyDoIntakeSet3, true);
+//                setPathState(PathState.PAUSE_2S_AFTER_INTAKE_READY_SET_3);
+//                break;
+//
+//            case PAUSE_2S_AFTER_INTAKE_READY_SET_3:
+//                if (pathTimer.getElapsedTimeSeconds() >= 2.0)
+//                    setPathState(PathState.DRIVE_ACTUALLY_DO_INTAKE_SET_3_TO_SHOOT_POSE);
+//                break;
+//
+//            case DRIVE_ACTUALLY_DO_INTAKE_SET_3_TO_SHOOT_POSE:
+//                follower.followPath(driveActuallyDoIntakeSet3toShootPose, true);
+//                setPathState(PathState.PAUSE_2S_AFTER_ACTUALLY_DO_INTAKE_SET_3);
+//                break;
+//
+//            case PAUSE_2S_AFTER_ACTUALLY_DO_INTAKE_SET_3:
+//                if (pathTimer.getElapsedTimeSeconds() >= 2.0)
+//                    setPathState(PathState.PAUSE_FOR_SHOOT_4);
+//                break;
+//
+//            case PAUSE_FOR_SHOOT_4:
+//                // runShooterPID();
+//                if (pathTimer.getElapsedTimeSeconds() >= 2.0)
+//                    setPathState(PathState.DRIVE_SHOOT_POSE_TO_READY_TO_EMPTY_END);
+//                // Shooter.stopShooter();
+//                break;
+//
+//            case DRIVE_SHOOT_POSE_TO_READY_TO_EMPTY_END:
+//                follower.followPath(driveShootPosetoReadyToEmptyEnd, true);
+//                setPathState(PathState.PAUSE_2S_AFTER_READY_TO_EMPTY_END);
+//                break;
+//
+//            case PAUSE_2S_AFTER_READY_TO_EMPTY_END:
+//                break;
         }
-    }
-
-    public void setPathState(PathState newState) {
-        pathState = newState;
-        pathTimer.resetTimer();
     }
 
     @Override
     public void runOpMode() {
+
         Shooter.init(hardwareMap);
-        pathState = autopathingfromredgoal.PathState.DRIVE_STARTPOS_TO_SHOOTING_POS;
+
         pathTimer = new Timer();
         opModeTimer = new Timer();
+
         follower = Constants.createFollower(hardwareMap);
-        buildPaths();
         follower.setPose(startPose);
 
+        buildPaths();
+        pathState = PathState.DRIVE_STARTPOS_TO_SHOOTING_POS;
+
         waitForStart();
-        follower.update();
-        statePathUpdate();
 
-        opModeTimer.resetTimer();
-        setPathState(pathState);
-
-        telemetry.addData("path state", pathState.toString());
-        telemetry.addData("x", follower.getPose().getX());
-        telemetry.addData("y", follower.getPose().getY());
-        telemetry.addData("heading", follower.getPose().getHeading());
-        telemetry.addData("path time", pathTimer.getElapsedTimeSeconds());
+        while (opModeIsActive()) {
+            follower.update();
+            statePathUpdate();
+            telemetry.addData("State", pathState);
+            telemetry.addData("X Position", follower.getPose().getX());
+            telemetry.addData("Y Position", follower.getPose().getY());
+            telemetry.addData("Heading", Math.toDegrees(follower.getPose().getHeading()));
+            telemetry.update();
+        }
     }
 }

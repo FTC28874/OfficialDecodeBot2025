@@ -43,7 +43,7 @@ public class MainTeleOp extends LinearOpMode {
 
         // INITIALIZE FOLLOWER HERE TO PREVENT NULL ERRORS
         follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(new Pose(84.02201834862386, 83.75779816513761, Math.toRadians(0)));
+        follower.setStartingPose(new Pose(105, 65, Math.toRadians(-10)));
 
         // Init Helper Classes
         org.firstinspires.ftc.teamcode.robot.Shooter.init(hardwareMap);
