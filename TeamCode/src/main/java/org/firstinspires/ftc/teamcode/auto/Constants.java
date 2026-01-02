@@ -14,7 +14,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 public class Constants {
     public static FollowerConstants followerConstants = new FollowerConstants()
-            .mass(10.5) // robot weight 9.07185
+            .mass(9.07185) // robot weight 9.07185
             .forwardZeroPowerAcceleration(-31.108642686848118)
             .lateralZeroPowerAcceleration(-52.132651227924235)
             .translationalPIDFCoefficients(new PIDFCoefficients(0.1, 0, 0, 0))
@@ -23,7 +23,7 @@ public class Constants {
             .centripetalScaling(0.0007);
 
     public static MecanumConstants driveConstants = new MecanumConstants()
-            .maxPower(1)
+            .maxPower(0.1)
             .rightFrontMotorName("driveFR")
             .rightRearMotorName("driveBR")
             .leftRearMotorName("driveBL")
@@ -42,7 +42,7 @@ public class Constants {
             .encoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD)
             .forwardEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD)
             .strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.REVERSED);
-    public static PathConstraints pathConstraints = new PathConstraints(0.99, 100, 0.5, 0.80);
+    public static PathConstraints pathConstraints = new PathConstraints(0.99, 100, 0.3, 0.85);
 
     public static Follower createFollower(HardwareMap hardwareMap) {
         return new FollowerBuilder(followerConstants, hardwareMap)
