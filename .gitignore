@@ -30,6 +30,8 @@ build/
 **/.gradle/
 **/build/
 **/.idea/
+FtcRobotController/build
+TeamCode/build
 
 
 
