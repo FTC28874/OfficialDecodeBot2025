@@ -67,7 +67,7 @@ public class aprilTagWebcam {
         }
         return null;
     }
-    public void  stop(){
+    public void stop(){
         if (visionPortal != null){
             visionPortal.close();
         }
