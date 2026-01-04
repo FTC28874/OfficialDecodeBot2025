@@ -310,7 +310,6 @@ public class autopathingfarfromredgoal extends LinearOpMode {
                 follower.followPath(driveActuallyDoIntakeSet3toShootPose, true);
                 setPathState(PathState.PAUSE_2S_AFTER_ACTUALLY_DO_INTAKE_SET_3);
                 break;
-
             case PAUSE_2S_AFTER_ACTUALLY_DO_INTAKE_SET_3:
                 if (pathTimer.getElapsedTimeSeconds() >= 2.0)
                     setPathState(PathState.PAUSE_FOR_SHOOT_4);
