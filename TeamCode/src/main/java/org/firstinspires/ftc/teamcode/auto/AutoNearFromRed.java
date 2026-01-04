@@ -1,130 +1,139 @@
 package org.firstinspires.ftc.teamcode.auto;
 
 import com.pedropathing.follower.Follower;
+import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.BezierLine;
+import com.pedropathing.geometry.Point;
 import com.pedropathing.geometry.Pose;
-import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import  com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
-@Autonomous(name="AUTO: RED - Near Goal", group = "Linear OpMode")
-public class AutoNearFromRed extends LinearOpMode {
+@Autonomous(name="AUTO: RED - Near Goal", group = "Autonomous")
+public class AutoNearFromRed extends OpMode {
     private Follower follower;
-    private Timer pathTimer, actionTimer, opmodeTimer;
-    private int pathState;
+    private Timer actionTimer;
+    private int pathState = 0;
 
-    private Pose startPose;
-    private Pose shootPose;
+    // --- 1. POSES ---
+    // Using Pose directly is cleaner than a separate Record for this scale
+    private final Pose startPose = new Pose(74, 9, Math.toRadians(90));
+    private final Pose shootPose = new Pose(74, 80, Math.toRadians(0));
+    private final Pose intake1Pose = new Pose(120, 84, Math.toRadians(0));
+    private final Pose intake2Pose = new Pose(120, 108, Math.toRadians(0));
+    private final Pose parkPose = new Pose(100, 72, Math.toRadians(0));
 
-    private record Spot(double x, double y) {}
-    private Spot start = new Spot(74, 9);
-    private Spot shoot = new Spot(74, 80);
-    private Spot intake1 = new Spot(120, 84);
-    private Spot intake2 = new Spot(120, 84+24);
-    private Spot intake3 = new Spot(120, 84+48);
-    private Spot gate = new Spot(120, 72);
-    private Spot park = new Spot(100, 72);
+    // --- 2. PATHS ---
+    private PathChain startToShoot, shootToIntake1, intake1ToIntake2, toPark;
 
-    private void initPoses() {
-        startPose = new Pose(start.x, start.y, Math.toRadians(90));
-        shootPose = new Pose(shoot.x, shoot.y, Math.toRadians(0));
-        intake1Pose = new Pose(intake1.x, intake1.y, Math.toRadians(0));
-        intake2Pose = new Pose(intake2.x, intake2.y, Math.toRadians(0));
-        intake3Pose = new Pose(intake3.x, intake3.y, Math.toRadians(0));
-        gatePose = new Pose(gate.x, gate.y, Math.toRadians(0));
-        parkPose = new Pose(park.x, park.y, Math.toRadians(0));
+    @Override
+    public void init() {
+        follower = new Follower(hardwareMap);
+        follower.setStartingPose(startPose);
+        actionTimer = new Timer();
+        buildPaths();
     }
-
-    private Path path;
-    private PathChain startToShoot,
-            shootToIntake1,
-            intake1ToIntake2,
-            intake2ToIntake3,
-            intake3ToGate,
-            gateToPark;
-
-
 
     private void buildPaths() {
-        initPoses();
-        startToShoot = buildLinePath(startPose, shootPose); 
-        shootToIntake1 = buildLinePath(shootPose, intake1Pose);
-        intake1ToIntake2 = buildLinePath(intake1Pose, intake2Pose);
-        intake2ToIntake3 = buildLinePath(intake2Pose, intake3Pose);
-        intake3ToGate = buildLinePath(intake3Pose, gatePose);
-        gateToPark = buildLinePath(gatePose, parkPose);
+        // Simple straight line
+        startToShoot = follower.pathBuilder()
+                .addPath(new BezierLine(new Point(startPose), new Point(shootPose)))
+                .setLinearHeadingInterpolation(startPose.getHeading(), shootPose.getHeading())
+                .build();
+
+        // Example of a Curved Path (BezierCurve)
+        // Requires: Start Point, Control Point (the "pull"), and End Point
+        shootToIntake1 = follower.pathBuilder()
+                .addPath(new BezierCurve(
+                        new Point(shootPose), 
+                        new Point(100, 90), // Control Point
+                        new Point(intake1Pose)
+                ))
+                .setLinearHeadingInterpolation(shootPose.getHeading(), intake1Pose.getHeading())
+                .build();
+
+        intake1ToIntake2 = follower.pathBuilder()
+                .addPath(new BezierLine(new Point(intake1Pose), new Point(intake2Pose)))
+                .setConstantHeadingInterpolation(Math.toRadians(0))
+                .build();
+
+        toPark = follower.pathBuilder()
+                .addPath(new BezierLine(new Point(intake2Pose), new Point(parkPose)))
+                .setLinearHeadingInterpolation(intake2Pose.getHeading(), parkPose.getHeading())
+                .build();
     }
 
-    private PathChain buildLinePath(Pose p1, Pose p2) {
-        path = follower.pathBuilder()
-            .addPath(new BezierLine(p1, p2))
-            .setLinearHeadingInterpolation(p1.getHeading(), p2.getHeading())
-            .build();
-
-        return path;
+    // --- 3. STATE MACHINE HELPER ---
+    public void setPathState(int state) {
+        pathState = state;
+        actionTimer.resetTimer();
     }
 
-    // Need to fix: BezierCurve syntax is not correct
-    private void buildCurvePath(Pose p1, Pose p2) {
-        path = follower.pathBuilder()
-            .addPath(new BezierCurve(p1, p2))
-            .build();   
-    }
-
-    private void statePathUpdate() {
-        switch (pathState) {
-            case 0:
-                follower.followPath(startToShoot, true);
-                pathState = 1;
-                break;
-            case 1:
-                follower.followPath(shootToIntake1, true);
-                pathState = 2;
-                break;
-            case 2:
-                follower.followPath(intake1ToIntake2, true);
-                pathState = 3;
-                break;
-            case 3:
-                follower.followPath(intake2ToIntake3, true);
-                pathState = 4;
-                break;
-            case 4:
-                follower.followPath(intake3ToGate, true);
-                pathState = 5;
-                break;
-            case 5: 
-                follower.followPath(gateToPark, true);
-                pathState = 6;
-                break;
-            default:
-                break;
-        }
-    }
-
-
-            
     @Override
-    public void runOpMode() {
-        follower = Constants.createFollower(hardwareMap);
-        follower.setPose(startPose);
+    public void loop() {
+        follower.update();
+        autonomousControl();
 
-        buildPaths();
-        pathState = 0;
-
-        waitForStart();
-
-        while (opModeIsActive()) {
-            follower.update();
-            statePathUpdate();
-            telemetry.addData("State", pathState);
-            telemetry.addData("X Position", follower.getPose().getX());
-            telemetry.addData("Y Position", follower.getPose().getY());
-            telemetry.addData("Heading", Math.toDegrees(follower.getPose().getHeading()));
-            telemetry.update();
-        }
+        // Telemetry for debugging
+        telemetry.addData("State", pathState);
+        telemetry.addData("Path Busy", follower.isBusy());
+        telemetry.addData("Pose", follower.getPose().toString());
+        telemetry.update();
     }
 
+    // --- 4. CENTRAL CONTROL ---
+    private void autonomousControl() {
+        switch (pathState) {
+            case 0: // Move to Shoot
+                follower.followPath(startToShoot);
+                setPathState(1);
+                break;
+
+            case 1: // Wait for arrival + DO_SHOOTING
+                if (!follower.isBusy()) {
+                    // Start shooting hardware here
+                    if (actionTimer.getElapsedTimeSeconds() > 1.0) { // Duration of shoot
+                        setPathState(2);
+                    }
+                }
+                break;
+
+            case 2: // Move to Intake
+                follower.followPath(shootToIntake1);
+                setPathState(3);
+                break;
+
+            case 3: // Wait for arrival + DO_INTAKE
+                if (!follower.isBusy()) {
+                    // Start intake hardware here
+                    if (actionTimer.getElapsedTimeSeconds() > 1.0) {
+                        setPathState(4);
+                    }
+                }
+                break;
+
+            case 4: // Move to Intake 2
+                follower.followPath(intake1ToIntake2);
+                setPathState(5);
+                break;
+
+            case 5: // Wait for arrival
+                if (!follower.isBusy()) {
+                    setPathState(6);
+                }
+                break;
+
+            case 6: // Final Parking
+                follower.followPath(toPark);
+                setPathState(7);
+                break;
+
+            case 7: // Finish
+                if (!follower.isBusy()) {
+                    telemetry.addLine("Done!");
+                }
+                break;
+        }
+    }
 }
