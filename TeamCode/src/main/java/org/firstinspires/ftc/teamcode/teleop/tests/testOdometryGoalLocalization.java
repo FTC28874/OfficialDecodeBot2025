@@ -6,7 +6,6 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
-
 import org.firstinspires.ftc.teamcode.auto.Constants;
 
 @TeleOp(name = "Pedro Turret Tracking (Constants)", group = "Control")
