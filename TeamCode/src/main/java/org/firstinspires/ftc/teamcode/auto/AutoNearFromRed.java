@@ -22,16 +22,18 @@ public class AutoNearFromRed extends LinearOpMode {
     private final double PATH_END_DELAY   = 0.15; 
 
     // --- 2. POSES ---
-    private final Pose startPose   = new Pose( 74, 9,   Math.toRadians(90));
-    private final Pose shootPose   = new Pose( 74, 80,  Math.toRadians(0));
-    private final Pose intake1Pose = new Pose(120, 84, Math.toRadians(0));
-    private final Pose intake2Pose = new Pose(120, 108, Math.toRadians(0));
-    private final Pose intake3Pose = new Pose(120, 132, Math.toRadians(0));
-    private final Pose gatePose    = new Pose(120, 72, Math.toRadians(0));
+    private final Pose startPose   = new Pose( 82, 9,   Math.toRadians(90));
+    private final Pose shootPose   = new Pose( 82, 95,  Math.toRadians(0));
+
+    private final Pose ctrlPose = new Pose(100, 90, Math.toRadians(0));
+    private final Pose intake1Pose = new Pose(110, 84, Math.toRadians(0));
+    private final Pose intake2Pose = new Pose(110, 108, Math.toRadians(0));
+    private final Pose intake3Pose = new Pose(110, 132, Math.toRadians(0));
+    private final Pose gatePose    = new Pose(110, 72, Math.toRadians(0));
     private final Pose parkPose    = new Pose(100, 72, Math.toRadians(0));
 
     // --- 3. PATHCHAINS ---
-    private PathChain toShoot, toIntake1, toIntake2, toIntake3, toGate, toPark;
+    private PathChain toShoot, toIntake1, toIntake2, toIntake3, toGate, toPark, intake1ToShoot;
 
     private void buildPaths() {
         // Linear path to initial shooting
@@ -42,32 +44,38 @@ public class AutoNearFromRed extends LinearOpMode {
 
         // Curved path to Intake 1
         toIntake1 = follower.pathBuilder()
-                .addPath(new BezierCurve(shootPose, new BezierPoint(100, 90), intake1Pose))
+                .addPath(new BezierCurve(shootPose, ctrlPose, intake1Pose))
                 .setLinearHeadingInterpolation(shootPose.getHeading(), intake1Pose.getHeading())
                 .build();
 
+        intake1ToShoot = follower.pathBuilder()
+                .addPath(new BezierCurve(intake1Pose, ctrlPose, shootPose))
+                .setLinearHeadingInterpolation(intake1Pose.getHeading(), shootPose.getHeading())
+                .build();
+
+
         // Curved path to Intake 2
         toIntake2 = follower.pathBuilder()
-                .addPath(new BezierCurve(intake1Pose, new BezierPoint(135, 96), intake2Pose))
+                .addPath(new BezierCurve(shootPose, ctrlPose, intake2Pose))
                 .setConstantHeadingInterpolation(Math.toRadians(0))
                 .build();
 
         // Curved path to Intake 3
         toIntake3 = follower.pathBuilder()
-                .addPath(new BezierCurve(intake2Pose, new BezierPoint(135, 120), intake3Pose))
+                .addPath(new BezierCurve(intake2Pose, ctrlPose, intake3Pose))
                 .setConstantHeadingInterpolation(Math.toRadians(0))
                 .build();
 
         // Curved path back to Gate
         toGate = follower.pathBuilder()
-                .addPath(new BezierCurve(intake3Pose, new BezierPoint(130, 100), gatePose))
+                .addPath(new BezierCurve(intake3Pose, ctrlPose, gatePose))
                 .setLinearHeadingInterpolation(intake3Pose.getHeading(), gatePose.getHeading())
                 .build();
 
         // Final path to Park
         toPark = follower.pathBuilder()
-                .addPath(new BezierLine(gatePose, parkPose))
-                .setLinearHeadingInterpolation(gatePose.getHeading(), parkPose.getHeading())
+                .addPath(new BezierLine(intake2Pose, parkPose))
+                .setLinearHeadingInterpolation(intake2Pose.getHeading(), parkPose.getHeading())
                 .build();
     }
 
@@ -135,29 +143,32 @@ public class AutoNearFromRed extends LinearOpMode {
                 break;
 
             case 1: // Shoot -> Intake 1
-                handleAction(SHOOT_DURATION, toIntake1, 2, this::shoot);
+                handleAction(SHOOT_DURATION, toIntake1, pathState+1, this::shoot);
                 break;
 
-            case 2: // Intake 1 -> Intake 2
-                handleAction(INTAKE_DURATION, toIntake2, 3, this::intake);
+            case 2: // Intake 1 > Shoot
+                handleAction(0, intake1ToShoot, pathState+1, this::shoot);
+
+            case 3: // Shoot -> Intake 2
+                handleAction(INTAKE_DURATION, toIntake2, 6, this::intake);
                 break;
 
-            case 3: // Intake 2 -> Intake 3
-                handleAction(INTAKE_DURATION, toIntake3, 4, this::intake);
+            case 4: // Intake 2 -> Intake 3
+                handleAction(INTAKE_DURATION, toIntake3, pathState+1, this::intake);
                 break;
 
-            case 4: // Intake 3 -> Gate
-                handleAction(INTAKE_DURATION, toGate, 5, this::intake);
+            case 5: // Intake 3 -> Gate
+                handleAction(INTAKE_DURATION, toGate, pathState+1, this::intake);
                 break;
 
-            case 5: // Drive Gate -> Park
+            case 6: // Drive Gate -> Park
                 if (!follower.isBusy()) {
                     follower.followPath(toPark);
                     setPathState(6);
                 }
                 break;
 
-            case 6: // Final completion
+            case 7: // Final completion
                 if (!follower.isBusy()) {
                     telemetry.addLine("Auto Complete!");
                 }
