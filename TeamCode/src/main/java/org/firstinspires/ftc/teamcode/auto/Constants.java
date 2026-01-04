@@ -46,7 +46,6 @@ public class Constants {
             .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD)
             .xVelocity(83.90387683778297)
             .yVelocity(63.115439107098915);
-
     // Pinpoint Localizer Settings
     public static PinpointConstants localizerConstants = new PinpointConstants()
             .forwardPodY(-6.126)
