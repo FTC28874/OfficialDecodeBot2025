@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.auto.Constants;
@@ -18,7 +19,7 @@ public class testOdometryGoalLocalization extends LinearOpMode {
     // 2. Placeholder Start Pose (X, Y, Heading in Radians)
     // Adjust these based on your actual starting position in 2026 matches
     private final Pose startPose = new Pose(88, 9, Math.toRadians(0));
-    private HardwareMap hardwareMap;
+   // private HardwareMap hardwareMap;
     private Follower follower;
     private DcMotorEx turretMotor;
 
@@ -34,6 +35,8 @@ public class testOdometryGoalLocalization extends LinearOpMode {
 
         turretMotor = hardwareMap.get(DcMotorEx.class, "turret");
         turretMotor.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
+        turretMotor.setPower(0.01);
+        turretMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
         waitForStart();
         while (opModeIsActive()) {
