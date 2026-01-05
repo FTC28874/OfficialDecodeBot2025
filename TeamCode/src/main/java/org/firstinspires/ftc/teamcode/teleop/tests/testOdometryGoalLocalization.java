@@ -2,13 +2,14 @@ package org.firstinspires.ftc.teamcode.teleop.tests;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
+
 import org.firstinspires.ftc.teamcode.auto.Constants;
 
-@TeleOp(name = "Pedro Turret Tracking (Constants)", group = "Control")
+@TeleOp(name = "Pedro Turret Tracking Degrees", group = "Control")
 public class testOdometryGoalLocalization extends OpMode {
 
     // ===============================
@@ -22,31 +23,34 @@ public class testOdometryGoalLocalization extends OpMode {
     private DcMotorEx turretMotor;
 
     // ===============================
-    // FIELD CONSTANTS
+    // FIELD GOAL
     // ===============================
     private static final double GOAL_X = 144.0;
     private static final double GOAL_Y = 144.0;
-    private static final double GOAL_HEADING = Math.toRadians(38.0);
+    private static final double GOAL_HEADING_DEG = 38.0;
 
     // ===============================
-    // TURRET OFFSET (ROBOT FRAME)
-    // +X forward, +Y left
+    // TURRET OFFSET
     // ===============================
     private static final double TURRET_OFFSET_X = 0.0;
     private static final double TURRET_OFFSET_Y = 0.0;
 
     // ===============================
-    // TURRET PID CONSTANTS
+    // TURRET PID (degrees)
     // ===============================
-    private static final double kP = 3.0;
-    private static final double kD = 0.15;
-
-    private double lastError = 0.0;
+    private static final double kP_DEG = 0.01; // small for degrees
+    private double lastErrorDeg = 0.0;
 
     // ===============================
-    // TURRET ENCODER
+    // TICKS PER REV (GoBILDA 435 RPM)
     // ===============================
-    private static final double TICKS_PER_REV = 8192.0;
+    private static final double TICKS_PER_REV = 384;
+
+    // ===============================
+    // HARD LIMITS (degrees)
+    // ===============================
+    private static final double TURRET_MIN_DEG = -135.0;
+    private static final double TURRET_MAX_DEG = 135.0;
 
     @Override
     public void init() {
@@ -57,8 +61,7 @@ public class testOdometryGoalLocalization extends OpMode {
         follower = Constants.createFollower(hardwareMap);
 
         // -------------------------------
-        // Set start pose (FIELD CENTER)
-        // (72,72) facing +X
+        // Set start pose (field-specific)
         // -------------------------------
         follower.setPose(new Pose(
                 88,
@@ -67,16 +70,16 @@ public class testOdometryGoalLocalization extends OpMode {
         ));
 
         // -------------------------------
-        // Drivetrain brake mode (optional but recommended)
+        // Set drivetrain brake mode
         // -------------------------------
         Constants.setBrakeMode(hardwareMap);
 
         // -------------------------------
-        // Turret motor
+        // Initialize turret motor
         // -------------------------------
         turretMotor = hardwareMap.get(DcMotorEx.class, "turret");
-        turretMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        turretMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        turretMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        turretMotor.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
     }
 
     @Override
@@ -86,53 +89,49 @@ public class testOdometryGoalLocalization extends OpMode {
         // Update Pedro localization
         // -------------------------------
         follower.update();
-
         Pose pose = follower.getPose();
 
         double robotX = pose.getX();
         double robotY = pose.getY();
-        double robotHeading = pose.getHeading();
+        double robotHeadingRad = pose.getHeading();
+        double robotHeadingDeg = Math.toDegrees(robotHeadingRad);
 
         // -------------------------------
         // Compute turret world position
         // -------------------------------
-        double cosH = Math.cos(robotHeading);
-        double sinH = Math.sin(robotHeading);
-
-        double turretWorldX =
-                robotX + TURRET_OFFSET_X * cosH - TURRET_OFFSET_Y * sinH;
-        double turretWorldY =
-                robotY + TURRET_OFFSET_X * sinH + TURRET_OFFSET_Y * cosH;
+        double cosH = Math.cos(robotHeadingRad);
+        double sinH = Math.sin(robotHeadingRad);
+        double turretWorldX = robotX + TURRET_OFFSET_X * cosH - TURRET_OFFSET_Y * sinH;
+        double turretWorldY = robotY + TURRET_OFFSET_X * sinH + TURRET_OFFSET_Y * cosH;
 
         // -------------------------------
-        // Vector turret → goal
+        // Compute target turret angle (degrees)
         // -------------------------------
-        double dx = GOAL_X - turretWorldX;
-        double dy = GOAL_Y - turretWorldY;
+        double targetTurretDeg = GOAL_HEADING_DEG - robotHeadingDeg;
 
-        // -------------------------------
-        // Angle math
-        // -------------------------------
-        double fieldAngleToGoal = Math.atan2(dy, dx);
-
-        // Blend goal position + goal facing
-        double blendedFieldAngle =
-                0.85 * fieldAngleToGoal + 0.15 * GOAL_HEADING;
-
-        double turretTargetAngle =
-                wrapAngle(blendedFieldAngle - robotHeading);
+        // Apply hard limits
+        targetTurretDeg = clamp(targetTurretDeg, TURRET_MIN_DEG, TURRET_MAX_DEG);
 
         // -------------------------------
-        // Turret PID
+        // Read current turret angle (degrees)
         // -------------------------------
-        double currentTurretAngle = getTurretAngle();
-        double error = wrapAngle(turretTargetAngle - currentTurretAngle);
+        double currentTurretDeg = (turretMotor.getCurrentPosition() / TICKS_PER_REV) * 360.0;
 
-        double derivative = error - lastError;
-        lastError = error;
+        // -------------------------------
+        // PID error
+        // -------------------------------
+        double errorDeg = targetTurretDeg - currentTurretDeg;
+        errorDeg = wrapErrorDeg(errorDeg);
 
-        double power = kP * error + kD * derivative;
-        power = clamp(power, -1.0, 1.0);
+        // Simple P controller
+        double power = kP_DEG * errorDeg;
+        power = clamp(power, -0.5, 0.5);
+
+        // Safety: stop motor if hitting limits
+        if ((currentTurretDeg <= TURRET_MIN_DEG && power < 0) ||
+                (currentTurretDeg >= TURRET_MAX_DEG && power > 0)) {
+            power = 0;
+        }
 
         turretMotor.setPower(power);
 
@@ -141,9 +140,11 @@ public class testOdometryGoalLocalization extends OpMode {
         // -------------------------------
         telemetry.addData("Robot X", robotX);
         telemetry.addData("Robot Y", robotY);
-        telemetry.addData("Robot Heading (deg)", Math.toDegrees(robotHeading));
-        telemetry.addData("Turret Target (deg)", Math.toDegrees(turretTargetAngle));
-        telemetry.addData("Turret Error (deg)", Math.toDegrees(error));
+        telemetry.addData("Robot Heading (deg)", robotHeadingDeg);
+        telemetry.addData("Turret Current (deg)", currentTurretDeg);
+        telemetry.addData("Turret Target (deg)", targetTurretDeg);
+        telemetry.addData("Error (deg)", errorDeg);
+        telemetry.addData("Motor Power", power);
         telemetry.update();
     }
 
@@ -151,16 +152,13 @@ public class testOdometryGoalLocalization extends OpMode {
     // HELPERS
     // ===============================
 
-    private double wrapAngle(double angle) {
-        return Math.atan2(Math.sin(angle), Math.cos(angle));
+    private double wrapErrorDeg(double angle) {
+        while (angle > 180) angle -= 360;
+        while (angle < -180) angle += 360;
+        return angle;
     }
 
     private double clamp(double value, double min, double max) {
         return Math.max(min, Math.min(max, value));
-    }
-
-    private double getTurretAngle() {
-        double ticks = turretMotor.getCurrentPosition();
-        return (ticks / TICKS_PER_REV) * (2.0 * Math.PI);
     }
 }
