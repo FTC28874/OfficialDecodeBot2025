@@ -25,6 +25,8 @@ public class Shooter {
     private static Servo shooterServo = null;
     private static DcMotor turret = null;
 
+    private static DcMotorEx turretEncoder = null;
+
     // Shooter Control Variables
     private static final double COUNTS_PER_REVOLUTION = 28;
 
@@ -49,12 +51,15 @@ public class Shooter {
 
         shooterServo = hardwareMap.get(Servo.class, "shooterServo");
 
+        turretEncoder = hardwareMap.get(DcMotorEx.class, "driveFR");
+
         // Set directions - adjust if motors spin the wrong way
         shooterD.setDirection(DcMotorSimple.Direction.FORWARD);
         shooterU.setDirection(DcMotorSimple.Direction.REVERSE);
 
         shooterD.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         shooterU.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+
 
     }
 
@@ -81,6 +86,10 @@ public class Shooter {
         }
     }
 
+
+    public static double getTurretPosition() {
+        return turretEncoder.getCurrentPosition();
+    }
 
 
     public static void setShooterSpeed(double shooterSpeed) {

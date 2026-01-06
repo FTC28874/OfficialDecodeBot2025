@@ -132,6 +132,7 @@ public class MainTeleOp extends LinearOpMode {
             telemetry.addData("Shooter RPM: ", Shooter.getCurrentRPM());
             telemetry.addData("Shooter Target Speed: ", shooterEncSpeed);
             telemetry.addData("Shooter RPM Error: ", Math.abs(Shooter.getCurrentRPM() - shooterEncSpeed));
+            telemetry.addData("Turret Position; ", Shooter.getTurretPosition());
             telemetry.update();
 
             // --- Shooter / Intake Controls ---

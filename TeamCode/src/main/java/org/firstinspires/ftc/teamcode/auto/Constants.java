@@ -24,12 +24,12 @@ public class Constants {
     // PID and Follower Tuning
     public static FollowerConstants followerConstants = new FollowerConstants()
             .mass(9.07185)
-            .forwardZeroPowerAcceleration(-31.108642686848118)
-            .lateralZeroPowerAcceleration(-52.132651227924235)
+            .forwardZeroPowerAcceleration(20)//66.71437757597195
+            .lateralZeroPowerAcceleration(20)//53.58475860835999
             // Added D coefficient (0.02) to dampen stops and prevent jerking
-            .translationalPIDFCoefficients(new PIDFCoefficients(0.3, 0, 0.02, 0))
+            .translationalPIDFCoefficients(new PIDFCoefficients(0.1, 0, 0.0, 0))
             // Heading PID with D damping (0.15) to prevent rotation "snap"
-            .headingPIDFCoefficients(new PIDFCoefficients(0.8, 0, 0.15, 0.01))
+            .headingPIDFCoefficients(new PIDFCoefficients(0.3, 0, 0.0, 0.0))
             .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.025, 1, 0.00001, 0.6, 0.01))
             .centripetalScaling(0.0007);
 
@@ -79,7 +79,7 @@ public class Constants {
         for (String name : motors) {
             try {
                 DcMotorEx motor = hardwareMap.get(DcMotorEx.class, name);
-                motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+                motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
             } catch (Exception e) {
                 // Silently handle if motor is not found in hardwareMap
             }

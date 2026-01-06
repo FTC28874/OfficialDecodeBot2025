@@ -6,11 +6,13 @@ import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.robot.Shooter;
 
 @Autonomous(name="From Red Goal", group = "Linear OpMode")
+@Disabled
 public class autopathingfromredgoal extends LinearOpMode {
 
     private double shooterEncSpeed = 1600;
