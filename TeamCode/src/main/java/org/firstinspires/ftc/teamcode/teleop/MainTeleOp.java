@@ -6,10 +6,14 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.robot.Intake;
 import org.firstinspires.ftc.teamcode.robot.Shooter;
 import org.firstinspires.ftc.teamcode.robot.HelperServos;
+import org.firstinspires.ftc.teamcode.robot.Turret;
 
 
 
@@ -22,6 +26,8 @@ public class MainTeleOp extends LinearOpMode {
     private DcMotor driveBL = null;
     private DcMotor driveFR = null;
     private DcMotor driveBR = null;
+
+    private GoBildaPinpointDriver pinpoint = null;
 
     private double shooterEncSpeed = 1600;
     private double shooterHoodAngle = Shooter.HoodState.DOWN.angle;
@@ -36,6 +42,8 @@ public class MainTeleOp extends LinearOpMode {
         driveBL = hardwareMap.get(DcMotor.class, "driveBL");
         driveFR = hardwareMap.get(DcMotor.class, "driveFR");
         driveBR = hardwareMap.get(DcMotor.class, "driveBR");
+
+        pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
 
         // ########################################################################################
         // !!!            IMPORTANT Drive Information. Test your motor directions.            !!!!!
@@ -56,6 +64,7 @@ public class MainTeleOp extends LinearOpMode {
         org.firstinspires.ftc.teamcode.robot.Shooter.init(hardwareMap);
         org.firstinspires.ftc.teamcode.robot.Intake.init(hardwareMap);
         HelperServos.init(hardwareMap);
+        Turret.init(hardwareMap);
 
         // Wait for the game to start (driver presses START)
         telemetry.addData("Status", "Initialized");
@@ -74,6 +83,8 @@ public class MainTeleOp extends LinearOpMode {
 
         waitForStart();
         runtime.reset();
+
+        Turret.zeroTurret();
 
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
@@ -135,6 +146,25 @@ public class MainTeleOp extends LinearOpMode {
             telemetry.addData("Turret Position; ", Shooter.getTurretPosition());
             telemetry.update();
 
+
+            // Turret Controls
+            double robotX = pinpoint.getPosX(DistanceUnit.INCH);
+            double robotY = pinpoint.getPosY(DistanceUnit.INCH);
+            double robotHeading = pinpoint.getHeading(AngleUnit.DEGREES);
+
+            // Manual Override
+            if (Math.abs(gamepad2.right_stick_x) > 0.1) {
+                Turret.setTurretAngle(gamepad2.right_stick_x * 90);
+            } else {
+                Turret.aimAtRedGoal(robotX, robotY, robotHeading);
+            }
+
+            // Emergency Stop
+            if (gamepad2.yWasPressed()) {
+                Turret.stop();
+            }
+
+
             // --- Shooter / Intake Controls ---
 
             // Shooter Speed Control
@@ -193,19 +223,19 @@ public class MainTeleOp extends LinearOpMode {
                 }
             }
 
-            // Turret Control
-            if (gamepad1.rightBumperWasPressed()) {
-                Shooter.turnTurretDirection(true, 0.25);
-                sleep(250);
-                Shooter.turnTurretDirection(true, 0.0);
-            }
-            if (gamepad1.leftBumperWasPressed()) {
-                Shooter.turnTurretDirection(false, 0.25);
-                sleep(250);
-                Shooter.turnTurretDirection(false, 0.0);
-            }
+//            // Turret Control
+//            if (gamepad1.rightBumperWasPressed()) {
+//                Shooter.turnTurretDirection(true, 0.25);
+//                sleep(250);
+//                Shooter.turnTurretDirection(true, 0.0);
+//            }
+//            if (gamepad1.leftBumperWasPressed()) {
+//                Shooter.turnTurretDirection(false, 0.25);
+//                sleep(250);
+//                Shooter.turnTurretDirection(false, 0.0);
+//            }
 
-
+            // Stopper Servo
             if (gamepad1.aWasPressed()) {
                 HelperServos.setStopperPass();
             }
