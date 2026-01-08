@@ -36,7 +36,7 @@ public class SamplePreloadAuto extends LinearOpMode {
         DRIVE_INTAKE_READY_2_TO_INTAKE_2,
         PAUSE_AFTER_INTAKE_2,
         DRIVEBACK_TO_INTAKE_READY_2,
-
+//asdfs
         DRIVE_INTAKE_2_TO_READY_TO_EMPTY,
         PAUSE_AFTER_READY_TO_EMPTY,
         DRIVE_READY_TO_EMPTY_TO_GATE,
