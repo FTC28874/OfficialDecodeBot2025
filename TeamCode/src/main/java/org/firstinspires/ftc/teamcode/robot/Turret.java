@@ -95,7 +95,7 @@ public final class Turret {
         turretMotor.setPower(0);
     }
 
-    /* ------------------ INTERNAL ------------------ */
+    /* ------------------ INTERNAL ------------------ -*/
 
     private static double getCurrentTurretTicks() {
         double turretPosition = -(encoderMotor.getCurrentPosition());
