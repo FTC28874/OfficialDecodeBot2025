@@ -27,21 +27,65 @@ public class SamplePreloadAuto extends LinearOpMode {
     DriveToPoint nav = new DriveToPoint(this); //OpMode member for the point-to-point navigation class
 
     enum StateMachine {
-        WAITING_FOR_START,
-        AT_TARGET,
-        DRIVE_TO_TARGET_1,
-        DRIVE_TO_TARGET_2,
-        WAIT_TO_CLAW,
-        DRIVE_TO_TARGET_3,
-        DRIVE_TO_TARGET_4,
-        DRIVE_TO_TARGET_5
+        DRIVE_START_TO_SHOOT,
+        PAUSE_AFTER_START,
+        PAUSE_FOR_SHOOT_1,
+
+        DRIVE_SHOOT_TO_INTAKE_READY_2,
+        PAUSE_AFTER_INTAKE_READY_2,
+        DRIVE_INTAKE_READY_2_TO_INTAKE_2,
+        PAUSE_AFTER_INTAKE_2,
+        DRIVEBACK_TO_INTAKE_READY_2,
+
+        DRIVE_INTAKE_2_TO_READY_TO_EMPTY,
+        PAUSE_AFTER_READY_TO_EMPTY,
+        DRIVE_READY_TO_EMPTY_TO_GATE,
+        PAUSE_AFTER_GATE,
+        DRIVE_GATE_TO_SHOOT_LINE,
+        PAUSE_AFTER_SHOOT_LINE,
+        PAUSE_FOR_SHOOT_2,
+
+        DRIVE_SHOOT_TO_INTAKE_READY_1,
+        PAUSE_AFTER_INTAKE_READY_1,
+        DRIVE_INTAKE_READY_1_TO_INTAKE_1,
+        PAUSE_AFTER_INTAKE_1,
+        DRIVE_INTAKE_1_TO_SHOOT,
+        PAUSE_FOR_SHOOT_3,
+
+        DRIVE_SHOOT_TO_INTAKE_READY_3,
+        PAUSE_AFTER_INTAKE_READY_3,
+        DRIVE_INTAKE_READY_3_TO_INTAKE_3,
+        PAUSE_AFTER_INTAKE_3,
+        DRIVE_INTAKE_3_TO_SHOOT,
+        PAUSE_FOR_SHOOT_4,
+
+        DRIVE_SHOOT_TO_READY_TO_EMPTY_END,
+        DONE
+    }
+    static Pose2D pose(double xIn, double yIn, double headingDeg) {
+        return new Pose2D(
+                DistanceUnit.MM,
+                xIn * 25.4,
+                yIn * 25.4,
+                AngleUnit.DEGREES,
+                headingDeg
+        );
     }
 
-    static final Pose2D TARGET_1 = new Pose2D(DistanceUnit.MM,300, 300,AngleUnit.DEGREES,-45);
-    static final Pose2D TARGET_2 = new Pose2D(DistanceUnit.MM, 100, 800, AngleUnit.DEGREES, -180);
-    static final Pose2D TARGET_3 = new Pose2D(DistanceUnit.MM,300,300, AngleUnit.DEGREES,-45);
-    static final Pose2D TARGET_4 = new Pose2D(DistanceUnit.MM, 100, -2600, AngleUnit.DEGREES, 90);
-    static final Pose2D TARGET_5 = new Pose2D(DistanceUnit.MM, 100, 0, AngleUnit.DEGREES, 0);
+    static final Pose2D SHOOT_POSE = pose(88, 95, 0);
+   static final Pose2D READY_TO_EMPTY = pose(110, 66, 90);
+   static final Pose2D EMPTY_GATE = pose(120, 66, 90);
+    static final Pose2D SHOOTING_LINE = pose(88, 66, 90);
+    static final Pose2D READY_TO_EMPTY_END = pose(110, 66, 90);
+
+    static final Pose2D INTAKE_READY_SET_1 = pose(88, 84, 0);
+    static final Pose2D ACTUALLY_DO_INTAKE_SET_1 = pose(111, 84, 0);
+    static final Pose2D INTAKE_READY_SET_2 = pose(88, 60, 0);
+    static final Pose2D ACTUALLY_DO_INTAKE_SET_2 = pose(111, 60, 0);
+
+    static final Pose2D INTAKE_READY_SET_3 = pose(88, 36, 0);
+    static final Pose2D ACTUALLY_DO_INTAKE_SET_3 = pose(111, 36, 0);
+
 
 
     @Override
@@ -77,7 +121,7 @@ public class SamplePreloadAuto extends LinearOpMode {
         nav.setDriveType(DriveToPoint.DriveType.MECANUM);
 
         StateMachine stateMachine;
-        stateMachine = StateMachine.WAITING_FOR_START;
+        stateMachine = StateMachine.DRIVE_START_TO_SHOOT;
 
 
 
@@ -96,39 +140,60 @@ public class SamplePreloadAuto extends LinearOpMode {
             odo.update();
 
             switch (stateMachine){
-                case WAITING_FOR_START:
+                case DRIVE_START_TO_SHOOT:
                     //the first step in the autonomous
-                    stateMachine = StateMachine.DRIVE_TO_TARGET_1;
+                    stateMachine = StateMachine.PAUSE_AFTER_START;
                     break;
-                case DRIVE_TO_TARGET_1:
+                case PAUSE_AFTER_START:
                     /*
                     drive the robot to the first target, the nav.driveTo function will return true once
                     the robot has reached the target, and has been there for (holdTime) seconds.
                     Once driveTo returns true, it prints a telemetry line and moves the state machine forward.
                      */
 
-                    if (nav.driveTo(odo.getPosition(), TARGET_1, 0.7, 0)){
+                    if (nav.driveTo(odo.getPosition(), SHOOT_POSE, 0.7, 0)){
                         telemetry.addLine("at position #1!");
-                        stateMachine = StateMachine.DRIVE_TO_TARGET_2;
+                        stateMachine = StateMachine.PAUSE_FOR_SHOOT_1;
                     }
                     break;
-                case DRIVE_TO_TARGET_2:
+                case PAUSE_FOR_SHOOT_1:
                     //drive to the second target
-                    if (nav.driveTo(odo.getPosition(), TARGET_2, 0.4, 3)){
-                        telemetry.addLine("at position #2!");
-                        timer.reset();
-                        stateMachine = StateMachine.WAIT_TO_CLAW;
+                    if (timer.time() > 1) {
+                        stateMachine = StateMachine.DRIVE_SHOOT_TO_INTAKE_READY_2;
                     }
                     break;
-                case WAIT_TO_CLAW:
-                    if (timer.time() > 0.5) {
-                        stateMachine = StateMachine.DRIVE_TO_TARGET_3;
+                case DRIVE_SHOOT_TO_INTAKE_READY_2:
+                    if (nav.driveTo(odo.getPosition(), INTAKE_READY_SET_2, 0.7, 0)){
+                        telemetry.addLine("at position #1!");
+                        stateMachine = StateMachine.PAUSE_AFTER_INTAKE_READY_2;
                     }
                     break;
-                case DRIVE_TO_TARGET_3:
-                    if(nav.driveTo(odo.getPosition(), TARGET_3, 0.7, 0)){
-                        telemetry.addLine("at position #3");
-                        stateMachine = StateMachine.DRIVE_TO_TARGET_4;
+                case PAUSE_AFTER_INTAKE_READY_2:
+                    if (timer.time() > 1) {
+                        stateMachine = StateMachine.DRIVE_INTAKE_READY_2_TO_INTAKE_2;
+                    }
+                    break;
+                case DRIVE_INTAKE_READY_2_TO_INTAKE_2:
+                    if (nav.driveTo(odo.getPosition(), ACTUALLY_DO_INTAKE_SET_2, 0.7, 0)){
+                        telemetry.addLine("at position #1!");
+                        stateMachine = StateMachine.PAUSE_AFTER_INTAKE_2;
+                    }
+                    break;
+                case PAUSE_AFTER_INTAKE_2:
+                    if (timer.time() > 1) {
+                        stateMachine = StateMachine.DRIVEBACK_TO_INTAKE_READY_2;
+                    }
+                    break;
+                case DRIVEBACK_TO_INTAKE_READY_2:
+                    if (nav.driveTo(odo.getPosition(), INTAKE_READY_SET_2, 0.7, 0)){
+                        telemetry.addLine("at position #1!");
+                        stateMachine = StateMachine.DRIVE_INTAKE_2_TO_READY_TO_EMPTY;
+                    }
+                    break;
+                case DRIVE_INTAKE_2_TO_READY_TO_EMPTY:
+                    if (nav.driveTo(odo.getPosition(),READY_TO_EMPTY, 0.7, 0)){
+                        telemetry.addLine("at position #1!");
+                        stateMachine = StateMachine.PAUSE_AFTER_READY_TO_EMPTY;
                     }
                     break;
 ////                case DRIVE_TO_TARGET_4:

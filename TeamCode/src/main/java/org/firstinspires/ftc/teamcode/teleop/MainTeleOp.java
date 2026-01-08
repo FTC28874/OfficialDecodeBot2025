@@ -207,10 +207,10 @@ public class MainTeleOp extends LinearOpMode {
 
 
             if (gamepad1.aWasPressed()) {
-                HelperServos.setPusherRest();
+                HelperServos.setStopperPass();
             }
             if (gamepad1.bWasPressed()) {
-                HelperServos.setPusherPush();
+                HelperServos.setStopperStop();
             }
 
         }

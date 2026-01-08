@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
+import org.firstinspires.ftc.teamcode.robot.Intake;
 import org.firstinspires.ftc.teamcode.robot.Shooter;
 
 @Autonomous(name="Far From Red Goal", group = "Linear OpMode")
@@ -167,7 +168,7 @@ public class autopathingfarfromredgoal extends LinearOpMode {
                 break;
 
             case PAUSE_FOR_SHOOT_1:
-                // runShooterPID();
+                // Shooter.setShooterPower(Shooter.PIDControl());
                 if (pathTimer.getElapsedTimeSeconds() >= 2.0)
                     setPathState(PathState.DRIVE_SHOOTPOS_TO_INTAKE_READY_SET_2_POS);
                 // Shooter.stopShooter();
@@ -184,7 +185,7 @@ public class autopathingfarfromredgoal extends LinearOpMode {
                 break;
 
             case DRIVE_INTAKE_READY_POSE_SET_2_TO_ACTUALLY_DO_INTAKE_SET_2:
-                // Intake.runIntake();
+                Intake.runIntake();
                 follower.followPath(driveIntakeReadyPoseSet2ToActuallyDoIntakeSet2, true);
                 setPathState(PathState.PAUSE_2S_AFTER_INTAKE_READY_SET_2);
                 break;
@@ -260,7 +261,7 @@ public class autopathingfarfromredgoal extends LinearOpMode {
                 break;
 
             case DRIVE_INTAKE_READY_POSE_SET_1_TO_ACTUALLY_DO_INTAKE_SET_1:
-                // Intake.runIntake();
+                Intake.runIntake();
                 follower.followPath(driveIntakeReadyPoseSet1toActuallyDoIntakeSet1, true);
                 setPathState(PathState.PAUSE_2S_AFTER_INTAKE_READY_SET_1);
                 break;
@@ -338,6 +339,7 @@ public class autopathingfarfromredgoal extends LinearOpMode {
     public void runOpMode() {
 
         Shooter.init(hardwareMap);
+        Intake.init(hardwareMap);
         Constants.setBrakeMode(hardwareMap);
 
         pathTimer = new Timer();

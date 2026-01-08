@@ -10,11 +10,17 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 
+import org.firstinspires.ftc.teamcode.robot.Shooter;
+import org.firstinspires.ftc.teamcode.robot.Intake;
+
 @Autonomous(name="Far From Red Goal DrivetoPoint", group="Auto")
 public class RedFar extends LinearOpMode {
 
-    DcMotor lf, rf, lb, rb;
-    GoBildaPinpointDriver odo;
+    DcMotor lf = null;
+    DcMotor lb = null;
+    DcMotor rf = null;
+    DcMotor rb = null;
+    GoBildaPinpointDriver odo = null;
     DriveToPoint nav = new DriveToPoint(this);
     ElapsedTime timer = new ElapsedTime();
 
@@ -66,7 +72,7 @@ public class RedFar extends LinearOpMode {
                 headingDeg
         );
     }
-
+//    final Pose2D
     final Pose2D SHOOT_POSE = pose(88, 95, 0);
     final Pose2D READY_TO_EMPTY = pose(110, 66, 90);
     final Pose2D EMPTY_GATE = pose(120, 66, 90);
@@ -99,12 +105,16 @@ public class RedFar extends LinearOpMode {
         rb.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         odo = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
-        odo.resetPosAndIMU();
+
+        Intake.init(hardwareMap);
+        Shooter.init(hardwareMap);
 
         nav.setDriveType(DriveToPoint.DriveType.MECANUM);
 
         waitForStart();
         timer.reset();
+
+        odo.resetPosAndIMU();
 
         while (opModeIsActive()) {
 
@@ -114,27 +124,28 @@ public class RedFar extends LinearOpMode {
             switch (state) {
 
                 case DRIVE_START_TO_SHOOT:
-                    telemetry.addData("Now in state", state);
-                    if (nav.driveTo(current, SHOOT_POSE, 0.8, 0)) {
+                    telemetry.addData("Now in state ", state);
+                    if (nav.driveTo(odo.getPosition(), SHOOT_POSE, 0.8, 0)) {
                         timer.reset();
                         state = State.PAUSE_AFTER_START;
                     }
                     break;
 
                 case PAUSE_AFTER_START:
-                    telemetry.addData("Now in state", state);
+                    Intake.stopIntake();
+                    telemetry.addData("Now in state ", state);
                     if (timer.seconds() >= 2.0)
                         state = State.PAUSE_FOR_SHOOT_1;
                     break;
 
                 case PAUSE_FOR_SHOOT_1:
-                    telemetry.addData("Now in state", state);
+                    telemetry.addData("Now in state ", state);
                     if (timer.seconds() >= 2.0)
                         state = State.DRIVE_SHOOT_TO_INTAKE_READY_2;
                     break;
 
                 case DRIVE_SHOOT_TO_INTAKE_READY_2:
-                    telemetry.addData("Now in state", state);
+                    telemetry.addData("Now in state ", state);
                     if (nav.driveTo(current, INTAKE_READY_SET_2, 0.7, 0)) {
                         timer.reset();
                         state = State.PAUSE_AFTER_INTAKE_READY_2;
@@ -142,27 +153,30 @@ public class RedFar extends LinearOpMode {
                     break;
 
                 case PAUSE_AFTER_INTAKE_READY_2:
-                    telemetry.addData("Now in state", state);
+                    Intake.raiseIntake();
+                    Intake.runIntake();
+                    telemetry.addData("Now in state ", state);
                     if (timer.seconds() >= 2.0)
                         state = State.DRIVE_INTAKE_READY_2_TO_INTAKE_2;
                     break;
 
                 case DRIVE_INTAKE_READY_2_TO_INTAKE_2:
-                    telemetry.addData("Now in state", state);
+                    telemetry.addData("Now in state ", state);
                     if (nav.driveTo(current, ACTUALLY_DO_INTAKE_SET_2, 0.5, 0)) {
                         timer.reset();
                         state = State.PAUSE_AFTER_INTAKE_2;
+                        Intake.stopIntake();
                     }
                     break;
 
                 case PAUSE_AFTER_INTAKE_2:
-                    telemetry.addData("Now in state", state);
+                    telemetry.addData("Now in state ", state);
                     if (timer.seconds() >= 2.0)
                         state = State.DRIVEBACK_TO_INTAKE_READY_2;
                     break;
 
                 case DRIVEBACK_TO_INTAKE_READY_2:
-                    telemetry.addData("Now in state", state);
+                    telemetry.addData("Now in state ", state);
                     if (nav.driveTo(current, INTAKE_READY_SET_2, 0.6, 0)) {
                         timer.reset();
                         state = State.DRIVE_INTAKE_2_TO_READY_TO_EMPTY;
@@ -170,7 +184,7 @@ public class RedFar extends LinearOpMode {
                     break;
 
                 case DRIVE_INTAKE_2_TO_READY_TO_EMPTY:
-                    telemetry.addData("Now in state", state);
+                    telemetry.addData("Now in state ", state);
                     if (nav.driveTo(current, READY_TO_EMPTY, 0.7, 0)) {
                         timer.reset();
                         state = State.PAUSE_AFTER_READY_TO_EMPTY;
@@ -178,13 +192,13 @@ public class RedFar extends LinearOpMode {
                     break;
 
                 case PAUSE_AFTER_READY_TO_EMPTY:
-                    telemetry.addData("Now in state", state);
+                    telemetry.addData("Now in state ", state);
                     if (timer.seconds() >= 2.0)
                         state = State.DRIVE_READY_TO_EMPTY_TO_GATE;
                     break;
 
                 case DRIVE_READY_TO_EMPTY_TO_GATE:
-                    telemetry.addData("Now in state", state);
+                    telemetry.addData("Now in state ", state);
                     if (nav.driveTo(current, EMPTY_GATE, 0.6, 0)) {
                         timer.reset();
                         state = State.PAUSE_AFTER_GATE;
@@ -192,13 +206,13 @@ public class RedFar extends LinearOpMode {
                     break;
 
                 case PAUSE_AFTER_GATE:
-                    telemetry.addData("Now in state", state);
+                    telemetry.addData("Now in state ", state);
                     if (timer.seconds() >= 2.0)
                         state = State.DRIVE_GATE_TO_SHOOT_LINE;
                     break;
 
                 case DRIVE_GATE_TO_SHOOT_LINE:
-                    telemetry.addData("Now in state", state);
+                    telemetry.addData("Now in state ", state);
                     if (nav.driveTo(current, SHOOTING_LINE, 0.7, 0)) {
                         timer.reset();
                         state = State.PAUSE_AFTER_SHOOT_LINE;
@@ -218,6 +232,7 @@ public class RedFar extends LinearOpMode {
                     break;
 
                 case DRIVE_SHOOT_TO_INTAKE_READY_1:
+                    Intake.runIntake();
                     telemetry.addData("Now in state", state);
                     if (nav.driveTo(current, INTAKE_READY_SET_1, 0.7, 0)) {
                         timer.reset();
@@ -229,6 +244,7 @@ public class RedFar extends LinearOpMode {
                     telemetry.addData("Now in state", state);
                     if (timer.seconds() >= 2.0)
                         state = State.DRIVE_INTAKE_READY_1_TO_INTAKE_1;
+
                     break;
 
                 case DRIVE_INTAKE_READY_1_TO_INTAKE_1:
@@ -236,6 +252,7 @@ public class RedFar extends LinearOpMode {
                     if (nav.driveTo(current, ACTUALLY_DO_INTAKE_SET_1, 0.5, 0)) {
                         timer.reset();
                         state = State.PAUSE_AFTER_INTAKE_1;
+                        Intake.stopIntake();
                     }
                     break;
 
@@ -260,6 +277,7 @@ public class RedFar extends LinearOpMode {
                     break;
 
                 case DRIVE_SHOOT_TO_INTAKE_READY_3:
+                    Intake.runIntake();
                     telemetry.addData("Now in state", state);
                     if (nav.driveTo(current, INTAKE_READY_SET_3, 0.7, 0)) {
                         timer.reset();
@@ -278,6 +296,7 @@ public class RedFar extends LinearOpMode {
                     if (nav.driveTo(current, ACTUALLY_DO_INTAKE_SET_3, 0.5, 0)) {
                         timer.reset();
                         state = State.PAUSE_AFTER_INTAKE_3;
+                        Intake.stopIntake();
                     }
                     break;
 

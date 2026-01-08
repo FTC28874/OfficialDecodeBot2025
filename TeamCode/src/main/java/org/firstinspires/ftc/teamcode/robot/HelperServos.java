@@ -23,7 +23,7 @@ public class HelperServos {
 
     private enum StopperState {
         PASS(0.0),
-        BLOCK(0.5);
+        BLOCK(0.35);
         private final double angle;
         StopperState(double angle) {
             this.angle = angle;
