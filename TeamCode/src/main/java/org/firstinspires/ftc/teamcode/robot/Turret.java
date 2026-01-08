@@ -37,7 +37,7 @@ public final class Turret {
     public static void init(HardwareMap hardwareMap) {
 
         turretMotor  = hardwareMap.get(DcMotorEx.class, "turret");
-        encoderMotor = hardwareMap.get(DcMotorEx.class, "driveFL");
+        encoderMotor = hardwareMap.get(DcMotorEx.class, "driveFR");
 
         turretMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         turretMotor.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
@@ -50,6 +50,7 @@ public final class Turret {
      * Call once when turret is physically centered
      */
     public static void zeroTurret() {
+        double turretPosition = -(encoderMotor.getCurrentPosition());
         if (!initialized) return;
         turretZeroOffsetTicks = encoderMotor.getCurrentPosition();
     }
@@ -62,6 +63,7 @@ public final class Turret {
         double fieldTargetAngleDeg = calculateFieldTargetAngle(robotX, robotY);
         double turretTargetAngleDeg =
                 normalizeAngle(fieldTargetAngleDeg - robotHeadingDeg);
+        double turretPosition = -(encoderMotor.getCurrentPosition());
 
         turretTargetAngleDeg = Range.clip(
                 turretTargetAngleDeg,
@@ -96,6 +98,7 @@ public final class Turret {
     /* ------------------ INTERNAL ------------------ */
 
     private static double getCurrentTurretTicks() {
+        double turretPosition = -(encoderMotor.getCurrentPosition());
         return encoderMotor.getCurrentPosition() - turretZeroOffsetTicks;
     }
 

@@ -32,6 +32,17 @@ public class MainTeleOp extends LinearOpMode {
     private double shooterEncSpeed = 1600;
     private double shooterHoodAngle = Shooter.HoodState.DOWN.angle;
 
+    // All values in INCHES, then converted to mm if using mm for odometry
+
+    final double startX_in = +63.0;   // robot center X in inches
+    final double startY_in = +60.0;   // robot center Y in inches
+    final double startHeading_deg = 0.0; // facing upfield (+Y)
+
+    // Convert to millimeters for most odometry systems:
+    final double startX_mm = startX_in * 25.4;
+    final double startY_mm = startY_in * 25.4;
+
+
     @Override
     public void runOpMode() throws InterruptedException {
 
@@ -80,6 +91,10 @@ public class MainTeleOp extends LinearOpMode {
         Shooter.raiseShooter();
         sleep(1500);
         Shooter.lowerShooter();
+
+        pinpoint.setPosX(startX_in, DistanceUnit.INCH);
+        pinpoint.setPosY(startY_in, DistanceUnit.INCH);
+        pinpoint.setHeading(startHeading_deg, AngleUnit.DEGREES);
 
         waitForStart();
         runtime.reset();
