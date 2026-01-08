@@ -10,7 +10,7 @@ import com.qualcomm.robotcore.util.Range;
  */
 public final class Turret {
 
-    /* ------------------ HARDWARE ------------------ */
+    /* ------------------ HARDWARE ----------------- */
     private static DcMotorEx turretMotor;
     private static DcMotorEx encoderMotor; // driveFL
 

@@ -159,7 +159,7 @@ public class MainTeleOp extends LinearOpMode {
                 Turret.aimAtRedGoal(robotX, robotY, robotHeading);
             }
 
-            // Emergency Stop
+            // Emergency Stop \
             if (gamepad2.yWasPressed()) {
                 Turret.stop();
             }
