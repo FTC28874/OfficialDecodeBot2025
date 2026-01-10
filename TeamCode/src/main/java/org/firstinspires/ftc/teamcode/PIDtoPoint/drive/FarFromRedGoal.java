@@ -35,7 +35,7 @@ public class FarFromRedGoal extends LinearOpMode {
     DcMotor rightBackDrive = null;
     DcMotorEx turretEncoder = null;
     DcMotor turret = null;
-    ElapsedTime timer = null;
+    ElapsedTime timer = null; //asdf
 
     GoBildaPinpointDriver odo; // Declare OpMode member for the Odometry Computer
     DriveToPoint nav = new DriveToPoint(this); //OpMode member for the point-to-point navigation class

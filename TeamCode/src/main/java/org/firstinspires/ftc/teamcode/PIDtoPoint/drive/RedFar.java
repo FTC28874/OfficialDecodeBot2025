@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.PIDtoPoint.drive;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -14,6 +15,7 @@ import org.firstinspires.ftc.teamcode.robot.Shooter;
 import org.firstinspires.ftc.teamcode.robot.Intake;
 
 @Autonomous(name="Far From Red Goal DrivetoPoint", group="Auto")
+@Disabled
 public class RedFar extends LinearOpMode {
 
     DcMotor lf = null;
@@ -72,7 +74,7 @@ public class RedFar extends LinearOpMode {
                 headingDeg
         );
     }
-//    final Pose2D
+//    final Pose2DaD
     final Pose2D SHOOT_POSE = pose(88, 95, 0);
     final Pose2D READY_TO_EMPTY = pose(110, 66, 90);
     final Pose2D EMPTY_GATE = pose(120, 66, 90);
