@@ -7,6 +7,12 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
+import org.firstinspires.ftc.teamcode.PIDtoPoint.drive.GoBildaPinpointDriver;
+import org.firstinspires.ftc.teamcode.robot.Intake;
+import org.firstinspires.ftc.teamcode.robot.dynamicShooter;
+
 import org.firstinspires.ftc.teamcode.robot.Shooter;
 
 @TeleOp(name="Test Shooter 123", group="Linear OpMode")
@@ -17,7 +23,11 @@ public class TestShooter extends LinearOpMode {
     private DcMotor shooterU = null;
     private DcMotor shooterD = null;
     private DcMotor intake = null;
-    private double shooterEncSpeed = 2300;
+    GoBildaPinpointDriver odo;
+    Pose2D pos = odo.getPosition();
+
+
+    private double shooterEncSpeed = dynamicShooter.flywheelSpeed(dynamicShooter.distanceFromGoal(pos.getX(DistanceUnit.INCH), pos.getY(DistanceUnit.INCH)));
 
 
     @Override
@@ -26,6 +36,12 @@ public class TestShooter extends LinearOpMode {
         shooterU = hardwareMap.get(DcMotor.class, "shooterU");
         shooterD = hardwareMap.get(DcMotor.class, "shooterD");
         intake = hardwareMap.get(DcMotor.class, "intake");
+        odo = hardwareMap.get(GoBildaPinpointDriver.class,"pinpoint");
+        odo.setOffsets(-48, -156); //these are tuned for 3110-0002-0001 Product Insight #1
+        odo.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
+        odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.REVERSED);
+
+        odo.resetPosAndIMU();
 
         shooterU.setDirection(DcMotorSimple.Direction.REVERSE);
         shooterD.setDirection(DcMotorSimple.Direction.FORWARD);
@@ -37,31 +53,13 @@ public class TestShooter extends LinearOpMode {
 
 //            shooterU.setPower(gamepad1.right_stick_y);
 //            shooterD.setPower(gamepad1.right_stick_y);
-            if (gamepad1.a) {
-//                shooterU.setPower(0.7);
-//                shooterD.setPower(0.7);
-                Shooter.setShooterPower(Shooter.PIDControl(shooterEncSpeed, Shooter.getCurrentRPM()));
-            } else if (!gamepad1.a) {
-//                shooterU.setPower(0);
-//                shooterD.setPower(0);
-                Shooter.stopShooter();
-            }
 
-            if (gamepad1.dpad_up) {
-                shooterEncSpeed = shooterEncSpeed + 50;
-                while (gamepad1.dpad_up) {}
-            }
-            if (gamepad1.dpad_down) {
-                shooterEncSpeed = shooterEncSpeed - 50;
-                while (gamepad1.dpad_down) {}
-            }
-
-            intake.setPower(gamepad1.left_stick_y);
 
             telemetry.addData("Shooter Power: ", gamepad1.right_stick_y);
             telemetry.addData("Shooter rpm: ", shooterEncSpeed);
             telemetry.addData("Current Shooter RPM: ", Shooter.getCurrentRPM());
             telemetry.addData("Intake Power: ", gamepad1.left_stick_y);
+            telemetry.addData("goalDist: ", dynamicShooter.distanceFromGoal(pos.getX(DistanceUnit.INCH), pos.getY(DistanceUnit.INCH)));
 
             telemetry.update();
         }

@@ -26,4 +26,12 @@ public class dynamicShooter {
                 0.904
         ) + hoodOffset;
     }
+
+
+    public static double distanceFromGoal(double robotX, double robotY) {
+        double goalX = 42.0;
+        double goalY = 130.0;
+
+        return Math.hypot(goalX - robotX, goalY - robotY);
+    }
 }
