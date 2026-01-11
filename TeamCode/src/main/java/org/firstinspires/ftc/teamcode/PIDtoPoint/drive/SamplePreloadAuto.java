@@ -71,7 +71,7 @@ public class SamplePreloadAuto extends LinearOpMode {
                 headingDeg
         );
     }
-
+    static final Pose2D START_POSE = pose(88, 9, 90);
     static final Pose2D SHOOT_POSE = pose(88, 95, 0);
    static final Pose2D READY_TO_EMPTY = pose(110, 66, 90);
    static final Pose2D EMPTY_GATE = pose(120, 66, 90);
@@ -138,6 +138,7 @@ public class SamplePreloadAuto extends LinearOpMode {
 
         while (opModeIsActive()) {
             odo.update();
+            odo.setPosition(START_POSE);
 
             switch (stateMachine){
                 case DRIVE_START_TO_SHOOT:
@@ -156,58 +157,58 @@ public class SamplePreloadAuto extends LinearOpMode {
                         stateMachine = StateMachine.PAUSE_FOR_SHOOT_1;
                     }
                     break;
-                case PAUSE_FOR_SHOOT_1:
-                    //drive to the second target
-                    if (timer.time() > 1) {
-                        stateMachine = StateMachine.DRIVE_SHOOT_TO_INTAKE_READY_2;
-                    }
-                    break;
-                case DRIVE_SHOOT_TO_INTAKE_READY_2:
-                    if (nav.driveTo(odo.getPosition(), INTAKE_READY_SET_2, 0.7, 0)){
-                        telemetry.addLine("at position #1!");
-                        stateMachine = StateMachine.PAUSE_AFTER_INTAKE_READY_2;
-                    }
-                    break;
-                case PAUSE_AFTER_INTAKE_READY_2:
-                    if (timer.time() > 1) {
-                        stateMachine = StateMachine.DRIVE_INTAKE_READY_2_TO_INTAKE_2;
-                    }
-                    break;
-                case DRIVE_INTAKE_READY_2_TO_INTAKE_2:
-                    if (nav.driveTo(odo.getPosition(), ACTUALLY_DO_INTAKE_SET_2, 0.7, 0)){
-                        telemetry.addLine("at position #1!");
-                        stateMachine = StateMachine.PAUSE_AFTER_INTAKE_2;
-                    }
-                    break;
-                case PAUSE_AFTER_INTAKE_2:
-                    if (timer.time() > 1) {
-                        stateMachine = StateMachine.DRIVEBACK_TO_INTAKE_READY_2;
-                    }
-                    break;
-                case DRIVEBACK_TO_INTAKE_READY_2:
-                    if (nav.driveTo(odo.getPosition(), INTAKE_READY_SET_2, 0.7, 0)){
-                        telemetry.addLine("at position #1!");
-                        stateMachine = StateMachine.DRIVE_INTAKE_2_TO_READY_TO_EMPTY;
-                    }
-                    break;
-                case DRIVE_INTAKE_2_TO_READY_TO_EMPTY:
-                    if (nav.driveTo(odo.getPosition(),READY_TO_EMPTY, 0.7, 0)){
-                        telemetry.addLine("at position #1!");
-                        stateMachine = StateMachine.PAUSE_AFTER_READY_TO_EMPTY;
-                    }
-                    break;
-////                case DRIVE_TO_TARGET_4:
-////                    if(nav.driveTo(odo.getPosition(),TARGET_4,0.7,1)){
-////                        telemetry.addLine("at position #4");
-////                        stateMachine = StateMachine.DRIVE_TO_TARGET_5;
-////                    }
-////                    break;
-////                case DRIVE_TO_TARGET_5:
-////                    if(nav.driveTo(odo.getPosition(),TARGET_5,0.7,1)){
-////                        telemetry.addLine("There!");
-////                        stateMachine = StateMachine.AT_TARGET;
-////                    }
+//                case PAUSE_FOR_SHOOT_1:
+//                    //drive to the second target
+//                    if (timer.time() > 1) {
+//                        stateMachine = StateMachine.DRIVE_SHOOT_TO_INTAKE_READY_2;
+//                    }
 //                    break;
+//                case DRIVE_SHOOT_TO_INTAKE_READY_2:
+//                    if (nav.driveTo(odo.getPosition(), INTAKE_READY_SET_2, 0.7, 0)){
+//                        telemetry.addLine("at position #1!");
+//                        stateMachine = StateMachine.PAUSE_AFTER_INTAKE_READY_2;
+//                    }
+//                    break;
+//                case PAUSE_AFTER_INTAKE_READY_2:
+//                    if (timer.time() > 1) {
+//                        stateMachine = StateMachine.DRIVE_INTAKE_READY_2_TO_INTAKE_2;
+//                    }
+//                    break;
+//                case DRIVE_INTAKE_READY_2_TO_INTAKE_2:
+//                    if (nav.driveTo(odo.getPosition(), ACTUALLY_DO_INTAKE_SET_2, 0.7, 0)){
+//                        telemetry.addLine("at position #1!");
+//                        stateMachine = StateMachine.PAUSE_AFTER_INTAKE_2;
+//                    }
+//                    break;
+//                case PAUSE_AFTER_INTAKE_2:
+//                    if (timer.time() > 1) {
+//                        stateMachine = StateMachine.DRIVEBACK_TO_INTAKE_READY_2;
+//                    }
+//                    break;
+//                case DRIVEBACK_TO_INTAKE_READY_2:
+//                    if (nav.driveTo(odo.getPosition(), INTAKE_READY_SET_2, 0.7, 0)){
+//                        telemetry.addLine("at position #1!");
+//                        stateMachine = StateMachine.DRIVE_INTAKE_2_TO_READY_TO_EMPTY;
+//                    }
+//                    break;
+//                case DRIVE_INTAKE_2_TO_READY_TO_EMPTY:
+//                    if (nav.driveTo(odo.getPosition(),READY_TO_EMPTY, 0.7, 0)){
+//                        telemetry.addLine("at position #1!");
+//                        stateMachine = StateMachine.PAUSE_AFTER_READY_TO_EMPTY;
+//                    }
+//                    break;
+//////                case DRIVE_TO_TARGET_4:
+//////                    if(nav.driveTo(odo.getPosition(),TARGET_4,0.7,1)){
+//////                        telemetry.addLine("at position #4");
+//////                        stateMachine = StateMachine.DRIVE_TO_TARGET_5;
+//////                    }
+//////                    break;
+//////                case DRIVE_TO_TARGET_5:
+//////                    if(nav.driveTo(odo.getPosition(),TARGET_5,0.7,1)){
+//////                        telemetry.addLine("There!");
+//////                        stateMachine = StateMachine.AT_TARGET;
+//////                    }
+////                    break;
             }
 
 
