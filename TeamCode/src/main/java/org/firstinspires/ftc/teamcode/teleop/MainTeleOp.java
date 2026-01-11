@@ -196,11 +196,11 @@ public class MainTeleOp extends LinearOpMode {
             }
             if (gamepad1.dpadDownWasPressed()) {
                 shooterEncSpeed = 1200;
-                shooterHoodAngle = 0.3;
+                shooterHoodAngle = Shooter.HoodState.DOWN.angle;
             }
             if (gamepad1.dpadRightWasPressed()) {
                 shooterEncSpeed = 1600;
-                shooterHoodAngle = Shooter.HoodState.DOWN.angle;
+                shooterHoodAngle = 0.3;
             }
 
 
@@ -208,6 +208,7 @@ public class MainTeleOp extends LinearOpMode {
             // Intake Controls
             if (gamepad2.left_bumper && !gamepad2.a && !gamepad2.x) {
                 Intake.runIntake();
+                HelperServos.setStopperStop();
                 Intake.raiseIntake();
             }
             if (gamepad2.a && !gamepad2.left_bumper && !gamepad2.x) {
@@ -221,7 +222,8 @@ public class MainTeleOp extends LinearOpMode {
                 Intake.stopIntake();
             }
             if (gamepad2.x && !gamepad2.a && !gamepad2.left_bumper) {
-                Intake.runIntakeSlow();
+                Intake.runIntake();
+                HelperServos.setStopperPass();
             }
 
             if (gamepad2.yWasPressed()) {
