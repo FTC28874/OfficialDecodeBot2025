@@ -16,6 +16,8 @@ import org.firstinspires.ftc.teamcode.robot.HelperServos;
 import org.firstinspires.ftc.teamcode.robot.Turret;
 
 
+// speed close 1200
+// speed far pos 2000
 
 @TeleOp(name="Main Teleop", group="Linear OpMode")
 public class MainTeleOp extends LinearOpMode {
@@ -41,6 +43,9 @@ public class MainTeleOp extends LinearOpMode {
     // Convert to millimeters for most odometry systems:
     final double startX_mm = startX_in * 25.4;
     final double startY_mm = startY_in * 25.4;
+
+    private boolean stopperStop = false;
+    private boolean prevB = false;
 
 
     @Override
@@ -82,15 +87,6 @@ public class MainTeleOp extends LinearOpMode {
         telemetry.update();
 
         // Reset servos
-        Intake.raiseIntake();
-        sleep(1500);
-        Intake.lowerIntake();
-        sleep(1500);
-        Shooter.lowerShooter();
-        sleep(1500);
-        Shooter.raiseShooter();
-        sleep(1500);
-        Shooter.lowerShooter();
 
         pinpoint.setPosX(startX_in, DistanceUnit.INCH);
         pinpoint.setPosY(startY_in, DistanceUnit.INCH);
@@ -159,6 +155,11 @@ public class MainTeleOp extends LinearOpMode {
             telemetry.addData("Shooter Target Speed: ", shooterEncSpeed);
             telemetry.addData("Shooter RPM Error: ", Math.abs(Shooter.getCurrentRPM() - shooterEncSpeed));
             telemetry.addData("Turret Position; ", Shooter.getTurretPosition());
+            telemetry.addData("X Position: ", pinpoint.getXOffset(DistanceUnit.INCH));
+            telemetry.addData("Y Position: ", pinpoint.getYOffset(DistanceUnit.INCH));
+            telemetry.addData("Heading: ", pinpoint.getHeading(AngleUnit.DEGREES));
+            telemetry.addData("ShooterServo Position: ", shooterHoodAngle);
+            telemetry.addData("StopperServo Closed? ", stopperStop);
             telemetry.update();
 
 
@@ -168,27 +169,41 @@ public class MainTeleOp extends LinearOpMode {
             double robotHeading = pinpoint.getHeading(AngleUnit.DEGREES);
 
             // Manual Override
-            if (Math.abs(gamepad2.right_stick_x) > 0.1) {
-                Turret.setTurretAngle(gamepad2.right_stick_x * 90);
-            } else {
-                Turret.aimAtRedGoal(robotX, robotY, robotHeading);
-            }
-
-            // Emergency Stop \
-            if (gamepad2.yWasPressed()) {
-                Turret.stop();
-            }
+//            if (Math.abs(gamepad2.right_stick_x) > 0.1) {
+//                Turret.setTurretAngle(gamepad2.right_stick_x * 90);
+//            } else {
+//                Turret.aimAtRedGoal(robotX, robotY, robotHeading);
+//            }
+//
+//            // Emergency Stop \
+//            if (gamepad2.yWasPressed()) {
+//                Turret.stop();
+//            }a
 
 
             // --- Shooter / Intake Controls ---
 
             // Shooter Speed Control
-            if (gamepad1.dpadUpWasPressed()) {
+            if (gamepad1.rightBumperWasPressed()) {
                 shooterEncSpeed = shooterEncSpeed + 50;
             }
-            if (gamepad1.dpadDownWasPressed()) {
+            if (gamepad1.leftBumperWasPressed()) {
                 shooterEncSpeed = shooterEncSpeed - 50;
             }
+            if (gamepad1.dpadUpWasPressed()) {
+                shooterEncSpeed = 2000;
+                shooterHoodAngle = 0.55;
+            }
+            if (gamepad1.dpadDownWasPressed()) {
+                shooterEncSpeed = 1200;
+                shooterHoodAngle = 0.3;
+            }
+            if (gamepad1.dpadRightWasPressed()) {
+                shooterEncSpeed = 1600;
+                shooterHoodAngle = Shooter.HoodState.DOWN.angle;
+            }
+
+
 
             // Intake Controls
             if (gamepad2.left_bumper && !gamepad2.a && !gamepad2.x) {
@@ -204,17 +219,18 @@ public class MainTeleOp extends LinearOpMode {
             }
             if (!gamepad2.a && !gamepad2.left_bumper && !gamepad2.x) {
                 Intake.stopIntake();
-                Intake.lowerIntake();
             }
             if (gamepad2.x && !gamepad2.a && !gamepad2.left_bumper) {
                 Intake.runIntakeSlow();
             }
 
-            // Shooter FlyWheel Control
-            if (gamepad2.right_bumper) {
-                Shooter.setShooterPower(Shooter.PIDControl(shooterEncSpeed, Shooter.getCurrentRPM()));
+            if (gamepad2.yWasPressed()) {
+                Intake.lowerIntake();
             }
-            if (!gamepad2.right_bumper) {
+
+            // Shooter FlyWheel Control
+            Shooter.setShooterPower(Shooter.PIDControl(shooterEncSpeed, Shooter.getCurrentRPM()));
+            if (gamepad2.right_bumper) {
                 Shooter.stopShooter();
             }
 
@@ -251,13 +267,26 @@ public class MainTeleOp extends LinearOpMode {
 //            }
 
             // Stopper Servo
-            if (gamepad1.aWasPressed()) {
-                HelperServos.setStopperPass();
+            if (gamepad2.b && !prevB) {
+                if (stopperStop) {
+                    HelperServos.setStopperPass();
+                } else {
+                    HelperServos.setStopperStop();
+                }
+                stopperStop = !stopperStop;
             }
-            if (gamepad1.bWasPressed()) {
-                HelperServos.setStopperStop();
+
+            prevB = gamepad2.b;
+
+            if (gamepad2.left_trigger > 0.1) {
+                Shooter.turnTurretDirection(false, 0.2);
             }
-//
+            if (gamepad2.right_trigger > 0.1) {
+                Shooter.turnTurretDirection(true, 0.2);
+            }
+            if (gamepad2.left_trigger == 0 && gamepad2.right_trigger == 0) {
+                Shooter.turnTurretDirection(true, 0);
+            }
         }
     }
 }

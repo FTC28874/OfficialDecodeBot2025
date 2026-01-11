@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.teleop.tests;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -11,6 +12,7 @@ import org.firstinspires.ftc.teamcode.robot.Intake;
 import org.firstinspires.ftc.teamcode.robot.Shooter;
 
 @TeleOp(name="Test Servo 123", group = "Linear OpMode")
+@Disabled
 public class TestServo extends LinearOpMode {
 
     private ElapsedTime runtime = new ElapsedTime();

@@ -12,7 +12,7 @@ public final class Turret {
 
     /* ------------------ HARDWARE ----------------- */
     private static DcMotorEx turretMotor;
-    private static DcMotorEx encoderMotor; // driveFL
+    private static DcMotorEx encoderMotor; // driveFR
 
     /* ------------------ CONSTANTS ------------------ */
 
