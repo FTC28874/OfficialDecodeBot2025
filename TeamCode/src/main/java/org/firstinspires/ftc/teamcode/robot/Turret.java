@@ -25,8 +25,8 @@ public final class Turret {
     private static final double kP = 0.01;
 
     /* ------------------ FIELD ------------------ */
-    private static final double RED_GOAL_X = 72.0;
-    private static final double RED_GOAL_Y = 144.0;
+    private static final double RED_GOAL_X = 68.0;
+    private static final double RED_GOAL_Y = -68.0;
 
     /* ------------------ STATE ------------------ */
     private static boolean initialized = false;
@@ -60,7 +60,7 @@ public final class Turret {
     public static void aimAtRedGoal(double robotX, double robotY, double robotHeadingDeg) {
         if (!initialized) return;
 
-        double fieldTargetAngleDeg = calculateFieldTargetAngle(robotX, robotY);
+        double fieldTargetAngleDeg = calculateFieldTargetAngle(robotX, robotY) - 90;
         double turretTargetAngleDeg =
                 normalizeAngle(fieldTargetAngleDeg - robotHeadingDeg);
         double turretPosition = -(encoderMotor.getCurrentPosition());
@@ -83,11 +83,11 @@ public final class Turret {
                 MAX_ANGLE_DEG
         );
 
-        double targetTicks = degreesToTicks(targetAngleDeg);
+        double targetTicks = degreesToTicks(targetAngleDeg * 0.85);
         double error = targetTicks - getCurrentTurretTicks();
 
         double power = Range.clip(error * kP, -1.0, 1.0);
-        turretMotor.setPower(power);
+        turretMotor.setPower(power * 0.5);
     }
 
     public static void stop() {
@@ -97,7 +97,7 @@ public final class Turret {
 
     /* ------------------ INTERNAL ------------------ -*/
 
-    private static double getCurrentTurretTicks() {
+    public static double getCurrentTurretTicks() {
         double turretPosition = -(encoderMotor.getCurrentPosition());
         return encoderMotor.getCurrentPosition() - turretZeroOffsetTicks;
     }
