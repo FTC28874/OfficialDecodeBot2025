@@ -42,6 +42,7 @@ public class FarFromRedGoal extends LinearOpMode {
     DcMotorEx turretEncoder = null;
     DcMotor turret = null;
     ElapsedTime timer = null; //asdf
+    double shooterEncSpeed = 2000;
 
     GoBildaPinpointDriver odo = null; // Declare OpMode member for the Odometry Computer
     DriveToPoint nav = new DriveToPoint(this); //OpMode member for the point-to-point navigation class
@@ -58,6 +59,8 @@ public class FarFromRedGoal extends LinearOpMode {
         DRIVE_TO_TARGET_5,
         DRIVE_TO_TARGET_6,
         DRIVE_TO_TARGET_7,
+        DRIVE_TO_TARGET_8,
+        DRIVE_TO_TARGET_9,
         DONE
     }
 
@@ -68,6 +71,7 @@ public class FarFromRedGoal extends LinearOpMode {
     static final Pose2D INTAKE_ROW_1 = new Pose2D(DistanceUnit.INCH, 76, -29, AngleUnit.DEGREES, -90);
     static final Pose2D BEGIN_INTAKE_ROW_3 = new Pose2D(DistanceUnit.INCH, 28, 0, AngleUnit.DEGREES, -90);
     static final Pose2D INTAKE_ROW_3 = new Pose2D(DistanceUnit.INCH, 28, -29, AngleUnit.DEGREES, -90);
+    static final Pose2D END_AUTO = new Pose2D(DistanceUnit.INCH, 52, 0, AngleUnit.DEGREES, 0);
 
     public double inToMM(double inValue) {
         return inValue * 25.4;
@@ -143,7 +147,7 @@ public class FarFromRedGoal extends LinearOpMode {
         while (opModeIsActive()) {
             odo.update();
             Shooter.setShooterPosition(0.55);
-            Shooter.setShooterPower(Shooter.PIDControl(2000, Shooter.getCurrentRPM()));
+            Shooter.setShooterPower(Shooter.PIDControl(shooterEncSpeed, Shooter.getCurrentRPM()));
             switch (stateMachine){
                 case WAITING_FOR_START:
                     //the first step in the autonomous
@@ -224,7 +228,37 @@ public class FarFromRedGoal extends LinearOpMode {
                         if (timer.time() > 1) {
                             HelperServos.setStopperPass();
                             timer.reset();
+                            stateMachine = StateMachine.DRIVE_TO_TARGET_7;
+                        }
+                    }
+                    break;
+                case DRIVE_TO_TARGET_7:
+                    if (nav.driveTo(odo.getPosition(), BEGIN_INTAKE_ROW_3, 0.6, 0.5)) {
+                        timer.reset();
+                        stateMachine = StateMachine.DRIVE_TO_TARGET_8;
+                    }
+                    break;
+                case DRIVE_TO_TARGET_8:
+                    if (nav.driveTo(odo.getPosition(), INTAKE_ROW_3, 0.6, 0.5)) {
+                        timer.reset();
+                        stateMachine = StateMachine.DRIVE_TO_TARGET_9;
+                    }
+                    break;
+                case DRIVE_TO_TARGET_9:
+                    if (nav.driveTo(odo.getPosition(), SHOOT_POSE, 0.25, 0.5)) {
+                        if (timer.time() > 1) {
+                            HelperServos.setStopperPass();
+                            timer.reset();
                             stateMachine = StateMachine.DONE;
+                        }
+                    }
+                    break;
+                case DONE:
+                    if (nav.driveTo(odo.getPosition(), END_AUTO, 0.25, 0.5)) {
+                        if (timer.time() > 1) {
+                            timer.reset();
+                            shooterEncSpeed = 0;
+                            Intake.stopIntake();
                         }
                     }
                     break;
