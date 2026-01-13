@@ -49,7 +49,6 @@ public class FarFromRedGoal extends LinearOpMode {
 
     enum StateMachine {
         WAITING_FOR_START,
-        AT_TARGET,
         DRIVE_TO_TARGET_1,
         DRIVE_TO_TARGET_2,
         WAIT,
@@ -262,45 +261,6 @@ public class FarFromRedGoal extends LinearOpMode {
                         }
                     }
                     break;
-//                case WAIT_TO_CLAW:
-//                    Intake.runIntake();
-//                    if (timer.time() > 1.0) {
-//                        stateMachine = StateMachine.DRIVE_TO_TARGET_2;
-//                    }
-//                    Intake.lowerIntake();
-//                    break;
-//                case DRIVE_TO_TARGET_2:
-//                    //drive to the second target
-//                    Intake.stopIntake();
-//                    if (nav.driveTo(odo.getPosition(), TARGET_2, 0.4, 1)) {
-//                        telemetry.addLine("at position #2!");
-//                        timer.reset();
-//                        stateMachine = StateMachine.WAIT_TO_CLAW;
-//                    }
-//                    break;
-//                case WAIT_TO_CLAW:
-//                    if (timer.time() > 0.5) {
-//                        stateMachine = StateMachine.DRIVE_TO_TARGET_3;
-//                    }
-//                    break;
-//                case DRIVE_TO_TARGET_3:
-//                    if(nav.driveTo(odo.getPosition(), TARGET_3, 0.7, 0)){
-//                        telemetry.addLine("at position #3");
-//                        stateMachine = StateMachine.DRIVE_TO_TARGET_4;
-//                    }
-//                    break;
-////                case DRIVE_TO_TARGET_4:
-////                    if(nav.driveTo(odo.getPosition(),TARGET_4,0.7,1)){
-////                        telemetry.addLine("at position #4");
-////                        stateMachine = StateMachine.DRIVE_TO_TARGET_5;
-////                    }
-////                    break;
-////                case DRIVE_TO_TARGET_5:
-////                    if(nav.driveTo(odo.getPosition(),TARGET_5,0.7,1)){
-////                        telemetry.addLine("There!");
-////                        stateMachine = StateMachine.AT_TARGET;
-////                    }
-//                    break;
             }
 
 
