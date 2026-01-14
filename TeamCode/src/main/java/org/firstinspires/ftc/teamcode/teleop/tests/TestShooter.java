@@ -9,8 +9,8 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
-import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import org.firstinspires.ftc.teamcode.robot.Intake;
+import org.firstinspires.ftc.teamcode.PIDtoPoint.drive.GoBildaPinpointDriver;
 import org.firstinspires.ftc.teamcode.robot.dynamicShooter;
 
 import org.firstinspires.ftc.teamcode.robot.Shooter;
@@ -31,10 +31,6 @@ public class TestShooter extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-
-        shooterU = hardwareMap.get(DcMotor.class, "shooterU");
-        shooterD = hardwareMap.get(DcMotor.class, "shooterD");
-        intake = hardwareMap.get(DcMotor.class, "intake");
         odo = hardwareMap.get(GoBildaPinpointDriver.class,"pinpoint");
         odo.setOffsets(-48, -156, DistanceUnit.INCH); //these are tuned for 3110-0002-0001 Product Insight #1
         odo.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
