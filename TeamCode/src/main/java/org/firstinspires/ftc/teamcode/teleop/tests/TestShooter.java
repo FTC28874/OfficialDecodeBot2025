@@ -22,8 +22,8 @@ public class TestShooter extends LinearOpMode {
     private DcMotor shooterU = null;
     private DcMotor shooterD = null;
     private DcMotor intake = null;
-    private GoBildaPinpointDriver odo;
-    Pose2D pos = odo.getPosition();
+    private GoBildaPinpointDriver odo = null;
+    Pose2D pos = null; //odo.getPosition(); ✅ ️
 
 
     private double shooterEncSpeed = dynamicShooter.flywheelSpeed(dynamicShooter.distanceFromGoal(pos.getX(DistanceUnit.INCH), pos.getY(DistanceUnit.INCH)));
@@ -35,6 +35,8 @@ public class TestShooter extends LinearOpMode {
         odo.setOffsets(-48, -156, DistanceUnit.INCH); //these are tuned for 3110-0002-0001 Product Insight #1
         odo.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
         odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.REVERSED);
+
+        pos = odo.getPosition();
 
         odo.resetPosAndIMU();
 

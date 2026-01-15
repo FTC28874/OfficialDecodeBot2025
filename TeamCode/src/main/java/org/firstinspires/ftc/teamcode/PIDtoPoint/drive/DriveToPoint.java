@@ -38,7 +38,7 @@ public class DriveToPoint {
         IN_BOUNDS
     }
 
-    private static double xyTolerance = 12;
+    private static double xyTolerance = 15; // Edit this to increase dead zones.
     private static double yawTolerance = 0.0349066;
 
     private static double pGain = 0.008;

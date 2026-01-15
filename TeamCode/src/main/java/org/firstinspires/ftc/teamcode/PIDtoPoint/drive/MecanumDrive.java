@@ -21,7 +21,7 @@ public class MecanumDrive {
 
     private Pose2D targetPose = null;
     private double kP_position = 0.01;
-    private double kP_heading = 0.01;
+    private double kP_heading = 0.02;
     private double maxPower = 0.6;
 
     public MecanumDrive(HardwareMap hardwareMap) {
