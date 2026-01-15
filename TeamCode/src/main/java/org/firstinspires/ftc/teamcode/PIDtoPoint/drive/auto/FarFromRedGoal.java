@@ -236,7 +236,7 @@ public class FarFromRedGoal extends LinearOpMode {
                     }
                     break;
                 case DRIVE_TO_TARGET_6:
-                    if (nav.driveTo(odo.getPosition(), SHOOT_POSE, 0.35, 0.5) || timer.time() > 3.0) {
+                    if (nav.driveTo(odo.getPosition(), SHOOT_POSE, 0.35, 0.5)) {
                         telemetry.addLine("At position #3");
                         timer.reset();
                         stateMachine = StateMachine.WAIT_3;
@@ -280,7 +280,7 @@ public class FarFromRedGoal extends LinearOpMode {
                     }
                     break;
                 case DRIVE_TO_TARGET_9:
-                    if (nav.driveTo(odo.getPosition(), SHOOT_POSE, 0.35, 0.5) || timer.time() > 3.0) {
+                    if (nav.driveTo(odo.getPosition(), SHOOT_POSE, 0.35, 0.5)) {
                         timer.reset();
                         stateMachine = StateMachine.WAIT_4;
                     }
