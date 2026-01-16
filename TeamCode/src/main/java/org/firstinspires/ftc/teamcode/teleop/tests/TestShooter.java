@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.robot.Intake;
@@ -16,6 +17,7 @@ import org.firstinspires.ftc.teamcode.robot.dynamicShooter;
 import org.firstinspires.ftc.teamcode.robot.Shooter;
 
 @TeleOp(name="Test Shooter 123", group="Linear OpMode")
+@Disabled
 public class TestShooter extends LinearOpMode {
 
     private ElapsedTime runtime = new ElapsedTime();
@@ -26,7 +28,6 @@ public class TestShooter extends LinearOpMode {
     Pose2D pos = null; //odo.getPosition(); ✅ ️
 
 
-    private double shooterEncSpeed = dynamicShooter.flywheelSpeed(dynamicShooter.distanceFromGoal(pos.getX(DistanceUnit.INCH), pos.getY(DistanceUnit.INCH)));
 
 
     @Override
@@ -36,12 +37,8 @@ public class TestShooter extends LinearOpMode {
         odo.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
         odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.REVERSED);
 
-        pos = odo.getPosition();
 
         odo.resetPosAndIMU();
-
-        shooterU.setDirection(DcMotorSimple.Direction.REVERSE);
-        shooterD.setDirection(DcMotorSimple.Direction.FORWARD);
 
         org.firstinspires.ftc.teamcode.robot.Shooter.init(hardwareMap);
 
@@ -50,13 +47,16 @@ public class TestShooter extends LinearOpMode {
 
 //            shooterU.setPower(gamepad1.right_stick_y);
 //            shooterD.setPower(gamepad1.right_stick_y);
-
+            odo.update();
+            pos = odo.getPosition();
+            double shooterEncSpeed = dynamicShooter.flywheelSpeed(dynamicShooter.distanceFromGoal(pos.getX(DistanceUnit.INCH), pos.getY(DistanceUnit.INCH), pos.getHeading(AngleUnit.RADIANS)));
+//            Shooter.setShooterPower();
 
             telemetry.addData("Shooter Power: ", gamepad1.right_stick_y);
             telemetry.addData("Shooter rpm: ", shooterEncSpeed);
             telemetry.addData("Current Shooter RPM: ", Shooter.getCurrentRPM());
             telemetry.addData("Intake Power: ", gamepad1.left_stick_y);
-            telemetry.addData("goalDist: ", dynamicShooter.distanceFromGoal(pos.getX(DistanceUnit.INCH), pos.getY(DistanceUnit.INCH)));
+            telemetry.addData("goalDist: ", dynamicShooter.distanceFromGoal(pos.getX(DistanceUnit.INCH), pos.getY(DistanceUnit.INCH), pos.getHeading(AngleUnit.RADIANS)));
 
             telemetry.update();
         }

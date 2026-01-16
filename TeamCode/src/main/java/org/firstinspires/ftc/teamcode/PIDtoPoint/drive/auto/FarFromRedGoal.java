@@ -203,7 +203,7 @@ public class FarFromRedGoal extends LinearOpMode {
                     if (timer.time() > 0.5) {
                         HelperServos.setStopperPass();
                     }
-                    if (timer.time() > 2) {
+                    if (timer.time() > 2.5) {
                         timer.reset();
                         HelperServos.setStopperStop();
                         stateMachine = StateMachine.DRIVE_TO_TARGET_4;
@@ -243,10 +243,10 @@ public class FarFromRedGoal extends LinearOpMode {
                     }
                     break;
                 case WAIT_3:
-                    if (timer.time() > 0.5) {
+                    if (timer.time() > 1) {
                         HelperServos.setStopperPass();
                     }
-                    if (timer.time() > 2) {
+                    if (timer.time() > 2.5) {
                         timer.reset();
                         HelperServos.setStopperStop();
                         stateMachine = StateMachine.DRIVE_TO_TARGET_7;

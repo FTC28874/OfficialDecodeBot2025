@@ -46,6 +46,7 @@ public class MainTeleOp extends LinearOpMode {
 
     private boolean stopperStop = false;
     private boolean prevB = false;
+    private double driverSensitivity = 1.0;
 
 
     @Override
@@ -102,9 +103,9 @@ public class MainTeleOp extends LinearOpMode {
             double max;
 
             // POV Mode uses left joystick to go forward & strafe, and right joystick to rotate.
-            double axial   = -gamepad1.left_stick_y;  // Note: pushing stick forward gives negative value
-            double lateral =  gamepad1.left_stick_x;
-            double yaw     =  gamepad1.right_stick_x;
+            double axial   = -gamepad1.left_stick_y * driverSensitivity;  // Note: pushing stick forward gives negative value
+            double lateral =  gamepad1.left_stick_x * driverSensitivity;
+            double yaw     =  gamepad1.right_stick_x * driverSensitivity;
 
             // Combine the joystick requests for each axis-motion to determine each wheel's power.
             // Set up a variable for each drive wheel to save the power level for telemetry.
@@ -201,6 +202,16 @@ public class MainTeleOp extends LinearOpMode {
             if (gamepad1.dpadRightWasPressed()) {
                 shooterEncSpeed = 1600;
                 shooterHoodAngle = 0.3;
+            }
+
+            // Driver Sensitivity Controls
+            if (gamepad1.yWasPressed()) {
+                shooterEncSpeed = 0;
+                driverSensitivity = 0.5;
+            }
+            if (gamepad1.xWasPressed()) {
+                shooterEncSpeed = 1200;
+                driverSensitivity = 1.0;
             }
 
 

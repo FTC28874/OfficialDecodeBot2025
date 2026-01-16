@@ -27,11 +27,24 @@ public class dynamicShooter {
         ) + hoodOffset;
     }
 
+    /**
+     * Calculates true field-relative distance from the goal.
+     *
+     * @param robotX   Robot X relative to start (inches)
+     * @param robotY   Robot Y relative to start (inches)
+     * @param heading  Robot heading in radians (field CCW+)
+     */
+    public static double distanceFromGoal(double robotX, double robotY, double heading) {
 
-    public static double distanceFromGoal(double robotX, double robotY) {
-        double goalX = 42.0;
-        double goalY = 130.0;
+        // Goal position in FIELD coordinates (inches)
+        double goalX = 130.0;
+        double goalY = 42.0;
 
-        return Math.hypot(goalX - robotX, goalY - robotY);
+        // Rotate robot-relative position into field coordinates
+        double fieldX = robotX * Math.cos(heading) - robotY * Math.sin(heading);
+        double fieldY = robotX * Math.sin(heading) + robotY * Math.cos(heading);
+
+        // Euclidean distance to goal
+        return Math.hypot(goalX - fieldX, goalY - fieldY);
     }
 }
