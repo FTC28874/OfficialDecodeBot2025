@@ -105,7 +105,7 @@ public class Shooter {
     public static double getCurrentRPM() {
         double currentTicksPerSecond = shooterD.getVelocity();
 
-        return ((currentTicksPerSecond * 60.0) / COUNTS_PER_REVOLUTION) * -1;
+        return ((currentTicksPerSecond * 60.0) / COUNTS_PER_REVOLUTION) * 1;
     }
 
     /**

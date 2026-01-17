@@ -192,15 +192,15 @@ public class MainTeleOp extends LinearOpMode {
                 shooterEncSpeed = shooterEncSpeed - 50;
             }
             if (gamepad1.dpadUpWasPressed()) {
-                shooterEncSpeed = 2000;
+                shooterEncSpeed = 3250;
                 shooterHoodAngle = 0.55;
             }
             if (gamepad1.dpadDownWasPressed()) {
-                shooterEncSpeed = 1200;
+                shooterEncSpeed = 1800;
                 shooterHoodAngle = Shooter.HoodState.DOWN.angle;
             }
             if (gamepad1.dpadRightWasPressed()) {
-                shooterEncSpeed = 1600;
+                shooterEncSpeed = 2450;
                 shooterHoodAngle = 0.3;
             }
 
@@ -292,10 +292,10 @@ public class MainTeleOp extends LinearOpMode {
             prevB = gamepad2.b;
 
             if (gamepad2.left_trigger > 0.1) {
-                Shooter.turnTurretDirection(false, 0.2);
+                Shooter.turnTurretDirection(false, 0.4);
             }
             if (gamepad2.right_trigger > 0.1) {
-                Shooter.turnTurretDirection(true, 0.2);
+                Shooter.turnTurretDirection(true, 0.4);
             }
             if (gamepad2.left_trigger == 0 && gamepad2.right_trigger == 0) {
                 Shooter.turnTurretDirection(true, 0);
