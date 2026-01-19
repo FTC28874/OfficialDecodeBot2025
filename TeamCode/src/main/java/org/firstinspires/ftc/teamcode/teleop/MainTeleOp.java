@@ -77,6 +77,11 @@ public class MainTeleOp extends LinearOpMode {
         driveFR.setDirection(DcMotor.Direction.FORWARD);
         driveBR.setDirection(DcMotor.Direction.FORWARD);
 
+        driveFL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        driveBL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        driveFR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        driveBR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
         // Init Helper Classes
         org.firstinspires.ftc.teamcode.robot.Shooter.init(hardwareMap);
         org.firstinspires.ftc.teamcode.robot.Intake.init(hardwareMap);
