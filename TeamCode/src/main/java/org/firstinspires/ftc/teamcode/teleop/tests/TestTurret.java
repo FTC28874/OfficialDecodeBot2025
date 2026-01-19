@@ -46,12 +46,12 @@ public class TestTurret extends LinearOpMode {
                 Turret.setTurretAngle(45.0);
             }
             if (gamepad1.a) {
-                Turret.aimAtRedGoal(odo.getPosX(INCH) - 4, odo.getPosY(INCH), odo.getHeading(DEGREES));
+                Turret.aimAtRedGoal(odo.getXOffset(INCH) - 4, odo.getYOffset(INCH), odo.getHeading(DEGREES));
             }
             odo.update();
             telemetry.addData("turret angle: ", Turret.getCurrentTurretTicks());
-            telemetry.addData("x: ", odo.getPosX(INCH));
-            telemetry.addData("y: ", odo.getPosY(INCH));
+            telemetry.addData("x: ", odo.getXOffset(INCH));
+            telemetry.addData("y: ", odo.getYOffset(INCH));
             telemetry.addData("heading: ", odo.getHeading(DEGREES));
             telemetry.update();
 
