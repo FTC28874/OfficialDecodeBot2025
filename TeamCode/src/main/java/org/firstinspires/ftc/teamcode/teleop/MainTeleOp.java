@@ -208,6 +208,10 @@ public class MainTeleOp extends LinearOpMode {
                 shooterEncSpeed = 2450;
                 shooterHoodAngle = 0.3;
             }
+            if (gamepad1.dpadLeftWasPressed()) {
+                shooterEncSpeed = 2000;
+                shooterHoodAngle = 0.25;
+            }
 
             // Driver Sensitivity Controls
             if (gamepad1.yWasPressed()) {
@@ -247,7 +251,9 @@ public class MainTeleOp extends LinearOpMode {
             }
 
             // Shooter FlyWheel Control
-            Shooter.setShooterPower(Shooter.PIDControl(shooterEncSpeed, Shooter.getCurrentRPM()));
+            if (!gamepad2.right_bumper) {
+                Shooter.setShooterPower(Shooter.PIDControl(shooterEncSpeed, Shooter.getCurrentRPM()));
+            }
             if (gamepad2.right_bumper) {
                 Shooter.stopShooter();
             }

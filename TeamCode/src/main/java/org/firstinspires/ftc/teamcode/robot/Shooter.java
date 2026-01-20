@@ -58,9 +58,24 @@ public class Shooter {
         shooterU.setDirection(DcMotorSimple.Direction.REVERSE);
 
         shooterD.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
-        shooterU.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        shooterU.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
 
 
+    }
+
+    public enum ShootPositionState {
+        CLOSE_RPM(1800),
+        MID_MID_RPM(2050),
+        MID_RPM(2450),
+        FAR_RPM(3250),
+        CLOSE_HOOD(HoodState.DOWN.angle),
+        MID_MID_HOOD(0.25),
+        MID_HOOD(0.3),
+        FAR_HOOD(0.55);
+        private final double position;
+        ShootPositionState(double position) {
+            this.position = position;
+        }
     }
 
     private enum PowerState {
