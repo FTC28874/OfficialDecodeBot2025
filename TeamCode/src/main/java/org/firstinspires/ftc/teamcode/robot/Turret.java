@@ -1,152 +1,284 @@
 package org.firstinspires.ftc.teamcode.robot;
 
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.Range;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 
-/**
- * Turret helper
- * Uses Pinpoint odometry X/Y + heading
- * Encoder read from driveFR
- */
-public final class Turret {
+public class Turret {
 
-    /* ================= HARDWARE ================= */
+    // Hardware
+    private static DcMotorEx turretMotor = null;
+    private static DcMotorEx encoderPort = null; // driveFR port used for encoder
 
-    private static DcMotorEx turretMotor;
-    private static DcMotorEx encoderMotor; // driveFR encoder only
+    // Gear ratio calculations
+    private static final double DRIVE_PULLEY_TEETH = 24.0;
+    private static final double TURRET_TEETH = 125.0;
+    private static final double GEAR_RATIO = TURRET_TEETH / DRIVE_PULLEY_TEETH; // 5.208333
 
-    /* ================= CONSTANTS ================= */
+    // Motor specifications
+    private static final double MOTOR_RPM = 435.0;
+    private static final double MOTOR_TICKS_PER_REV = 384.5; // GoBilda 435 RPM Yellow Jacket
 
-    private static final double MOTOR_TICKS_PER_REV = 537.6; // 435 RPM YJ
-    private static final double GEAR_RATIO = 125.0 / 24.0;
+    // Turret angle calculations
+    private static final double TICKS_PER_TURRET_DEGREE = (MOTOR_TICKS_PER_REV * GEAR_RATIO) / 360.0;
 
-    private static final double MIN_ANGLE_DEG = -90.0;
-    private static final double MAX_ANGLE_DEG =  90.0;
+    // PID constants - tune these for your robot
+    private static double kP = 0.015;
+    private static double kI = 0.0001;
+    private static double kD = 0.001;
 
-    private static final double kP = 0.008;
-    private static final double MAX_POWER = 0.45;
-    private static final double ANGLE_DEADBAND_DEG = 1.0;
+    private static double lastError = 0;
+    private static double integralSum = 0;
+    private static long lastUpdateTime = 0;
 
-    /* ================= FIELD ================= */
+    // Goal position (field coordinates in inches)
+    // MODIFY THESE VALUES for your field setup
+    private static double goalX = 0.0;  // X position of goal
+    private static double goalY = 72.0; // Y position of goal (example: 6 feet out)
 
-    // Decode field, inches, origin at center
-    private static final double RED_GOAL_X =  68.0;
-    private static final double RED_GOAL_Y = -68.0;
+    // Turret offset from robot center (in inches)
+    private static double turretOffsetX = 0.0;
+    private static double turretOffsetY = 0.0;
 
-    /* ================= STATE ================= */
+    // Angle limits (in degrees) - adjust based on your physical constraints
+    private static double minAngle = -180.0;
+    private static double maxAngle = 180.0;
 
-    private static boolean initialized = false;
-    private static double zeroOffsetTicks = 0.0;
-
-    /* ================= INIT ================= */
-
-    public static void init(HardwareMap hardwareMap) {
-        turretMotor  = hardwareMap.get(DcMotorEx.class, "turret");
-        encoderMotor = hardwareMap.get(DcMotorEx.class, "driveFR");
-
-        turretMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
-        turretMotor.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
-
-        initialized = true;
-    }
-
-    /** Call ONCE when turret is physically centered */
-    public static void zeroTurret() {
-        if (!initialized) return;
-        zeroOffsetTicks = encoderMotor.getCurrentPosition();
-    }
-
-    /* ================= MAIN LOOP ================= */
+    private static double targetAngle = 0.0;
 
     /**
-     * Aim turret at red goal using FULL field-centric math
+     * Initialize the turret system
+     * @param hardwareMap The hardware map from your OpMode
      */
-    public static void aimAtRedGoal(
-            double robotX,
-            double robotY,
-            double robotHeadingDeg
-    ) {
-        if (!initialized) return;
+    public static void init(HardwareMap hardwareMap) {
+        // Initialize turret motor
+        turretMotor = hardwareMap.get(DcMotorEx.class, "turret");
+        turretMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        turretMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        turretMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        // 1️⃣ Field angle from robot to goal
-        double fieldAngleDeg = calculateFieldAngleToGoal(robotX, robotY);
+        // Use driveFR port for encoder reading
+        encoderPort = hardwareMap.get(DcMotorEx.class, "driveFR");
+        encoderPort.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        encoderPort.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-        // 2️⃣ Subtract robot heading (THIS IS THE KEY STEP)
-        double turretTargetDeg =
-                normalizeAngle(fieldAngleDeg - robotHeadingDeg);
-
-        // 3️⃣ Enforce hard limits
-        turretTargetDeg = Range.clip(
-                turretTargetDeg,
-                MIN_ANGLE_DEG,
-                MAX_ANGLE_DEG
-        );
-
-        // 4️⃣ Drive turret
-        setTurretAngle(turretTargetDeg);
+        lastUpdateTime = System.currentTimeMillis();
     }
 
-    /* ================= CONTROL ================= */
+    /**
+     * Call this when the turret is facing forward to zero the encoder
+     * IMPORTANT: Position turret to face forward, then call this method!
+     */
+    public static void zeroTurret() {
+        encoderPort.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        encoderPort.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        integralSum = 0;
+        lastError = 0;
+        targetAngle = 0;
+    }
 
-    public static void setTurretAngle(double targetDeg) {
-        double currentDeg = getCurrentTurretAngleDeg();
-        double errorDeg = targetDeg - currentDeg;
+    /**
+     * Set the goal position on the field
+     * @param x X coordinate of goal (inches)
+     * @param y Y coordinate of goal (inches)
+     */
+    public static void setGoalPosition(double x, double y) {
+        goalX = x;
+        goalY = y;
+    }
 
-        if (Math.abs(errorDeg) < ANGLE_DEADBAND_DEG) {
-            turretMotor.setPower(0);
-            return;
+    /**
+     * Set the turret offset from robot center
+     * @param x X offset (inches)
+     * @param y Y offset (inches)
+     */
+    public static void setTurretOffset(double x, double y) {
+        turretOffsetX = x;
+        turretOffsetY = y;
+    }
+
+    /**
+     * Set angle limits for the turret
+     * @param min Minimum angle in degrees
+     * @param max Maximum angle in degrees
+     */
+    public static void setAngleLimits(double min, double max) {
+        minAngle = min;
+        maxAngle = max;
+    }
+
+    /**
+     * Set PID constants
+     * @param p Proportional gain
+     * @param i Integral gain
+     * @param d Derivative gain
+     */
+    public static void setPID(double p, double i, double d) {
+        kP = p;
+        kI = i;
+        kD = d;
+    }
+
+    /**
+     * Get current turret angle in degrees
+     * @return Current angle
+     */
+    public static double getCurrentAngle() {
+        int ticks = encoderPort.getCurrentPosition();
+        return ticks / TICKS_PER_TURRET_DEGREE;
+    }
+
+    /**
+     * Set target angle for the turret
+     * @param angle Target angle in degrees (0 = forward)
+     */
+    public static void setTargetAngle(double angle) {
+        targetAngle = Range.clip(angle, minAngle, maxAngle);
+    }
+
+    /**
+     * Calculate the angle needed to aim at the goal
+     * @param robotPose Current robot pose from Pinpoint odometry
+     * @return Turret angle needed to aim at goal
+     */
+    public static double calculateAngleToGoal(Pose2D robotPose) {
+        // Calculate turret position on field
+        double turretX = robotPose.getX(DistanceUnit.INCH) + turretOffsetX;
+        double turretY = robotPose.getY(DistanceUnit.INCH) + turretOffsetY;
+
+        // Calculate vector to goal
+        double deltaX = goalX - turretX;
+        double deltaY = goalY - turretY;
+
+        // Calculate absolute angle to goal (in degrees)
+        double absoluteAngle = Math.toDegrees(Math.atan2(deltaX, deltaY));
+
+        // Calculate relative angle (turret angle relative to robot)
+        double robotHeading = robotPose.getHeading(AngleUnit.DEGREES);
+        double relativeAngle = absoluteAngle - robotHeading;
+
+        // Normalize to -180 to 180
+        while (relativeAngle > 180) relativeAngle -= 360;
+        while (relativeAngle < -180) relativeAngle += 360;
+
+        return relativeAngle;
+    }
+
+    /**
+     * Aim at the goal automatically using Pinpoint odometry
+     * @param robotPose Current robot pose from Pinpoint odometry
+     */
+    public static void aimAtGoal(Pose2D robotPose) {
+        double angleToGoal = calculateAngleToGoal(robotPose);
+        setTargetAngle(angleToGoal);
+    }
+
+    /**
+     * Update turret control - call this in your OpMode loop
+     * Uses PID control to reach target angle
+     */
+    public static void update() {
+        double currentAngle = getCurrentAngle();
+        double error = targetAngle - currentAngle;
+
+        // Calculate time delta for integral
+        long currentTime = System.currentTimeMillis();
+        double deltaTime = (currentTime - lastUpdateTime) / 1000.0; // Convert to seconds
+        lastUpdateTime = currentTime;
+
+        // PID calculations
+        integralSum += error * deltaTime;
+
+        // Anti-windup: limit integral
+        integralSum = Range.clip(integralSum, -100, 100);
+
+        double derivative = 0;
+        if (deltaTime > 0) {
+            derivative = (error - lastError) / deltaTime;
         }
 
-        double errorTicks =
-                degreesToTicks(targetDeg) - getCurrentTurretTicks();
+        double power = (kP * error) + (kI * integralSum) + (kD * derivative);
 
-        double power = Range.clip(
-                errorTicks * kP,
-                -MAX_POWER,
-                MAX_POWER
-        );
+        // Add a deadband near target to prevent oscillation
+        if (Math.abs(error) < 2.0) {
+            power *= 0.5; // Reduce power when close to target
+        }
+
+        // Clamp power
+        power = Range.clip(power, -0.8, 0.8); // Limit max power to prevent runaway
 
         turretMotor.setPower(power);
+
+        lastError = error;
     }
 
+    /**
+     * Check if turret is at target angle
+     * @param tolerance Tolerance in degrees
+     * @return true if within tolerance
+     */
+    public static boolean isAtTarget(double tolerance) {
+        return Math.abs(targetAngle - getCurrentAngle()) < tolerance;
+    }
+
+    /**
+     * Reset the turret encoder
+     */
+    public static void resetEncoder() {
+        encoderPort.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        encoderPort.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        integralSum = 0;
+        lastError = 0;
+        targetAngle = 0;
+    }
+
+    /**
+     * Manual control of turret power (for testing)
+     * @param power Power from -1.0 to 1.0
+     */
+    public static void setManualPower(double power) {
+        turretMotor.setPower(Range.clip(power, -1.0, 1.0));
+    }
+
+    /**
+     * Get current error (difference between target and current angle)
+     * @return Error in degrees
+     */
+    public static double getError() {
+        return targetAngle - getCurrentAngle();
+    }
+
+    /**
+     * Stop the turret
+     */
     public static void stop() {
-        if (!initialized) return;
         turretMotor.setPower(0);
     }
 
-    /* ================= INTERNAL ================= */
-
-    /** FTC-aligned atan2: 0° = forward, +90° = left */
-    private static double calculateFieldAngleToGoal(double robotX, double robotY) {
-        double dx = RED_GOAL_X - robotX;
-        double dy = RED_GOAL_Y - robotY;
-        return Math.toDegrees(Math.atan2(dx, dy));
+    /**
+     * Get the target angle
+     * @return Target angle in degrees
+     */
+    public static double getTargetAngle() {
+        return targetAngle;
     }
 
-    public static double getCurrentTurretTicks() {
-        return -(encoderMotor.getCurrentPosition() - zeroOffsetTicks);
-    }
+    /**
+     * Get distance to goal
+     * @param robotPose Current robot pose from Pinpoint odometry
+     * @return Distance to goal in inches
+     */
+    public static double getDistanceToGoal(Pose2D robotPose) {
+        double turretX = robotPose.getX(DistanceUnit.INCH) + turretOffsetX;
+        double turretY = robotPose.getY(DistanceUnit.INCH) + turretOffsetY;
 
-    private static double getCurrentTurretAngleDeg() {
-        return ticksToDegrees(getCurrentTurretTicks());
-    }
+        double deltaX = goalX - turretX;
+        double deltaY = goalY - turretY;
 
-    private static double degreesToTicks(double deg) {
-        double turretRevs = deg / 360.0;
-        double motorRevs  = turretRevs * GEAR_RATIO;
-        return motorRevs * MOTOR_TICKS_PER_REV;
-    }
-
-    private static double ticksToDegrees(double ticks) {
-        double motorRevs  = ticks / MOTOR_TICKS_PER_REV;
-        double turretRevs = motorRevs / GEAR_RATIO;
-        return turretRevs * 360.0;
-    }
-
-    private static double normalizeAngle(double deg) {
-        while (deg > 180) deg -= 360;
-        while (deg < -180) deg += 360;
-        return deg;
+        return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
     }
 }
