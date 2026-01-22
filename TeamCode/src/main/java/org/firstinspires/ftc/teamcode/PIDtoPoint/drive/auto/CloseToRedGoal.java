@@ -55,6 +55,7 @@ public class CloseToRedGoal extends LinearOpMode {
         WAIT_2,
         WAIT_3,
         WAIT_4,
+        WAIT_5,
         DRIVE_TO_TARGET_3,
         DRIVE_TO_TARGET_4,
         DRIVE_TO_TARGET_5,
@@ -62,17 +63,18 @@ public class CloseToRedGoal extends LinearOpMode {
         DRIVE_TO_TARGET_7,
         DRIVE_TO_TARGET_8,
         DRIVE_TO_TARGET_9,
+        DRIVE_TO_TARGET_10,
         DONE
     }
 
-    static final Pose2D BEGIN_INTAKE_ROW_2 = new Pose2D(DistanceUnit.INCH, 52, 0,AngleUnit.DEGREES,-90);
+    static final Pose2D BEGIN_INTAKE_ROW_2 = new Pose2D(DistanceUnit.INCH, -63, 25,AngleUnit.DEGREES,-90);
     static final Pose2D SHOOT_POSE = new Pose2D(DistanceUnit.INCH, -24, 24, AngleUnit.DEGREES, -45);
-    static final Pose2D INTAKE_ROW_2 = new Pose2D(DistanceUnit.INCH, 52, -29, AngleUnit.DEGREES, -90);
-    static final Pose2D BEGIN_INTAKE_ROW_1 = new Pose2D(DistanceUnit.INCH,-35,25, AngleUnit.DEGREES,-90);
-    static final Pose2D INTAKE_ROW_1 = new Pose2D(DistanceUnit.INCH, -35, 5, AngleUnit.DEGREES, -90);
-    static final Pose2D BEGIN_INTAKE_ROW_3 = new Pose2D(DistanceUnit.INCH, 28, 0, AngleUnit.DEGREES, -90);
-    static final Pose2D INTAKE_ROW_3 = new Pose2D(DistanceUnit.INCH, 28, -29, AngleUnit.DEGREES, -90);
-    static final Pose2D END_AUTO = new Pose2D(DistanceUnit.INCH, -16, 0, AngleUnit.DEGREES, 0);
+    static final Pose2D INTAKE_ROW_2 = new Pose2D(DistanceUnit.INCH, -63, 1, AngleUnit.DEGREES, -90);
+    static final Pose2D BEGIN_INTAKE_ROW_1 = new Pose2D(DistanceUnit.INCH,-37,25, AngleUnit.DEGREES,-90);
+    static final Pose2D INTAKE_ROW_1 = new Pose2D(DistanceUnit.INCH, -37, 1, AngleUnit.DEGREES, -90);
+    static final Pose2D BEGIN_INTAKE_ROW_3 = new Pose2D(DistanceUnit.INCH, -84, 25, AngleUnit.DEGREES, -90);
+    static final Pose2D INTAKE_ROW_3 = new Pose2D(DistanceUnit.INCH, -84, 1, AngleUnit.DEGREES, -90);
+    static final Pose2D END_AUTO = new Pose2D(DistanceUnit.INCH, -49, 12, AngleUnit.DEGREES, -90);
 
     public double inToMM(double inValue) {
         return inValue * 25.4;
@@ -130,8 +132,6 @@ public class CloseToRedGoal extends LinearOpMode {
         telemetry.addData("Device Scalar", odo.getYawScalar());
         telemetry.update();
 
-        Intake.raiseIntake();
-        sleep(1500);
         Intake.lowerIntake();
         sleep(1500);
         Shooter.lowerShooter();
@@ -167,7 +167,7 @@ public class CloseToRedGoal extends LinearOpMode {
                     the robot has reached the target, and has been there for (holdTime) seconds.
                     Once driveTo returns true, it prints a telemetry line and moves the state machine forward.
                      */
-                    if (nav.driveTo(odo.getPosition(), SHOOT_POSE, 0.5, 0.5)) {
+                    if (nav.driveTo(odo.getPosition(), SHOOT_POSE, 0.25, 0.0)) {
                         Intake.raiseIntake();
                         telemetry.addLine("about to intake with stopper closed");
                         telemetry.addLine("at position #1!");
@@ -215,98 +215,84 @@ public class CloseToRedGoal extends LinearOpMode {
                     if (timer.time() > 0.5) {
                         HelperServos.setStopperPass();
                     }
+                    if (timer.time() > 1.0) {
+                        Intake.lowerIntake();
+                    }
                     if (timer.time() > 2.5) {
                         timer.reset();
+                        Intake.raiseIntake();
                         HelperServos.setStopperStop();
+                        stateMachine = StateMachine.DRIVE_TO_TARGET_5;
+                    }
+                    break;
+                    // loop from here
+                case DRIVE_TO_TARGET_5:
+                    /*
+                    drive the robot to the first target, the nav.driveTo function will return true once
+                    the robot has reached the target, and has been there for (holdTime) seconds.
+                    Once driveTo returns true, it prints a telemetry line and moves the state machine forward.
+                     */
+                    if (nav.driveTo(odo.getPosition(), BEGIN_INTAKE_ROW_2, 0.5, 0.5)) {
+                        telemetry.addLine("at position #2!");
+                        timer.reset();
+                        stateMachine = StateMachine.DRIVE_TO_TARGET_6;
+                    }
+                    break;
+                case DRIVE_TO_TARGET_6:
+                    if (nav.driveTo(odo.getPosition(), INTAKE_ROW_2, 0.5, 0.0)) {
+                        telemetry.addLine("At position #3");
+                        timer.reset();
+                        stateMachine = StateMachine.DRIVE_TO_TARGET_7;
+
+                    }
+                    break;
+                case DRIVE_TO_TARGET_7:
+                    if (nav.driveTo(odo.getPosition(), SHOOT_POSE, 0.5, 0.5)) {
+                        timer.reset();
+                        stateMachine = StateMachine.WAIT_4;
+                    }
+                    break;
+                case WAIT_4:
+                    if (timer.time() > 0.5) {
+                        HelperServos.setStopperPass();
+                    }
+                    if (timer.time() > 1.0) {
+                        Intake.lowerIntake();
+                    }
+                    if (timer.time() > 2.5) {
+                        timer.reset();
+                        Intake.raiseIntake();
+                        HelperServos.setStopperStop();
+                        stateMachine = StateMachine.DRIVE_TO_TARGET_8;
+                    }
+                    break;
+                    // to here
+                case DRIVE_TO_TARGET_8:
+                    /*
+                    drive the robot to the first target, the nav.driveTo function will return true once
+                    the robot has reached the target, and has been there for (holdTime) seconds.
+                    Once driveTo returns true, it prints a telemetry line and moves the state machine forward.
+                     */
+                    if (nav.driveTo(odo.getPosition(), BEGIN_INTAKE_ROW_3, 0.5, 0.5)) {
+                        telemetry.addLine("at position #2!");
+                        timer.reset();
+                        stateMachine = StateMachine.DRIVE_TO_TARGET_9;
+                    }
+                    break;
+                case DRIVE_TO_TARGET_9:
+                    if (nav.driveTo(odo.getPosition(), INTAKE_ROW_3, 0.5, 0.0)) {
+                        telemetry.addLine("At position #3");
+                        timer.reset();
+                        stateMachine = StateMachine.DRIVE_TO_TARGET_10;
+
+                    }
+                    break;
+                case DRIVE_TO_TARGET_10:
+                    if (nav.driveTo(odo.getPosition(), BEGIN_INTAKE_ROW_3, 0.5, 0.0)) {
+                        timer.reset();
                         stateMachine = StateMachine.DONE;
                     }
                     break;
-//                case DRIVE_TO_TARGET_4:
-//                    /*
-//                    drive the robot to the first target, the nav.driveTo function will return true once
-//                    the robot has reached the target, and has been there for (holdTime) seconds.
-//                    Once driveTo returns true, it prints a telemetry line and moves the state machine forward.
-//                     */
-//                    if (nav.driveTo(odo.getPosition(), BEGIN_INTAKE_ROW_2, 0.7, 0.5)) {
-//                        Intake.raiseIntake();
-//                        HelperServos.setStopperStop();
-//                        telemetry.addLine("about to intake with stopper closed");
-//                        telemetry.addLine("at position #1!");
-//                        timer.reset();
-//                        stateMachine = StateMachine.DRIVE_TO_TARGET_5;
-//                    }
-//                    break;
-//                case DRIVE_TO_TARGET_5:
-//                    /*
-//                    drive the robot to the first target, the nav.driveTo function will return true once
-//                    the robot has reached the target, and has been there for (holdTime) seconds.
-//                    Once driveTo returns true, it prints a telemetry line and moves the state machine forward.
-//                     */
-//                    if (nav.driveTo(odo.getPosition(), INTAKE_ROW_2, 0.6, 0.0)) {
-//                        telemetry.addLine("at position #2!");
-//                        stateMachine = StateMachine.DRIVE_TO_TARGET_6;
-//                    }
-//                    break;
-//                case DRIVE_TO_TARGET_6:
-//                    if (nav.driveTo(odo.getPosition(), SHOOT_POSE, 0.45, 0.5)) {
-//                        telemetry.addLine("At position #3");
-//                        timer.reset();
-//                        stateMachine = StateMachine.WAIT_3;
-//                    }
-//                    break;
-//                case WAIT_3:
-//                    if (timer.time() > 1) {
-//                        HelperServos.setStopperPass();
-//                    }
-//                    if (timer.time() > 2.5) {
-//                        timer.reset();
-//                        HelperServos.setStopperStop();
-//                        stateMachine = StateMachine.DRIVE_TO_TARGET_7;
-//                    }
-//                    break;
-//                case DRIVE_TO_TARGET_7:
-//                    /*
-//                    drive the robot to the first target, the nav.driveTo function will return true once
-//                    the robot has reached the target, and has been there for (holdTime) seconds.
-//                    Once driveTo returns true, it prints a telemetry line and moves the state machine forward.
-//                     */
-//                    if (nav.driveTo(odo.getPosition(), BEGIN_INTAKE_ROW_1, 0.7, 0.5)) {
-//                        Intake.raiseIntake();
-//                        HelperServos.setStopperStop();
-//                        telemetry.addLine("about to intake with stopper closed");
-//                        telemetry.addLine("at position #1!");
-//                        timer.reset();
-//                        stateMachine = StateMachine.DRIVE_TO_TARGET_8;
-//                    }
-//                    break;
-//                case DRIVE_TO_TARGET_8:
-//                    /*
-//                    drive the robot to the first target, the nav.driveTo function will return true once
-//                    the robot has reached the target, and has been there for (holdTime) seconds.
-//                    Once driveTo returns true, it prints a telemetry line and moves the state machine forward.
-//                     */
-//                    if (nav.driveTo(odo.getPosition(), INTAKE_ROW_1, 0.6, 0.0)) {
-//                        telemetry.addLine("at position #2!");
-//                        timer.reset();
-//                        stateMachine = StateMachine.DONE;
-//                    }
-//                    break;
-//                case DRIVE_TO_TARGET_9:
-//                    if (nav.driveTo(odo.getPosition(), SHOOT_POSE, 0.35, 0.5)) {
-//                        timer.reset();
-//                        stateMachine = StateMachine.WAIT_4;
-//                    }
-//                    break;
-//                case WAIT_4:
-//                    if (timer.time() > 0.5) {
-//                        HelperServos.setStopperPass();
-//                    }
-//                    if (timer.time() > 3) {
-//                        timer.reset();
-//                        HelperServos.setStopperStop();
-//                        stateMachine = StateMachine.DONE;
-//                    }
-//                    break;
                 case DONE:
                     if (nav.driveTo(odo.getPosition(), END_AUTO, 0.7, 0.5)) {
                         timer.reset();
