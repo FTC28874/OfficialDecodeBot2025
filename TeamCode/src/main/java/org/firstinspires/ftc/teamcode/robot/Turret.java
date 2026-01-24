@@ -11,7 +11,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 public class Turret {
 
     // Hardware
-    private static DcMotorEx turretMotor = null;
+    private static DcMotor turretMotor = null;
     private static DcMotorEx encoderPort = null; // driveFR port used for encoder
 
     // Gear ratio calculations
@@ -56,7 +56,7 @@ public class Turret {
      */
     public static void init(HardwareMap hardwareMap) {
         // Initialize turret motor
-        turretMotor = hardwareMap.get(DcMotorEx.class, "turret");
+        turretMotor = hardwareMap.get(DcMotor.class, "turret");
         turretMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         turretMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         turretMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);

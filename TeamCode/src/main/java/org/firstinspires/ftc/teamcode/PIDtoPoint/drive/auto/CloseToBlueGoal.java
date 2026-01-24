@@ -39,8 +39,8 @@ public class CloseToBlueGoal extends LinearOpMode {
     DcMotorEx turretEncoder = null;
     DcMotor turret = null;
     ElapsedTime timer = null; //asdf
-    double shooterEncSpeed = 2050;
-    double shooterHoodAngle = 0.25;
+    double shooterEncSpeed = Shooter.ShootPositionState.MID_MID_RPM.position;
+    double shooterHoodAngle = Shooter.ShootPositionState.MID_MID_HOOD.position;
 
     GoBildaPinpointDriver odo = null; // Declare OpMode member for the Odometry Computer
     DriveToPoint nav = new DriveToPoint(this); //OpMode member for the point-to-point navigation class

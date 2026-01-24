@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.PIDtoPoint.drive.auto;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -27,7 +28,7 @@ import java.util.Locale;
 // Shooter Hood: 0.55
 
 @Autonomous(name="Sample Preload Auto", group="Auto")
-//@Disabled
+@Disabled
 
 public class SamplePreloadAuto extends LinearOpMode {
 

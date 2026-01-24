@@ -42,7 +42,8 @@ public class FarFromRedGoal extends LinearOpMode {
     DcMotorEx turretEncoder = null;
     DcMotor turret = null;
     ElapsedTime timer = null; //asdf
-    double shooterEncSpeed = 3300;
+    double shooterEncSpeed = Shooter.ShootPositionState.FAR_RPM.position;
+    double shooterHoodSpeed = Shooter.ShootPositionState.FAR_HOOD.position;
 
     GoBildaPinpointDriver odo = null; // Declare OpMode member for the Odometry Computer
     DriveToPoint nav = new DriveToPoint(this); //OpMode member for the point-to-point navigation class
@@ -147,7 +148,7 @@ public class FarFromRedGoal extends LinearOpMode {
 
         while (opModeIsActive()) {
             odo.update();
-            Shooter.setShooterPosition(0.55);
+            Shooter.setShooterPosition(shooterHoodSpeed);
             Shooter.setShooterPower(Shooter.PIDControl(shooterEncSpeed, Shooter.getCurrentRPM()));
             switch (stateMachine){
                 case WAITING_FOR_START:
