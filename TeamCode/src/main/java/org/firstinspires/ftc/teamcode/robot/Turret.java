@@ -37,8 +37,8 @@ public class Turret {
 
     // Goal position (field coordinates in inches)
     // MODIFY THESE VALUES for your field setup
-    private static double goalX = 72.0;  // X position of goal
-    private static double goalY = 0.0; // Y position of goal (example: 6 feet out)
+    private static double goalX = 28.0;  // X position of goal 64.0
+    private static double goalY = 59.0; // Y position of goal (example: 6 feet out) -64.0
 
     // Turret offset from robot center (in inches)
     private static double turretOffsetX = 0.0;
