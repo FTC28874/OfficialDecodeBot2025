@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.teleop.tests;
 
+import com.pedropathing.math.MathFunctions;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -19,6 +20,10 @@ public class TestShooter extends LinearOpMode {
 
     private double shooterTargetRPM = 3000;
     private double shooterPower = 0;
+    private double minHoodAngle = Shooter.HoodState.DOWN.angle; // 0.1
+    private double maxHoodAngle = Shooter.HoodState.UP.angle; // 0.6
+
+    private double curHoodAngle = minHoodAngle;
 
     @Override
     public void runOpMode() {
@@ -28,12 +33,14 @@ public class TestShooter extends LinearOpMode {
 
         odo.resetPosAndIMU();
 
-        org.firstinspires.ftc.teamcode.robot.Shooter.init(hardwareMap);
+        Shooter.init(hardwareMap);
 
         waitForStart();
         while (opModeIsActive()) {
             odo.update();
             pos = odo.getPosition();
+
+            // shooter controls
 
             if (!gamepad1.right_bumper) {
                 shooterPower = Shooter.PIDControl(shooterTargetRPM, Shooter.getCurrentRPM());
@@ -42,10 +49,36 @@ public class TestShooter extends LinearOpMode {
             if (gamepad1.right_bumper) {
                 Shooter.stopShooter();
             }
+
+            // shooter speed controls
+
+            if (gamepad1.dpadUpWasPressed()) {
+                shooterTargetRPM = shooterTargetRPM + 100;
+            }
+            if (gamepad1.dpadDownWasPressed()) {
+                shooterTargetRPM = shooterTargetRPM - 100;
+            }
+
+            // hood controls
+            Shooter.setShooterPosition(curHoodAngle);
+
+            if (gamepad1.dpadRightWasPressed()) {
+                if (curHoodAngle < maxHoodAngle) {
+                    curHoodAngle += 0.05;
+                }
+            }
+            if (gamepad1.dpadLeftWasPressed()) {
+                if (curHoodAngle > minHoodAngle) {
+                    curHoodAngle -= 0.05;
+                }
+            }
+
+
             telemetry.addData("Robot X: ", pos.getX(DistanceUnit.INCH));
             telemetry.addData("Robot Y: ", pos.getY(DistanceUnit.INCH));
             telemetry.addData("Shooter Target RPM: ", shooterTargetRPM);
             telemetry.addData("Current Shooter RPM: ", Shooter.getCurrentRPM());
+            telemetry.addData("Hood Angle", curHoodAngle);
             telemetry.addData("Shooter Power: ", shooterPower);
 
             telemetry.update();
