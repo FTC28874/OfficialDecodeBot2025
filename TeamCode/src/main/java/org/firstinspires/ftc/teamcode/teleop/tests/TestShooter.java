@@ -1,16 +1,16 @@
 package org.firstinspires.ftc.teamcode.teleop.tests;
 
-import com.pedropathing.math.MathFunctions;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.PIDtoPoint.drive.GoBildaPinpointDriver;
-import org.firstinspires.ftc.teamcode.robot.dynamicShooter;
+import org.firstinspires.ftc.teamcode.robot.HelperServos;
+import org.firstinspires.ftc.teamcode.robot.Intake;
 
 import org.firstinspires.ftc.teamcode.robot.Shooter;
+import org.firstinspires.ftc.teamcode.robot.Turret;
 
 @TeleOp(name="Test XY", group="Linear OpMode")
 
@@ -39,6 +39,11 @@ public class TestShooter extends LinearOpMode {
         odo.resetPosAndIMU();
 
         Shooter.init(hardwareMap);
+        Intake.init(hardwareMap);
+        HelperServos.init(hardwareMap);
+        Turret.init(hardwareMap);
+
+        telemetry.addLine("Stopper Servo Init");
 
         waitForStart();
         while (opModeIsActive()) {
@@ -94,12 +99,21 @@ public class TestShooter extends LinearOpMode {
                 Shooter.turnTurretDirection(true, 0);
             }
 
+            // intake controls
+            if (gamepad1.left_bumper) {
+                Intake.runIntake();
+                HelperServos.setStopperStop();
+                Intake.raiseIntake();
+            }
+            else {
+                Intake.stopIntake();
+            }
+
             telemetry.addData("Robot X: ", pos.getX(DistanceUnit.INCH));
             telemetry.addData("Robot Y: ", pos.getY(DistanceUnit.INCH));
             telemetry.addData("Shooter Target RPM: ", shooterTargetRPM);
             telemetry.addData("Current Shooter RPM: ", Shooter.getCurrentRPM());
             telemetry.addData("Hood Angle", curHoodAngle);
-            telemetry.addData("Shooter Power: ", shooterPower);
             telemetry.addData("Shooter ON: ", shooterState);
             telemetry.addData("Turret Heading: ", Shooter.getTurretPosition());
 
