@@ -17,7 +17,7 @@ import org.firstinspires.ftc.teamcode.robot.dynamicShooter;
 import org.firstinspires.ftc.teamcode.robot.Shooter;
 
 @TeleOp(name="Test Shooter 123", group="Linear OpMode")
-@Disabled
+
 public class TestShooter extends LinearOpMode {
 
     private ElapsedTime runtime = new ElapsedTime();
@@ -51,7 +51,8 @@ public class TestShooter extends LinearOpMode {
             pos = odo.getPosition();
             double shooterEncSpeed = dynamicShooter.flywheelSpeed(dynamicShooter.distanceFromGoal(pos.getX(DistanceUnit.INCH), pos.getY(DistanceUnit.INCH), pos.getHeading(AngleUnit.RADIANS)));
 //            Shooter.setShooterPower();
-
+            telemetry.addData("Robot X: ", pos.getX(DistanceUnit.INCH));
+            telemetry.addData("Robot Y: ", pos.getY(DistanceUnit.INCH));
             telemetry.addData("Shooter Power: ", gamepad1.right_stick_y);
             telemetry.addData("Shooter rpm: ", shooterEncSpeed);
             telemetry.addData("Current Shooter RPM: ", Shooter.getCurrentRPM());

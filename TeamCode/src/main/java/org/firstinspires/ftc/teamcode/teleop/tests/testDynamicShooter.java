@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.teleop.tests;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.robot.HelperServos;
 import org.firstinspires.ftc.teamcode.robot.Intake;
 import org.firstinspires.ftc.teamcode.robot.Shooter;
@@ -25,8 +26,9 @@ public class testDynamicShooter extends LinearOpMode {
 
         waitForStart();
         while (opModeIsActive()) {
-            telemetry.addData("Distance to goal: ", Turret.getDistanceToGoal(odo.getPosition()));
-            telemetry.addData("Robot Position: ", odo.getPosition());
+           // telemetry.addData("Distance to goal: ", Turret.getDistanceToGoal(odo.getPosition()));
+            telemetry.addData("Robot X: ", odo.getXOffset(DistanceUnit.INCH));
+            telemetry.addData("Robot Y: ", odo.getYOffset(DistanceUnit.INCH));
             telemetry.addData("Shooter Target RPM: ", shooterEncSpeed);
             telemetry.addData("Shooter RPM: ", Shooter.getCurrentRPM());
             telemetry.addData("Shooter Hood Angle: ", shooterHoodAngle);
