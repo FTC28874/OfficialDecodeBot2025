@@ -17,6 +17,9 @@ public class TestShooter extends LinearOpMode {
     private GoBildaPinpointDriver odo = null;
     Pose2D pos = null;
 
+    private double shooterTargetRPM = 3000;
+    private double shooterPower = 0;
+
     @Override
     public void runOpMode() {
         odo = hardwareMap.get(GoBildaPinpointDriver.class,"pinpoint");
@@ -31,14 +34,19 @@ public class TestShooter extends LinearOpMode {
         while (opModeIsActive()) {
             odo.update();
             pos = odo.getPosition();
-            double shooterEncSpeed = dynamicShooter.flywheelSpeed(dynamicShooter.distanceFromGoal(pos.getX(DistanceUnit.INCH), pos.getY(DistanceUnit.INCH), pos.getHeading(AngleUnit.RADIANS)));
+
+            if (!gamepad1.right_bumper) {
+                shooterPower = Shooter.PIDControl(shooterTargetRPM, Shooter.getCurrentRPM());
+                Shooter.setShooterPower(shooterPower);
+            }
+            if (gamepad1.right_bumper) {
+                Shooter.stopShooter();
+            }
             telemetry.addData("Robot X: ", pos.getX(DistanceUnit.INCH));
             telemetry.addData("Robot Y: ", pos.getY(DistanceUnit.INCH));
-            telemetry.addData("Shooter Power: ", gamepad1.right_stick_y);
-            telemetry.addData("Shooter rpm: ", shooterEncSpeed);
+            telemetry.addData("Shooter Target RPM: ", shooterTargetRPM);
             telemetry.addData("Current Shooter RPM: ", Shooter.getCurrentRPM());
-            telemetry.addData("Intake Power: ", gamepad1.left_stick_y);
-            telemetry.addData("goalDist: ", dynamicShooter.distanceFromGoal(pos.getX(DistanceUnit.INCH), pos.getY(DistanceUnit.INCH), pos.getHeading(AngleUnit.RADIANS)));
+            telemetry.addData("Shooter Power: ", shooterPower);
 
             telemetry.update();
         }
