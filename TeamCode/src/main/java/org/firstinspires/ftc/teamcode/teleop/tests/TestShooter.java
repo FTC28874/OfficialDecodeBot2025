@@ -25,6 +25,8 @@ public class TestShooter extends LinearOpMode {
 
     private double curHoodAngle = minHoodAngle;
 
+    private boolean shooterState = true;
+
     @Override
     public void runOpMode() {
         odo = hardwareMap.get(GoBildaPinpointDriver.class,"pinpoint");
@@ -41,17 +43,18 @@ public class TestShooter extends LinearOpMode {
             pos = odo.getPosition();
 
             // shooter controls
-
-            if (!gamepad1.right_bumper) {
+            if (shooterState) {
                 shooterPower = Shooter.PIDControl(shooterTargetRPM, Shooter.getCurrentRPM());
                 Shooter.setShooterPower(shooterPower);
             }
-            if (gamepad1.right_bumper) {
+            else {
                 Shooter.stopShooter();
+            }
+            if (gamepad1.xWasPressed()) {
+                shooterState = !shooterState;
             }
 
             // shooter speed controls
-
             if (gamepad1.dpadUpWasPressed()) {
                 shooterTargetRPM = shooterTargetRPM + 100;
             }
@@ -73,13 +76,13 @@ public class TestShooter extends LinearOpMode {
                 }
             }
 
-
             telemetry.addData("Robot X: ", pos.getX(DistanceUnit.INCH));
             telemetry.addData("Robot Y: ", pos.getY(DistanceUnit.INCH));
             telemetry.addData("Shooter Target RPM: ", shooterTargetRPM);
             telemetry.addData("Current Shooter RPM: ", Shooter.getCurrentRPM());
             telemetry.addData("Hood Angle", curHoodAngle);
             telemetry.addData("Shooter Power: ", shooterPower);
+            telemetry.addData("Shooter ON: ", shooterState);
 
             telemetry.update();
         }
