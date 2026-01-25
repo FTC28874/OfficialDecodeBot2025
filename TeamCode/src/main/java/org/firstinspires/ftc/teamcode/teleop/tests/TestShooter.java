@@ -27,6 +27,9 @@ public class TestShooter extends LinearOpMode {
 
     private boolean shooterState = true;
 
+    private double minTurretHeading = -500;
+    private double maxTurretHeading = 450;
+
     @Override
     public void runOpMode() {
         odo = hardwareMap.get(GoBildaPinpointDriver.class,"pinpoint");
@@ -76,6 +79,21 @@ public class TestShooter extends LinearOpMode {
                 }
             }
 
+            // turret heading controls
+            if (gamepad1.left_trigger > 0.1) {
+                if (Shooter.getTurretPosition() > minTurretHeading) {
+                    Shooter.turnTurretDirection(false, 0.4);
+                }
+            }
+            if (gamepad1.right_trigger > 0.1) {
+                if (Shooter.getTurretPosition() < maxTurretHeading) {
+                    Shooter.turnTurretDirection(true, 0.4);
+                }
+            }
+            if (gamepad1.left_trigger == 0 && gamepad1.right_trigger == 0) {
+                Shooter.turnTurretDirection(true, 0);
+            }
+
             telemetry.addData("Robot X: ", pos.getX(DistanceUnit.INCH));
             telemetry.addData("Robot Y: ", pos.getY(DistanceUnit.INCH));
             telemetry.addData("Shooter Target RPM: ", shooterTargetRPM);
@@ -83,6 +101,7 @@ public class TestShooter extends LinearOpMode {
             telemetry.addData("Hood Angle", curHoodAngle);
             telemetry.addData("Shooter Power: ", shooterPower);
             telemetry.addData("Shooter ON: ", shooterState);
+            telemetry.addData("Turret Heading: ", Shooter.getTurretPosition());
 
             telemetry.update();
         }
