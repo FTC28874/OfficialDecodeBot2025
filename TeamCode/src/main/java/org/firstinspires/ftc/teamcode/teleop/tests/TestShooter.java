@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.teleop.tests;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.PIDtoPoint.drive.GoBildaPinpointDriver;
@@ -106,7 +107,13 @@ public class TestShooter extends LinearOpMode {
                 Intake.raiseIntake();
             }
             else {
+                Intake.lowerIntake();
                 Intake.stopIntake();
+            }
+            if (gamepad1.right_bumper) {
+                Intake.lowerIntake();
+                Intake.runIntake();
+                HelperServos.setStopperPass();
             }
 
             telemetry.addData("Robot X: ", pos.getX(DistanceUnit.INCH));
@@ -116,6 +123,7 @@ public class TestShooter extends LinearOpMode {
             telemetry.addData("Hood Angle", curHoodAngle);
             telemetry.addData("Shooter ON: ", shooterState);
             telemetry.addData("Turret Heading: ", Shooter.getTurretPosition());
+            telemetry.addData("Robot Heading: ", pos.getHeading(AngleUnit.DEGREES));
 
             telemetry.update();
         }
