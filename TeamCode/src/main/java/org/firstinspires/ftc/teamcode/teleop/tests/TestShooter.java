@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
+import org.firstinspires.ftc.teamcode.Helper;
 import org.firstinspires.ftc.teamcode.PIDtoPoint.drive.GoBildaPinpointDriver;
 import org.firstinspires.ftc.teamcode.robot.HelperServos;
 import org.firstinspires.ftc.teamcode.robot.Intake;
@@ -30,6 +31,8 @@ public class TestShooter extends LinearOpMode {
 
     private double minTurretHeading = -500;
     private double maxTurretHeading = 450;
+    private double goalDistance = 0;
+
 
     @Override
     public void runOpMode() {
@@ -50,6 +53,10 @@ public class TestShooter extends LinearOpMode {
         while (opModeIsActive()) {
             odo.update();
             pos = odo.getPosition();
+
+            double curX = pos.getX(DistanceUnit.INCH);
+            double curY = pos.getY(DistanceUnit.INCH);
+            goalDistance = Helper.calcDistToGoal(curX, curY);
 
             // shooter controls
             if (shooterState) {
@@ -124,7 +131,7 @@ public class TestShooter extends LinearOpMode {
             telemetry.addData("Shooter ON: ", shooterState);
             telemetry.addData("Turret Heading: ", Shooter.getTurretPosition());
             telemetry.addData("Robot Heading: ", pos.getHeading(AngleUnit.DEGREES));
-
+            telemetry.addData("goalDist: ", goalDistance);
             telemetry.update();
         }
     }
