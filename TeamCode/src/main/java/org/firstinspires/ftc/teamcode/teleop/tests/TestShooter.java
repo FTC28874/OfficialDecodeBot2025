@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.teleop.tests;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -14,12 +15,12 @@ import org.firstinspires.ftc.teamcode.robot.Intake;
 import org.firstinspires.ftc.teamcode.robot.Shooter;
 import org.firstinspires.ftc.teamcode.robot.Turret;
 
-@TeleOp(name="Test XY", group="Linear OpMode")
+@TeleOp(name="Test Dynamic Shooter", group="Linear OpMode")
 
 public class TestShooter extends LinearOpMode {
     private GoBildaPinpointDriver odo = null;
     Pose2D pos = null;
-
+    private double driverSensitivity = 1.0;
     private double shooterTargetRPM = 3000;
     private double shooterPower = 0;
     private double minHoodAngle = Shooter.HoodState.DOWN.angle; // 0.1
@@ -32,15 +33,32 @@ public class TestShooter extends LinearOpMode {
     private double minTurretHeading = -500;
     private double maxTurretHeading = 450;
     private double goalDistance = 0;
+    private DcMotor driveFL = null;
+    private DcMotor driveBL = null;
+    private DcMotor driveFR = null;
+    private DcMotor driveBR = null;
 
 
     @Override
     public void runOpMode() {
+        driveFL = hardwareMap.get(DcMotor.class, "driveFL");
+        driveBL = hardwareMap.get(DcMotor.class, "driveBL");
+        driveFR = hardwareMap.get(DcMotor.class, "driveFR");
+        driveBR = hardwareMap.get(DcMotor.class, "driveBR");
         odo = hardwareMap.get(GoBildaPinpointDriver.class,"pinpoint");
         odo.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
         odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.REVERSED);
 
         odo.resetPosAndIMU();
+        driveFL.setDirection(DcMotor.Direction.REVERSE);
+        driveBL.setDirection(DcMotor.Direction.REVERSE);
+        driveFR.setDirection(DcMotor.Direction.FORWARD);
+        driveBR.setDirection(DcMotor.Direction.FORWARD);
+
+        driveFL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        driveBL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        driveFR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        driveBR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         Shooter.init(hardwareMap);
         Intake.init(hardwareMap);
@@ -51,6 +69,33 @@ public class TestShooter extends LinearOpMode {
 
         waitForStart();
         while (opModeIsActive()) {
+            double max;
+
+            // POV Mode uses left joystick to go forward & strafe, and right joystick to rotate.
+            double axial   = -gamepad1.left_stick_y * driverSensitivity;  // Note: pushing stick forward gives negative value
+            double lateral =  gamepad1.left_stick_x * driverSensitivity;
+            double yaw     =  gamepad1.right_stick_x * driverSensitivity;
+
+            // Combine the joystick requests for each axis-motion to determine each wheel's power.
+            // Set up a variable for each drive wheel to save the power level for telemetry.
+            double powerFL  = axial + lateral + yaw;
+            double powerFR = axial - lateral - yaw;
+            double powerBL   = axial - lateral + yaw;
+            double powerBR  = axial + lateral - yaw;
+
+            // Normalize the values so no wheel power exceeds 100%
+            // This ensures that the robot maintains the desired motion.
+            max = Math.max(Math.abs(powerFL), Math.abs(powerFR));
+            max = Math.max(max, Math.abs(powerBL));
+            max = Math.max(max, Math.abs(powerBR));
+
+            if (max > 1.0) {
+                powerFL  /= max;
+                powerFR /= max;
+                powerBL   /= max;
+                powerBR  /= max;
+            }
+
             odo.update();
             pos = odo.getPosition();
 
@@ -58,6 +103,7 @@ public class TestShooter extends LinearOpMode {
             double curY = pos.getY(DistanceUnit.INCH);
             goalDistance = Helper.calcDistToGoal(curX, curY);
 
+            shooterTargetRPM = Helper.calculateRPM(goalDistance);
             // shooter controls
             if (shooterState) {
                 shooterPower = Shooter.PIDControl(shooterTargetRPM, Shooter.getCurrentRPM());
@@ -122,6 +168,11 @@ public class TestShooter extends LinearOpMode {
                 Intake.runIntake();
                 HelperServos.setStopperPass();
             }
+            driveFL.setPower(powerFL);
+            driveFR.setPower(powerFR);
+            driveBL.setPower(powerBL);
+            driveBR.setPower(powerBR);
+
 
             telemetry.addData("Robot X: ", pos.getX(DistanceUnit.INCH));
             telemetry.addData("Robot Y: ", pos.getY(DistanceUnit.INCH));
