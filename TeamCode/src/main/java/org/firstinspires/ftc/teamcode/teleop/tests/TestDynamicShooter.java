@@ -121,9 +121,9 @@ public class TestDynamicShooter extends LinearOpMode {
                 double deltaTurretPos = turretPos - curTurretPos;
 
                 if (deltaTurretPos > 0) {
-                    Shooter.turnTurretDirection(true, 0.4);
+                    Shooter.turnTurretDirection(true, 0.3);
                 } else {
-                    Shooter.turnTurretDirection(false, 0.4);
+                    Shooter.turnTurretDirection(false, 0.3);
                 }
             }
 
