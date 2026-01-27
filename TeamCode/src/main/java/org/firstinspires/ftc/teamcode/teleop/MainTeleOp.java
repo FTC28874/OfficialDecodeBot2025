@@ -303,10 +303,10 @@ public class MainTeleOp extends LinearOpMode {
             prevB = gamepad2.b;
 
             if (gamepad2.left_trigger > 0.1) {
-                Shooter.turnTurretDirection(false, 0.4);
+                Shooter.turnTurretDirection(false, gamepad2.left_trigger * 0.4);
             }
             if (gamepad2.right_trigger > 0.1) {
-                Shooter.turnTurretDirection(true, 0.4);
+                Shooter.turnTurretDirection(true, gamepad2.right_trigger * 0.4);
             }
             if (gamepad2.left_trigger == 0 && gamepad2.right_trigger == 0) {
                 Shooter.turnTurretDirection(true, 0);
