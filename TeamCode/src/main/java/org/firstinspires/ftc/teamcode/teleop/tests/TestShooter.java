@@ -103,7 +103,7 @@ public class TestShooter extends LinearOpMode {
             double curY = pos.getY(DistanceUnit.INCH);
             goalDistance = Helper.calcDistToGoal(curX, curY);
 
-            shooterTargetRPM = Helper.calculateRPM(goalDistance);
+//            shooterTargetRPM = Helper.calculateRPM(goalDistance);
             // shooter controls
             if (shooterState) {
                 shooterPower = Shooter.PIDControl(shooterTargetRPM, Shooter.getCurrentRPM());
@@ -168,6 +168,12 @@ public class TestShooter extends LinearOpMode {
                 Intake.runIntake();
                 HelperServos.setStopperPass();
             }
+
+            // reset position to 0,0 and hood to 0.1
+            if (gamepad1.aWasPressed()){
+                odo.resetPosAndIMU();
+                curHoodAngle = minHoodAngle;
+            }
             driveFL.setPower(powerFL);
             driveFR.setPower(powerFR);
             driveBL.setPower(powerBL);
@@ -176,13 +182,13 @@ public class TestShooter extends LinearOpMode {
 
             telemetry.addData("Robot X: ", pos.getX(DistanceUnit.INCH));
             telemetry.addData("Robot Y: ", pos.getY(DistanceUnit.INCH));
-            telemetry.addData("Shooter Target RPM: ", shooterTargetRPM);
-            telemetry.addData("Current Shooter RPM: ", Shooter.getCurrentRPM());
-            telemetry.addData("Hood Angle", curHoodAngle);
-            telemetry.addData("Shooter ON: ", shooterState);
-            telemetry.addData("Turret Heading: ", Shooter.getTurretPosition());
-            telemetry.addData("Robot Heading: ", pos.getHeading(AngleUnit.DEGREES));
             telemetry.addData("goalDist: ", goalDistance);
+            telemetry.addData("Robot Heading: ", pos.getHeading(AngleUnit.DEGREES));
+            telemetry.addData("Shooter Target RPM: ", shooterTargetRPM);
+            telemetry.addData("Hood Angle", curHoodAngle);
+            telemetry.addData("Turret Heading: ", Shooter.getTurretPosition());
+            telemetry.addData("Shooter ON: ", shooterState);
+            telemetry.addData("Current Shooter RPM: ", Shooter.getCurrentRPM());
             telemetry.update();
         }
     }
