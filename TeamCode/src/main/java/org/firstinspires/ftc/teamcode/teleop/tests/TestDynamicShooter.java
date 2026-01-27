@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
+import org.firstinspires.ftc.teamcode.robot.Constants;
 import org.firstinspires.ftc.teamcode.robot.Helper;
 import org.firstinspires.ftc.teamcode.PIDtoPoint.drive.GoBildaPinpointDriver;
 import org.firstinspires.ftc.teamcode.robot.HelperServos;
@@ -15,9 +16,9 @@ import org.firstinspires.ftc.teamcode.robot.Intake;
 import org.firstinspires.ftc.teamcode.robot.Shooter;
 import org.firstinspires.ftc.teamcode.robot.Turret;
 
-@TeleOp(name="Test Dynamic Shooter", group="Linear OpMode")
+@TeleOp(name = "Test Dynamic Shooter", group = "Linear OpMode")
 
-public class TestShooter extends LinearOpMode {
+public class TestDynamicShooter extends LinearOpMode {
     private GoBildaPinpointDriver odo = null;
     Pose2D pos = null;
     private double driverSensitivity = 1.0;
@@ -30,9 +31,16 @@ public class TestShooter extends LinearOpMode {
 
     private boolean shooterState = true;
 
-    private double minTurretHeading = -500;
-    private double maxTurretHeading = 450;
+    private double minTurretHeading = Constants.MIN_TURRET_HEAD;
+    private double maxTurretHeading = Constants.MAX_TURRET_HEAD;
+
+    private double turretPos = 0;
+    private double curTurretPos = 0;
     private double goalDistance = 0;
+
+    private double robotHeading = 0;
+
+    private boolean isDynamic = false;
     private DcMotor driveFL = null;
     private DcMotor driveBL = null;
     private DcMotor driveFR = null;
@@ -45,7 +53,7 @@ public class TestShooter extends LinearOpMode {
         driveBL = hardwareMap.get(DcMotor.class, "driveBL");
         driveFR = hardwareMap.get(DcMotor.class, "driveFR");
         driveBR = hardwareMap.get(DcMotor.class, "driveBR");
-        odo = hardwareMap.get(GoBildaPinpointDriver.class,"pinpoint");
+        odo = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
         odo.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
         odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.REVERSED);
 
@@ -72,16 +80,16 @@ public class TestShooter extends LinearOpMode {
             double max;
 
             // POV Mode uses left joystick to go forward & strafe, and right joystick to rotate.
-            double axial   = -gamepad1.left_stick_y * driverSensitivity;  // Note: pushing stick forward gives negative value
-            double lateral =  gamepad1.left_stick_x * driverSensitivity;
-            double yaw     =  gamepad1.right_stick_x * driverSensitivity;
+            double axial = -gamepad1.left_stick_y * driverSensitivity;  // Note: pushing stick forward gives negative value
+            double lateral = gamepad1.left_stick_x * driverSensitivity;
+            double yaw = gamepad1.right_stick_x * driverSensitivity;
 
             // Combine the joystick requests for each axis-motion to determine each wheel's power.
             // Set up a variable for each drive wheel to save the power level for telemetry.
-            double powerFL  = axial + lateral + yaw;
+            double powerFL = axial + lateral + yaw;
             double powerFR = axial - lateral - yaw;
-            double powerBL   = axial - lateral + yaw;
-            double powerBR  = axial + lateral - yaw;
+            double powerBL = axial - lateral + yaw;
+            double powerBR = axial + lateral - yaw;
 
             // Normalize the values so no wheel power exceeds 100%
             // This ensures that the robot maintains the desired motion.
@@ -90,27 +98,47 @@ public class TestShooter extends LinearOpMode {
             max = Math.max(max, Math.abs(powerBR));
 
             if (max > 1.0) {
-                powerFL  /= max;
+                powerFL /= max;
                 powerFR /= max;
-                powerBL   /= max;
-                powerBR  /= max;
+                powerBL /= max;
+                powerBR /= max;
             }
 
             odo.update();
             pos = odo.getPosition();
+            robotHeading = pos.getHeading(AngleUnit.DEGREES);
 
             double curX = pos.getX(DistanceUnit.INCH);
             double curY = pos.getY(DistanceUnit.INCH);
             goalDistance = Helper.calcDistToGoal(curX, curY);
-            // goalDistance = Turret.getDistanceToGoal(odo.getPosition()); //LITERALLY ALL YOU HAD TO DO
+            curTurretPos = Shooter.getTurretPosition();
 
-            shooterTargetRPM = Helper.calculateRPM(goalDistance);
+            if (isDynamic) {
+                shooterTargetRPM = Helper.calcTargetRPM(goalDistance);
+                curHoodAngle = Helper.calcHoodPos(goalDistance);
+                turretPos = Helper.calcTurretHead(robotHeading);
+
+                double deltaTurretPos = turretPos - curTurretPos;
+
+                if (deltaTurretPos > 0) {
+                    Shooter.turnTurretDirection(true, 0.3);
+                } else {
+                    Shooter.turnTurretDirection(false, 0.3);
+                }
+            }
+
+            if (gamepad1.bWasPressed()) {
+                isDynamic = false;
+            }
+            if (gamepad1.yWasPressed()) {
+                isDynamic = true;
+            }
+
             // shooter controls
             if (shooterState) {
                 shooterPower = Shooter.PIDControl(shooterTargetRPM, Shooter.getCurrentRPM());
                 Shooter.setShooterPower(shooterPower);
-            }
-            else {
+            } else {
                 Shooter.stopShooter();
             }
             if (gamepad1.xWasPressed()) {
@@ -159,8 +187,7 @@ public class TestShooter extends LinearOpMode {
                 Intake.runIntake();
                 HelperServos.setStopperStop();
                 Intake.raiseIntake();
-            }
-            else {
+            } else {
                 Intake.lowerIntake();
                 Intake.stopIntake();
             }
@@ -169,21 +196,28 @@ public class TestShooter extends LinearOpMode {
                 Intake.runIntake();
                 HelperServos.setStopperPass();
             }
+
+            // reset position to 0,0 and hood to 0.1
+            if (gamepad1.aWasPressed()) {
+                odo.resetPosAndIMU();
+                curHoodAngle = minHoodAngle;
+            }
             driveFL.setPower(powerFL);
             driveFR.setPower(powerFR);
             driveBL.setPower(powerBL);
             driveBR.setPower(powerBR);
 
-
+            telemetry.addData("Dynamic Shooting Active: ", isDynamic);
             telemetry.addData("Robot X: ", pos.getX(DistanceUnit.INCH));
             telemetry.addData("Robot Y: ", pos.getY(DistanceUnit.INCH));
-            telemetry.addData("Shooter Target RPM: ", shooterTargetRPM);
-            telemetry.addData("Current Shooter RPM: ", Shooter.getCurrentRPM());
-            telemetry.addData("Hood Angle", curHoodAngle);
-            telemetry.addData("Shooter ON: ", shooterState);
-            telemetry.addData("Turret Heading: ", Shooter.getTurretPosition());
-            telemetry.addData("Robot Heading: ", pos.getHeading(AngleUnit.DEGREES));
             telemetry.addData("goalDist: ", goalDistance);
+            telemetry.addData("Robot Heading: ", robotHeading);
+            telemetry.addData("Shooter Target RPM: ", shooterTargetRPM);
+            telemetry.addData("Hood Angle", curHoodAngle);
+            telemetry.addData("Current Turret Heading: ", curTurretPos);
+            telemetry.addData("Target Turret Position: ", turretPos);
+            telemetry.addData("Shooter ON: ", shooterState);
+            telemetry.addData("Current Shooter RPM: ", Shooter.getCurrentRPM());
             telemetry.update();
         }
     }
