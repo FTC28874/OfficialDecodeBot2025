@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
-import org.firstinspires.ftc.teamcode.Helper;
+import org.firstinspires.ftc.teamcode.robot.Helper;
 import org.firstinspires.ftc.teamcode.PIDtoPoint.drive.GoBildaPinpointDriver;
 import org.firstinspires.ftc.teamcode.robot.HelperServos;
 import org.firstinspires.ftc.teamcode.robot.Intake;
@@ -102,6 +102,7 @@ public class TestShooter extends LinearOpMode {
             double curX = pos.getX(DistanceUnit.INCH);
             double curY = pos.getY(DistanceUnit.INCH);
             goalDistance = Helper.calcDistToGoal(curX, curY);
+            // goalDistance = Turret.getDistanceToGoal(odo.getPosition()); //LITERALLY ALL YOU HAD TO DO
 
 //            shooterTargetRPM = Helper.calculateRPM(goalDistance);
             // shooter controls
