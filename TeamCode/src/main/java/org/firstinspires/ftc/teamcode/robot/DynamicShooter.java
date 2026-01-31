@@ -1,10 +1,12 @@
 package org.firstinspires.ftc.teamcode.robot;
 
-public class Helper {
+public class DynamicShooter {
+
+    public static double goalX = 128;
+    public static double goalY = 128;
 
     public static double calcDistToGoal(double robotX, double robotY) {
-        double goalX = 128;
-        double goalY = 128;
+
         double deltaX = goalX - robotX;
         double deltaY = goalY - robotY;
         return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
@@ -28,6 +30,11 @@ public class Helper {
         double turHead = 0.0450189 * Math.pow(robotHeading, 2) + 0.286092 * robotHeading - 34.64081;
         turHead = Math.min(Constants.MAX_TURRET_HEAD, Math.max(Constants.MIN_TURRET_HEAD, turHead));
         return turHead;
+    }
+
+    public static void setGoalPosition(double newPositionX, double newPositionY) {
+        goalX = newPositionX;
+        goalY = newPositionY;
     }
 
 }

@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode.teleop;
 
-import androidx.appcompat.widget.ThemedSpinnerAdapter;
-
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -10,6 +8,9 @@ import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
+import org.firstinspires.ftc.teamcode.robot.Constants;
+import org.firstinspires.ftc.teamcode.robot.DynamicShooter;
 import org.firstinspires.ftc.teamcode.robot.Intake;
 import org.firstinspires.ftc.teamcode.robot.Shooter;
 import org.firstinspires.ftc.teamcode.robot.HelperServos;
@@ -29,7 +30,7 @@ public class MainTeleOp extends LinearOpMode {
     private DcMotor driveFR = null;
     private DcMotor driveBR = null;
 
-    private GoBildaPinpointDriver pinpoint = null;
+    private GoBildaPinpointDriver odo = null;
 
     private double shooterEncSpeed = 1600;
     private double shooterHoodAngle = Shooter.HoodState.DOWN.angle;
@@ -44,9 +45,17 @@ public class MainTeleOp extends LinearOpMode {
     final double startX_mm = startX_in * 25.4;
     final double startY_mm = startY_in * 25.4;
 
-    private boolean stopperStop = false;
+    private boolean dynamicToggle = false;
     private boolean prevB = false;
     private double driverSensitivity = 1.0;
+
+    Pose2D pos = null;
+    private double shooterPower = 0;
+    private double robotHeading = 0;
+    private boolean isDynamic = true;
+    private double minTurretHeading = Constants.MIN_TURRET_HEAD;
+    private double maxTurretHeading = Constants.MAX_TURRET_HEAD;
+    private double goalDistance = 0;
 
 
     @Override
@@ -60,7 +69,7 @@ public class MainTeleOp extends LinearOpMode {
         driveFR = hardwareMap.get(DcMotor.class, "driveFR");
         driveBR = hardwareMap.get(DcMotor.class, "driveBR");
 
-        pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
+        odo = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
 
         // ########################################################################################
         // !!!            IMPORTANT Drive Information. Test your motor directions.            !!!!!
@@ -93,10 +102,11 @@ public class MainTeleOp extends LinearOpMode {
         telemetry.update();
 
         // Reset servos
+        odo.resetPosAndIMU();
 
-        pinpoint.setPosX(startX_in, DistanceUnit.INCH);
-        pinpoint.setPosY(startY_in, DistanceUnit.INCH);
-        pinpoint.setHeading(startHeading_deg, AngleUnit.DEGREES);
+//        odo.setPosX(startX_in, DistanceUnit.INCH);
+//        odo.setPosY(startY_in, DistanceUnit.INCH);
+//        odo.setHeading(startHeading_deg, AngleUnit.DEGREES);
 
         waitForStart();
         runtime.reset();
@@ -114,10 +124,10 @@ public class MainTeleOp extends LinearOpMode {
 
             // Combine the joystick requests for each axis-motion to determine each wheel's power.
             // Set up a variable for each drive wheel to save the power level for telemetry.
-            double powerFL  = axial + lateral + yaw;
+            double powerFL = axial + lateral + yaw;
             double powerFR = axial - lateral - yaw;
-            double powerBL   = axial - lateral + yaw;
-            double powerBR  = axial + lateral - yaw;
+            double powerBL = axial - lateral + yaw;
+            double powerBR = axial + lateral - yaw;
 
             // Normalize the values so no wheel power exceeds 100%
             // This ensures that the robot maintains the desired motion.
@@ -161,31 +171,21 @@ public class MainTeleOp extends LinearOpMode {
             telemetry.addData("Shooter Target Speed: ", shooterEncSpeed);
             telemetry.addData("Shooter RPM Error: ", Math.abs(Shooter.getCurrentRPM() - shooterEncSpeed));
             telemetry.addData("Turret Position; ", Shooter.getTurretPosition());
-            telemetry.addData("X Position: ", pinpoint.getXOffset(DistanceUnit.INCH));
-            telemetry.addData("Y Position: ", pinpoint.getYOffset(DistanceUnit.INCH));
-            telemetry.addData("Heading: ", pinpoint.getHeading(AngleUnit.DEGREES));
+            telemetry.addData("X Position: ", odo.getXOffset(DistanceUnit.INCH));
+            telemetry.addData("Y Position: ", odo.getYOffset(DistanceUnit.INCH));
+            telemetry.addData("Heading: ", odo.getHeading(AngleUnit.DEGREES));
             telemetry.addData("ShooterServo Position: ", shooterHoodAngle);
-            telemetry.addData("StopperServo Closed? ", stopperStop);
+            telemetry.addData("StopperServo Closed? ", dynamicToggle);
             telemetry.update();
 
 
-            // Turret Controls
-            double robotX = pinpoint.getPosX(DistanceUnit.INCH);
-            double robotY = pinpoint.getPosY(DistanceUnit.INCH);
-            double robotHeading = pinpoint.getHeading(AngleUnit.DEGREES);
+            odo.update();
+            pos = odo.getPosition();
+            robotHeading = pos.getHeading(AngleUnit.DEGREES);
 
-            // Manual Override
-//            if (Math.abs(gamepad2.right_stick_x) > 0.1) {
-//                Turret.setTurretAngle(gamepad2.right_stick_x * 90);
-//            } else {
-//                Turret.aimAtRedGoal(robotX, robotY, robotHeading);
-//            }
-//
-//            // Emergency Stop \
-//            if (gamepad2.yWasPressed()) {
-//                Turret.stop();
-//            }a
-
+            double curX = pos.getX(DistanceUnit.INCH);
+            double curY = pos.getY(DistanceUnit.INCH);
+            goalDistance = DynamicShooter.calcDistToGoal(curX, curY);
 
             // --- Shooter / Intake Controls ---
 
@@ -230,9 +230,6 @@ public class MainTeleOp extends LinearOpMode {
                 Intake.runIntake();
                 HelperServos.setStopperStop();
                 Intake.raiseIntake();
-            }
-            if (gamepad2.a && !gamepad2.left_bumper && !gamepad2.x) {
-                Intake.runIntakeReverseSlow();
             }
             if (gamepad2.a && gamepad2.left_bumper && !gamepad2.x) {
                 Intake.reverseIntake();
@@ -291,22 +288,33 @@ public class MainTeleOp extends LinearOpMode {
 //            }
 
             // Stopper Servo
-            if (gamepad2.b && !prevB) {
-                if (stopperStop) {
-                    HelperServos.setStopperPass();
-                } else {
-                    HelperServos.setStopperStop();
-                }
-                stopperStop = !stopperStop;
+            if (gamepad2.bWasPressed()) {
+                isDynamic = !isDynamic;
             }
 
-            prevB = gamepad2.b;
+            if (isDynamic) {
+                shooterEncSpeed = DynamicShooter.calcTargetRPM(goalDistance);
+                shooterHoodAngle = DynamicShooter.calcHoodPos(goalDistance);
+//                turretPos = Helper.calcTurretHead(robotHeading);
+
+//                double deltaTurretPos = turretPos - curTurretPos;
+
+//                if (deltaTurretPos > 0) {
+//                    Shooter.turnTurretDirection(true, 0.3);
+//                } else {
+//                    Shooter.turnTurretDirection(false, 0.3);
+//                }
+            }
 
             if (gamepad2.left_trigger > 0.1) {
-                Shooter.turnTurretDirection(false, gamepad2.left_trigger * 0.4);
+                if (Shooter.getTurretPosition() > minTurretHeading) {
+                    Shooter.turnTurretDirection(false, gamepad2.left_trigger * 0.6);
+                }
             }
             if (gamepad2.right_trigger > 0.1) {
-                Shooter.turnTurretDirection(true, gamepad2.right_trigger * 0.4);
+                if (Shooter.getTurretPosition() > maxTurretHeading) {
+                    Shooter.turnTurretDirection(true, gamepad2.right_trigger * 0.6);
+                }
             }
             if (gamepad2.left_trigger == 0 && gamepad2.right_trigger == 0) {
                 Shooter.turnTurretDirection(true, 0);

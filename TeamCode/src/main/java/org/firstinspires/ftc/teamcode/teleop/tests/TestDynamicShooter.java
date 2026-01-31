@@ -8,7 +8,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.robot.Constants;
-import org.firstinspires.ftc.teamcode.robot.Helper;
+import org.firstinspires.ftc.teamcode.robot.DynamicShooter;
 import org.firstinspires.ftc.teamcode.PIDtoPoint.drive.GoBildaPinpointDriver;
 import org.firstinspires.ftc.teamcode.robot.HelperServos;
 import org.firstinspires.ftc.teamcode.robot.Intake;
@@ -110,21 +110,21 @@ public class TestDynamicShooter extends LinearOpMode {
 
             double curX = pos.getX(DistanceUnit.INCH);
             double curY = pos.getY(DistanceUnit.INCH);
-            goalDistance = Helper.calcDistToGoal(curX, curY);
+            goalDistance = DynamicShooter.calcDistToGoal(curX, curY);
             curTurretPos = Shooter.getTurretPosition();
 
             if (isDynamic) {
-                shooterTargetRPM = Helper.calcTargetRPM(goalDistance);
-                curHoodAngle = Helper.calcHoodPos(goalDistance);
-                turretPos = Helper.calcTurretHead(robotHeading);
+                shooterTargetRPM = DynamicShooter.calcTargetRPM(goalDistance);
+                curHoodAngle = DynamicShooter.calcHoodPos(goalDistance);
+//                turretPos = Helper.calcTurretHead(robotHeading);
 
-                double deltaTurretPos = turretPos - curTurretPos;
+//                double deltaTurretPos = turretPos - curTurretPos;
 
-                if (deltaTurretPos > 0) {
-                    Shooter.turnTurretDirection(true, 0.3);
-                } else {
-                    Shooter.turnTurretDirection(false, 0.3);
-                }
+//                if (deltaTurretPos > 0) {
+//                    Shooter.turnTurretDirection(true, 0.3);
+//                } else {
+//                    Shooter.turnTurretDirection(false, 0.3);
+//                }
             }
 
             if (gamepad1.bWasPressed()) {
@@ -188,7 +188,6 @@ public class TestDynamicShooter extends LinearOpMode {
                 HelperServos.setStopperStop();
                 Intake.raiseIntake();
             } else {
-                Intake.lowerIntake();
                 Intake.stopIntake();
             }
             if (gamepad1.right_bumper) {
