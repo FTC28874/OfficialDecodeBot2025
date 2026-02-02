@@ -73,9 +73,20 @@ public class TestDynamicShooter extends LinearOpMode {
         HelperServos.init(hardwareMap);
         Turret.init(hardwareMap);
 
-        telemetry.addLine("Stopper Servo Init");
 
-        waitForStart();
+        telemetry.addLine("Press [B] for Blue goal");
+        telemetry.addLine("Press [A] for Red goal");
+        while (opModeInInit()) {
+
+            if (gamepad1.bWasPressed()) {
+                DynamicShooter.setGoalPosition(-128, 128);
+                telemetry.addLine("Blue goal. Ready to start");
+            }
+            if (gamepad1.aWasPressed()) {
+                DynamicShooter.setGoalPosition(128, 128);
+                telemetry.addLine("Red goal. Ready to start");
+            }
+        }
         while (opModeIsActive()) {
             double max;
 
