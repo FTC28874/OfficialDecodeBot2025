@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
 
-import org.firstinspires.ftc.teamcode.auto.Constants;
+import org.firstinspires.ftc.teamcode.PedroPathing.Constants;
 
 @TeleOp(name = "Pedro Turret Tracking Degrees", group = "Control")
 @Disabled
