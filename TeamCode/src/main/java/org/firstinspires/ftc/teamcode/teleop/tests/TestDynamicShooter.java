@@ -137,7 +137,7 @@ public class TestDynamicShooter extends LinearOpMode {
                 int deltaTurretPos = turretPos - curTurretPos;
 
 
-                turret.setTargetPosition(deltaTurretPos);
+                turret.setTargetPosition(turretPos);
                 turret.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
                 turret.setPower(0.75);
             }
