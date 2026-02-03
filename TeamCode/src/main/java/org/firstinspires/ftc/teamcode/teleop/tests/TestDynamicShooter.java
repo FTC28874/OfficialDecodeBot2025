@@ -47,6 +47,8 @@ public class TestDynamicShooter extends LinearOpMode {
     private DcMotor driveFR = null;
     private DcMotor driveBR = null;
     private DcMotorEx turret = null;
+    private int goalX = 128;
+    private int goalY = 128;
 
 
     @Override
@@ -134,12 +136,12 @@ public class TestDynamicShooter extends LinearOpMode {
 
                 turretPos = DynamicShooter.calcTurretHead(robotHeading, curX, curY);
 
-                int deltaTurretPos = turretPos - curTurretPos;
+//                int deltaTurretPos = turretPos - curTurretPos;
 
 
                 turret.setTargetPosition(turretPos);
                 turret.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
-                turret.setPower(0.75);
+                turret.setPower(0.85);
             }
             if (gamepad1.bWasPressed()) {
                 isDynamic = false;
@@ -212,6 +214,7 @@ public class TestDynamicShooter extends LinearOpMode {
 
             // reset position to 0,0 and hood to 0.1
             if (gamepad1.aWasPressed()) {
+                DynamicShooter.resetTurretEncoder();
                 odo.resetPosAndIMU();
                 curHoodAngle = minHoodAngle;
             }

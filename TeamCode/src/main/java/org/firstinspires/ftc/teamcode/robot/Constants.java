@@ -8,5 +8,5 @@ public class Constants {
     public static double MAX_HOOD_POSITION = 0.6;
 
     public static double MIN_TURRET_HEAD = -500;
-    public static double MAX_TURRET_HEAD = 450;
+    public static double MAX_TURRET_HEAD = 420;
 }
