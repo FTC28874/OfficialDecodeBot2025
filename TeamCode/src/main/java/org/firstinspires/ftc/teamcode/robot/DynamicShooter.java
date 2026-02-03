@@ -25,11 +25,23 @@ public class DynamicShooter {
         return hoodPos;
     }
 
-    public static double calcTurretHead(double robotHeading) {
+    public static int calcTurretHead(double robotHeading, double robotX, double robotY) {
         // Equation: y = 0.0450189x^2 + 0.286092x - 34.64081
-        double turHead = 0.0450189 * Math.pow(robotHeading, 2) + 0.286092 * robotHeading - 34.64081;
-        turHead = Math.min(Constants.MAX_TURRET_HEAD, Math.max(Constants.MIN_TURRET_HEAD, turHead));
-        return turHead;
+        double turHead = 0;
+        double deltaX = goalX - robotX;
+        double deltaY = goalY - robotY;
+        double headingToGoal = Math.atan2(deltaY, deltaX);
+
+//        if (Shooter.getTurretPosition() <= 0){
+//            turHead = -721.95 + 11.8*robotX + 2.55*robotY + 9.53*robotHeading - 0.008*Math.pow(robotX, 2) - 0.092*robotX*robotY - 0.119*robotX*robotHeading + 0.027*Math.pow(robotY, 2) + 0.003*robotY*robotHeading + 0.003*Math.pow(robotHeading, 2);
+//            turHead = Math.min(Constants.MAX_TURRET_HEAD, Math.max(Constants.MIN_TURRET_HEAD, turHead));
+//
+//           }
+//        else {
+//            turHead = -1410.77 - 21.7*Math.pow(robotX, 2) + 42.13*robotY + 12.81*robotHeading + 0.094*Math.pow(robotX, 2) + 0.058*robotX*robotY + 0.04*robotX*robotHeading - 0.215*Math.pow(robotY, 2) - 0.143*robotY*robotHeading + 0.018*Math.pow(robotHeading, 2);
+//            turHead = Math.min(Constants.MAX_TURRET_HEAD, Math.max(Constants.MIN_TURRET_HEAD, turHead));
+//        }
+        return (int)(headingToGoal);
     }
 
     public static void setGoalPosition(double newPositionX, double newPositionY) {

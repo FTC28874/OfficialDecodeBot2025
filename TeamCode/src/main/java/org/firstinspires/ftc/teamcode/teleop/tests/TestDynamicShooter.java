@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.teleop.tests;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -34,8 +35,8 @@ public class TestDynamicShooter extends LinearOpMode {
     private double minTurretHeading = Constants.MIN_TURRET_HEAD;
     private double maxTurretHeading = Constants.MAX_TURRET_HEAD;
 
-    private double turretPos = 0;
-    private double curTurretPos = 0;
+    private int turretPos = 0;
+    private int curTurretPos = 0;
     private double goalDistance = 0;
 
     private double robotHeading = 0;
@@ -45,6 +46,7 @@ public class TestDynamicShooter extends LinearOpMode {
     private DcMotor driveBL = null;
     private DcMotor driveFR = null;
     private DcMotor driveBR = null;
+    private DcMotorEx turret = null;
 
 
     @Override
@@ -53,6 +55,7 @@ public class TestDynamicShooter extends LinearOpMode {
         driveBL = hardwareMap.get(DcMotor.class, "driveBL");
         driveFR = hardwareMap.get(DcMotor.class, "driveFR");
         driveBR = hardwareMap.get(DcMotor.class, "driveBR");
+        turret = hardwareMap.get(DcMotorEx.class, "turret");
         odo = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
         odo.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
         odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.REVERSED);
@@ -67,6 +70,7 @@ public class TestDynamicShooter extends LinearOpMode {
         driveBL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         driveFR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         driveBR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
 
         Shooter.init(hardwareMap);
         Intake.init(hardwareMap);
@@ -122,22 +126,21 @@ public class TestDynamicShooter extends LinearOpMode {
             double curX = pos.getX(DistanceUnit.INCH);
             double curY = pos.getY(DistanceUnit.INCH);
             goalDistance = DynamicShooter.calcDistToGoal(curX, curY);
-            curTurretPos = Shooter.getTurretPosition();
+            curTurretPos = (int) Shooter.getTurretPosition();
 
             if (isDynamic) {
                 shooterTargetRPM = DynamicShooter.calcTargetRPM(goalDistance);
                 curHoodAngle = DynamicShooter.calcHoodPos(goalDistance);
-//                turretPos = Helper.calcTurretHead(robotHeading);
 
-//                double deltaTurretPos = turretPos - curTurretPos;
+                turretPos = DynamicShooter.calcTurretHead(robotHeading, curX, curY);
 
-//                if (deltaTurretPos > 0) {
-//                    Shooter.turnTurretDirection(true, 0.3);
-//                } else {
-//                    Shooter.turnTurretDirection(false, 0.3);
-//                }
+                int deltaTurretPos = turretPos - curTurretPos;
+
+
+                turret.setTargetPosition(deltaTurretPos);
+                turret.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+                turret.setPower(0.75);
             }
-
             if (gamepad1.bWasPressed()) {
                 isDynamic = false;
             }
@@ -224,7 +227,7 @@ public class TestDynamicShooter extends LinearOpMode {
             telemetry.addData("Robot Heading: ", robotHeading);
             telemetry.addData("Shooter Target RPM: ", shooterTargetRPM);
             telemetry.addData("Hood Angle", curHoodAngle);
-            telemetry.addData("Current Turret Heading: ", curTurretPos);
+            telemetry.addData("Current Turret Heading: ", turret.getCurrentPosition());
             telemetry.addData("Target Turret Position: ", turretPos);
             telemetry.addData("Shooter ON: ", shooterState);
             telemetry.addData("Current Shooter RPM: ", Shooter.getCurrentRPM());
