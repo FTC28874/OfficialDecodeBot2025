@@ -112,7 +112,18 @@ public class MainTeleOp extends LinearOpMode {
         runtime.reset();
 
         Turret.zeroTurret();
-//khgjgh
+        telemetry.addLine("Press [B] for Blue goal");
+        telemetry.addLine("Press [A] for Red goal");
+        while (opModeInInit()) {
+            if (gamepad1.bWasPressed()) {
+                DynamicShooter.setGoalPosition(-128, 128);
+                telemetry.addLine("Blue goal. Ready to start");
+            }
+            if (gamepad1.aWasPressed()) {
+                DynamicShooter.setGoalPosition(128, 128);
+                telemetry.addLine("Red goal. Ready to start");
+            }
+        }
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
             double max;
@@ -171,11 +182,11 @@ public class MainTeleOp extends LinearOpMode {
             telemetry.addData("Shooter Target Speed: ", shooterEncSpeed);
             telemetry.addData("Shooter RPM Error: ", Math.abs(Shooter.getCurrentRPM() - shooterEncSpeed));
             telemetry.addData("Turret Position; ", Shooter.getTurretPosition());
-            telemetry.addData("X Position: ", odo.getXOffset(DistanceUnit.INCH));
-            telemetry.addData("Y Position: ", odo.getYOffset(DistanceUnit.INCH));
-            telemetry.addData("Heading: ", odo.getHeading(AngleUnit.DEGREES));
+            telemetry.addData("X Position: ", pos.getX(DistanceUnit.INCH));
+            telemetry.addData("Y Position: ", pos.getY(DistanceUnit.INCH));
+            telemetry.addData("Heading: ", pos.getHeading(AngleUnit.DEGREES));
             telemetry.addData("ShooterServo Position: ", shooterHoodAngle);
-            telemetry.addData("StopperServo Closed? ", dynamicToggle);
+            telemetry.addData("Dynamic Toggle: ", dynamicToggle);
             telemetry.update();
 
 
@@ -287,8 +298,12 @@ public class MainTeleOp extends LinearOpMode {
 //                Shooter.turnTurretDirection(false, 0.0);
 //            }
 
-            // Stopper Servo
-            if (gamepad2.bWasPressed()) {
+            if (gamepad1.a && gamepad1.left_bumper) {
+                odo.resetPosAndIMU();
+            }
+
+            // Dynamic Toggle
+            if (gamepad1.bWasPressed()) {
                 isDynamic = !isDynamic;
             }
 
