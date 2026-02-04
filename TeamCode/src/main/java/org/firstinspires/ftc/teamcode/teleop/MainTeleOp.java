@@ -53,9 +53,8 @@ public class MainTeleOp extends LinearOpMode {
     private double shooterPower = 0;
     private double robotHeading = 0;
     private boolean isDynamic = true;
-    private double minTurretHeading = Constants.MIN_TURRET_HEAD;
-    private double maxTurretHeading = Constants.MAX_TURRET_HEAD;
     private double goalDistance = 0;
+    private double turretPos = 0;
 
 
     @Override
@@ -182,9 +181,6 @@ public class MainTeleOp extends LinearOpMode {
             telemetry.addData("Shooter Target Speed: ", shooterEncSpeed);
             telemetry.addData("Shooter RPM Error: ", Math.abs(Shooter.getCurrentRPM() - shooterEncSpeed));
             telemetry.addData("Turret Position; ", Shooter.getTurretPosition());
-            telemetry.addData("X Position: ", pos.getX(DistanceUnit.INCH));
-            telemetry.addData("Y Position: ", pos.getY(DistanceUnit.INCH));
-            telemetry.addData("Heading: ", pos.getHeading(AngleUnit.DEGREES));
             telemetry.addData("ShooterServo Position: ", shooterHoodAngle);
             telemetry.addData("Dynamic Toggle: ", dynamicToggle);
             telemetry.update();
@@ -300,6 +296,7 @@ public class MainTeleOp extends LinearOpMode {
 
             if (gamepad1.a && gamepad1.left_bumper) {
                 odo.resetPosAndIMU();
+                DynamicShooter.resetTurretEncoder();
             }
 
             // Dynamic Toggle
@@ -310,32 +307,25 @@ public class MainTeleOp extends LinearOpMode {
             if (isDynamic) {
                 shooterEncSpeed = DynamicShooter.calcTargetRPM(goalDistance);
                 shooterHoodAngle = DynamicShooter.calcHoodPos(goalDistance);
-//                turretPos = Helper.calcTurretHead(robotHeading);
 
-//                double deltaTurretPos = turretPos - curTurretPos;
+                turretPos = DynamicShooter.calcTurretHead(robotHeading, curX, curY);
 
-//                if (deltaTurretPos > 0) {
-//                    Shooter.turnTurretDirection(true, 0.3);
-//                } else {
-//                    Shooter.turnTurretDirection(false, 0.3);
-//                }
+                DynamicShooter.setTurretToPosition( (int) turretPos, 0.85);
+
             }
 
             if (gamepad2.left_trigger > 0.1) {
-                if (Shooter.getTurretPosition() > minTurretHeading) {
+                if (Shooter.getTurretPosition() > Constants.MIN_TURRET_HEAD) {
                     Shooter.turnTurretDirection(false, gamepad2.left_trigger * 0.6);
                 }
             }
             if (gamepad2.right_trigger > 0.1) {
-                if (Shooter.getTurretPosition() > maxTurretHeading) {
+                if (Shooter.getTurretPosition() > Constants.MAX_TURRET_HEAD) {
                     Shooter.turnTurretDirection(true, gamepad2.right_trigger * 0.6);
                 }
             }
             if (gamepad2.left_trigger == 0 && gamepad2.right_trigger == 0) {
                 Shooter.turnTurretDirection(true, 0);
-
-
-
             }
         }
     }

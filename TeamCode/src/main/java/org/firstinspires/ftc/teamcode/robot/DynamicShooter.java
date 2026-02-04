@@ -16,11 +16,7 @@ public class DynamicShooter {
     public static void init(HardwareMap hardwareMap) {
 
         turret = hardwareMap.get(DcMotorEx.class, "turret");
-
-
-
-
-
+        turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
     public static double calcDistToGoal(double robotX, double robotY) {
@@ -55,6 +51,16 @@ public class DynamicShooter {
     public static void setGoalPosition(double newPositionX, double newPositionY) {
         goalX = newPositionX;
         goalY = newPositionY;
+    }
+
+    public static void setTurretToPosition(int position, double power) {
+        turret.setTargetPosition(position);
+        turret.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+        turret.setPower(power);
+    }
+
+    public static int getTurretPosition() {
+        return turret.getCurrentPosition();
     }
 
     public static void resetTurretEncoder() {

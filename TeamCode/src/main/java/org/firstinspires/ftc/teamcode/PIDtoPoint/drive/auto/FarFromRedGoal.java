@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.PIDtoPoint.drive.auto;
 
 import androidx.appcompat.widget.ThemedSpinnerAdapter;
 
+import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -21,14 +22,10 @@ import org.firstinspires.ftc.teamcode.robot.HelperServos;
 
 import java.util.Locale;
 
-// RPM: 1600
-// Turret Encoder Value: 406
-// Shooter Hood: 0.2
 
-// Far:
-// RPM: 1950
-// Turret Encoder Value: 126
-// Shooter Hood: 0.55
+// turret encoder value: -372
+// hood: 0.6
+// rpm: 3500
 
 @Autonomous(name="Far From Red Goal", group="Auto")
 //@Disabled
@@ -73,6 +70,9 @@ public class FarFromRedGoal extends LinearOpMode {
     static final Pose2D INTAKE_ROW_1 = new Pose2D(DistanceUnit.INCH, 76, -29, AngleUnit.DEGREES, -90);
     static final Pose2D BEGIN_INTAKE_ROW_3 = new Pose2D(DistanceUnit.INCH, 28, 0, AngleUnit.DEGREES, -90);
     static final Pose2D INTAKE_ROW_3 = new Pose2D(DistanceUnit.INCH, 28, -29, AngleUnit.DEGREES, -90);
+    static final Pose2D BEGIN_INTAKE_HUMAN = new Pose2D(DistanceUnit.INCH, 5, 0, AngleUnit.DEGREES, -90);
+    static final Pose2D INTAKE_HUMAN = new Pose2D(DistanceUnit.INCH, 5, -29, AngleUnit.DEGREES, -90);
+
     static final Pose2D END_AUTO = new Pose2D(DistanceUnit.INCH, 20, 0, AngleUnit.DEGREES, 0);
 
     public double inToMM(double inValue) {
@@ -267,7 +267,7 @@ public class FarFromRedGoal extends LinearOpMode {
                     the robot has reached the target, and has been there for (holdTime) seconds.
                     Once driveTo returns true, it prints a telemetry line and moves the state machine forward.
                      */
-                    if (nav.driveTo(odo.getPosition(), BEGIN_INTAKE_ROW_1, 0.7, 0.5)) {
+                    if (nav.driveTo(odo.getPosition(), BEGIN_INTAKE_HUMAN, 0.7, 0.5)) {
                         Intake.raiseIntake();
                         HelperServos.setStopperStop();
                         telemetry.addLine("about to intake with stopper closed");
@@ -282,10 +282,10 @@ public class FarFromRedGoal extends LinearOpMode {
                     the robot has reached the target, and has been there for (holdTime) seconds.
                     Once driveTo returns true, it prints a telemetry line and moves the state machine forward.
                      */
-                    if (nav.driveTo(odo.getPosition(), INTAKE_ROW_1, 0.6, 0.0)) {
+                    if (nav.driveTo(odo.getPosition(), INTAKE_HUMAN, 0.6, 0.0)) {
                         telemetry.addLine("at position #2!");
                         timer.reset();
-                        stateMachine = StateMachine.DONE;
+                        stateMachine = StateMachine.DRIVE_TO_TARGET_9;
                     }
                     break;
                 case DRIVE_TO_TARGET_9:
