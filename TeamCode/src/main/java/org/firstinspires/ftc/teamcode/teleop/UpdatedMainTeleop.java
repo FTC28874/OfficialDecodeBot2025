@@ -211,6 +211,24 @@ public class UpdatedMainTeleop extends LinearOpMode {
                 Intake.lowerIntake();
             }
 
+            // Driver Presets
+            if (gamepad1.dpadUpWasPressed()) {
+                shooterTargetRPM = Shooter.ShootPositionState.FAR_RPM.position;
+                curHoodAngle = Shooter.ShootPositionState.FAR_HOOD.position;
+            }
+            if (gamepad1.dpadDownWasPressed()) {
+                shooterTargetRPM = Shooter.ShootPositionState.CLOSE_RPM.position;
+                curHoodAngle = Shooter.ShootPositionState.CLOSE_HOOD.position;
+            }
+            if (gamepad1.dpadLeftWasPressed()) {
+                shooterTargetRPM = Shooter.ShootPositionState.MID_MID_RPM.position;
+                curHoodAngle = Shooter.ShootPositionState.MID_MID_HOOD.position;
+            }
+            if (gamepad1.dpadRightWasPressed()) {
+                shooterTargetRPM = Shooter.ShootPositionState.MID_RPM.position;
+                curHoodAngle = Shooter.ShootPositionState.MID_HOOD.position;
+            }
+
             // reset position to 0,0 and hood to 0.1
             if (gamepad1.yWasPressed()) {
                 odo.resetPosAndIMU();
