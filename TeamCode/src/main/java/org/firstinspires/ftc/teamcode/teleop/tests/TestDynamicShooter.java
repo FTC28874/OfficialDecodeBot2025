@@ -46,6 +46,7 @@ public class TestDynamicShooter extends LinearOpMode {
     private DcMotor driveBL = null;
     private DcMotor driveFR = null;
     private DcMotor driveBR = null;
+    private DcMotorEx turret = null;
     private int goalX = 128;
     private int goalY = 128;
 
@@ -56,6 +57,7 @@ public class TestDynamicShooter extends LinearOpMode {
         driveBL = hardwareMap.get(DcMotor.class, "driveBL");
         driveFR = hardwareMap.get(DcMotor.class, "driveFR");
         driveBR = hardwareMap.get(DcMotor.class, "driveBR");
+        turret = hardwareMap.get(DcMotorEx.class, "turret");
         odo = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
         odo.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
         odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.REVERSED);
@@ -134,7 +136,9 @@ public class TestDynamicShooter extends LinearOpMode {
 
                 turretPos = DynamicShooter.calcTurretHead(robotHeading, curX, curY);
 
-                DynamicShooter.setTurretToPosition(turretPos, 0.85);
+                turret.setTargetPosition(turretPos);
+                turret.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+                turret.setPower(0.86);
             }
             if (gamepad1.bWasPressed()) {
                 isDynamic = false;
@@ -207,9 +211,10 @@ public class TestDynamicShooter extends LinearOpMode {
 
             // reset position to 0,0 and hood to 0.1
             if (gamepad1.aWasPressed()) {
-                DynamicShooter.resetTurretEncoder();
                 odo.resetPosAndIMU();
                 curHoodAngle = minHoodAngle;
+                turret.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+                turret.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
             }
             driveFL.setPower(powerFL);
             driveFR.setPower(powerFR);
@@ -223,7 +228,6 @@ public class TestDynamicShooter extends LinearOpMode {
             telemetry.addData("Robot Heading: ", robotHeading);
             telemetry.addData("Shooter Target RPM: ", shooterTargetRPM);
             telemetry.addData("Hood Angle", curHoodAngle);
-            telemetry.addData("Current Turret Heading: ", DynamicShooter.getTurretPosition());
             telemetry.addData("Target Turret Position: ", turretPos);
             telemetry.addData("Shooter ON: ", shooterState);
             telemetry.addData("Current Shooter RPM: ", Shooter.getCurrentRPM());
