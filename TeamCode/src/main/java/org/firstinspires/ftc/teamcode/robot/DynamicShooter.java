@@ -39,11 +39,19 @@ public class DynamicShooter {
     }
 
 
-    public static int calcTurretHead(double robotHeading, double robotX, double robotY) {
+    public static int calcTurretHead(double robotHeading, double robotX, double robotY, boolean redGoal) {
         double turHead = 0;
-        turHead = -307.1978 + (-1.6701)*robotX + (3.0168)*robotY + (5.5425)*robotHeading;
-        turHead = Math.min(Constants.MAX_TURRET_HEAD, Math.max(Constants.MIN_TURRET_HEAD, turHead));
-        return (int)turHead;
+        if (redGoal) {
+            turHead = -307.1978 + (-1.6701) * robotX + (3.0168) * robotY + (5.5425) * robotHeading;
+            turHead = Math.min(Constants.MAX_TURRET_HEAD, Math.max(Constants.MIN_TURRET_HEAD, turHead));
+
+        } else {
+            // t_blue = -1105.59 - 4.11×x₁ + 7.10×y₁ + 1.24×h
+            turHead = -1105.59 - (4.11) * robotX + (7.1) * robotY + (1.24) * robotHeading;
+            turHead = Math.min(Constants.MAX_TURRET_HEAD, Math.max(Constants.MIN_TURRET_HEAD, turHead));
+
+        }
+        return (int) turHead;
     }
 
 

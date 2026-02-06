@@ -310,7 +310,7 @@ public class MainTeleOp extends LinearOpMode {
                 shooterEncSpeed = DynamicShooter.calcTargetRPM(goalDistance);
                 shooterHoodAngle = DynamicShooter.calcHoodPos(goalDistance);
 
-                turretPos = DynamicShooter.calcTurretHead(robotHeading, curX, curY);
+                turretPos = DynamicShooter.calcTurretHead(robotHeading, curX, curY, true);
                 DynamicShooter.setTurretToPosition( (int) turretPos, 0.85);
 
             }

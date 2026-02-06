@@ -49,6 +49,7 @@ public class UpdatedMainTeleop extends LinearOpMode {
     private int goalX = 128;
     private int goalY = 128;
     private boolean init = false;
+    private boolean isRed = true;
 
 
     @Override
@@ -81,17 +82,19 @@ public class UpdatedMainTeleop extends LinearOpMode {
 
         init = true;
 
-        while (init) {
+        while (opModeInInit()) {
             telemetry.addData("Press [B] ", "for Blue goal");
             telemetry.addData("Press [A] ", "for Red goal");
             if (gamepad1.bWasPressed()) {
-                DynamicShooter.setGoalPosition(-128, -128);
+                DynamicShooter.setGoalPosition(-128, 128);
                 telemetry.addData("Blue goal. ", "Ready to start");
+                isRed = false;
                 init = false;
             }
             if (gamepad1.aWasPressed()) {
                 DynamicShooter.setGoalPosition(128, 128);
                 telemetry.addData("Red goal. ", "Ready to start");
+                isRed = true;
                 init = false;
             }
             telemetry.update();
@@ -145,7 +148,7 @@ public class UpdatedMainTeleop extends LinearOpMode {
                     shooterTargetRPM = DynamicShooter.calcTargetRPM(goalDistance);
                     curHoodAngle = DynamicShooter.calcHoodPos(goalDistance);
 
-                    turretPos = DynamicShooter.calcTurretHead(robotHeading, curX, curY);
+                    turretPos = DynamicShooter.calcTurretHead(robotHeading, curX, curY, isRed);
                     turret.setTargetPosition(turretPos);
                     turret.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
                     turret.setPower(0.75);
