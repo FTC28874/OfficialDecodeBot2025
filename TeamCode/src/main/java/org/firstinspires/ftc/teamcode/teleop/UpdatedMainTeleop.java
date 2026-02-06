@@ -90,6 +90,7 @@ public class UpdatedMainTeleop extends LinearOpMode {
                 DynamicShooter.setGoalPosition(128, 128);
                 telemetry.addData("Red goal. ", "Ready to start");
             }
+            telemetry.update();
         }
         while (opModeIsActive()) {
             double max;
