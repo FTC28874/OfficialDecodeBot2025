@@ -78,13 +78,12 @@ public class UpdatedMainTeleop extends LinearOpMode {
         HelperServos.init(hardwareMap);
         Turret.init(hardwareMap);
 
-
-        telemetry.addLine("Press [B] for Blue goal");
-        telemetry.addLine("Press [A] for Red goal");
         while (opModeInInit()) {
 
+            telemetry.addLine("Press [B] for Blue goal");
+            telemetry.addLine("Press [A] for Red goal");
             if (gamepad1.bWasPressed()) {
-                DynamicShooter.setGoalPosition(-128, 128);
+                DynamicShooter.setGoalPosition(-128, -128);
                 telemetry.addLine("Blue goal. Ready to start");
             }
             if (gamepad1.aWasPressed()) {
@@ -130,14 +129,25 @@ public class UpdatedMainTeleop extends LinearOpMode {
             curTurretPos = (int) Shooter.getTurretPosition();
 
             if (isDynamic) {
-                shooterTargetRPM = DynamicShooter.calcTargetRPM(goalDistance);
-                curHoodAngle = DynamicShooter.calcHoodPos(goalDistance);
+                if (goalDistance >= 130){
+                    shooterTargetRPM = 2900;
+                    curHoodAngle = 0.6;
+                    turretPos = 168;
+                    turret.setTargetPosition(turretPos);
+                    turret.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+                    turret.setPower(0.75);
+                } else  {
+                    shooterTargetRPM = DynamicShooter.calcTargetRPM(goalDistance);
+                    curHoodAngle = DynamicShooter.calcHoodPos(goalDistance);
 
-                turretPos = DynamicShooter.calcTurretHead(robotHeading, curX, curY);
+                    turretPos = DynamicShooter.calcTurretHead(robotHeading, curX, curY);
+                    turret.setTargetPosition(turretPos);
+                    turret.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+                    turret.setPower(0.75);
+                }
 
-                turret.setTargetPosition(turretPos);
-                turret.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
-                turret.setPower(0.75);
+
+
             }
             if (gamepad2.bWasPressed()) {
                 isDynamic = !isDynamic;

@@ -80,10 +80,10 @@ public class TestDynamicShooter extends LinearOpMode {
         Turret.init(hardwareMap);
 
 
-        telemetry.addLine("Press [B] for Blue goal");
-        telemetry.addLine("Press [A] for Red goal");
-        while (opModeInInit()) {
 
+        while (opModeInInit()) {
+            telemetry.addLine("Press [B] for Blue goal");
+            telemetry.addLine("Press [A] for Red goal");
             if (gamepad1.bWasPressed()) {
                 DynamicShooter.setGoalPosition(-128, 128);
                 telemetry.addLine("Blue goal. Ready to start");
@@ -216,6 +216,9 @@ public class TestDynamicShooter extends LinearOpMode {
                 turret.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
                 turret.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
             }
+            // shooter presets
+
+
             driveFL.setPower(powerFL);
             driveFR.setPower(powerFR);
             driveBL.setPower(powerBL);
@@ -231,6 +234,7 @@ public class TestDynamicShooter extends LinearOpMode {
             telemetry.addData("Target Turret Position: ", turretPos);
             telemetry.addData("Shooter ON: ", shooterState);
             telemetry.addData("Current Shooter RPM: ", Shooter.getCurrentRPM());
+            telemetry.addData("Curret Turret Position: ", turret.getCurrentPosition());
             telemetry.update();
         }
     }
