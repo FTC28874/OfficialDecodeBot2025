@@ -80,15 +80,15 @@ public class UpdatedMainTeleop extends LinearOpMode {
 
         while (opModeInInit()) {
 
-            telemetry.addLine("Press [B] for Blue goal");
-            telemetry.addLine("Press [A] for Red goal");
+            telemetry.addData("Press [B] ", "for Blue goal");
+            telemetry.addData("Press [A] ", "for Red goal");
             if (gamepad1.bWasPressed()) {
                 DynamicShooter.setGoalPosition(-128, -128);
-                telemetry.addLine("Blue goal. Ready to start");
+                telemetry.addData("Blue goal. ", "Ready to start");
             }
             if (gamepad1.aWasPressed()) {
                 DynamicShooter.setGoalPosition(128, 128);
-                telemetry.addLine("Red goal. Ready to start");
+                telemetry.addData("Red goal. ", "Ready to start");
             }
         }
         while (opModeIsActive()) {
