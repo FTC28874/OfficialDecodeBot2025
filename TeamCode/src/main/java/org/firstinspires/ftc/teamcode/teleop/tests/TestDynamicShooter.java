@@ -134,7 +134,7 @@ public class TestDynamicShooter extends LinearOpMode {
                 shooterTargetRPM = DynamicShooter.calcTargetRPM(goalDistance);
                 curHoodAngle = DynamicShooter.calcHoodPos(goalDistance);
 
-                turretPos = DynamicShooter.calcTurretHead(robotHeading, curX, curY);
+                turretPos = DynamicShooter.calcTurretHead(robotHeading, curX, curY, true);
 
                 turret.setTargetPosition(turretPos);
                 turret.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);

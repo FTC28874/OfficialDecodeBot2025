@@ -43,6 +43,7 @@ public class CloseToRedGoal extends LinearOpMode {
     ElapsedTime timer = null; //asdf
     double shooterEncSpeed = Shooter.ShootPositionState.MID_MID_RPM.position;
     double shooterHoodAngle = Shooter.ShootPositionState.MID_MID_HOOD.position;
+    int ballMode = 0;
 
     GoBildaPinpointDriver odo = null; // Declare OpMode member for the Odometry Computer
     DriveToPoint nav = new DriveToPoint(this); //OpMode member for the point-to-point navigation class
@@ -75,6 +76,7 @@ public class CloseToRedGoal extends LinearOpMode {
     static final Pose2D BEGIN_INTAKE_ROW_3 = new Pose2D(DistanceUnit.INCH, -84, 25, AngleUnit.DEGREES, -90);
     static final Pose2D INTAKE_ROW_3 = new Pose2D(DistanceUnit.INCH, -84, 1, AngleUnit.DEGREES, -90);
     static final Pose2D END_AUTO = new Pose2D(DistanceUnit.INCH, -49, 12, AngleUnit.DEGREES, -90);
+
 
     public double inToMM(double inValue) {
         return inValue * 25.4;
@@ -141,6 +143,27 @@ public class CloseToRedGoal extends LinearOpMode {
         Shooter.setShooterPosition(0.55);
         HelperServos.setStopperPass();
 
+        while (opModeInInit()) {
+            telemetry.addLine("Select [A] for 3 Ball Auto");
+            telemetry.addLine("Select [B] for 6 Ball Auto");
+            telemetry.addLine("Select [Y] for 9 Ball Auto");
+            telemetry.addLine("Select [X] for 9 Ball Auto With 3rd Row");
+            telemetry.addData("Current Auto Mode", ballMode);
+            if (gamepad1.aWasPressed()) {
+                ballMode = 3;
+            }
+            if (gamepad1.bWasPressed()) {
+                ballMode = 6;
+            }
+            if (gamepad1.xWasPressed()) {
+                ballMode = 12;
+            }
+            if (gamepad1.yWasPressed()) {
+                ballMode = 9;
+            }
+            telemetry.update();
+        }
+
         // Wait for the game to start (driver presses START)
         waitForStart();
         resetRuntime();
@@ -182,7 +205,11 @@ public class CloseToRedGoal extends LinearOpMode {
                     if (timer.time() > 2.5) {
                         timer.reset();
                         HelperServos.setStopperStop();
-                        stateMachine = StateMachine.DRIVE_TO_TARGET_2;
+                        if (ballMode > 3) {
+                            stateMachine = StateMachine.DRIVE_TO_TARGET_2;
+                        } else {
+                            stateMachine = StateMachine.DONE;
+                        }
                     }
                     break;
                 case DRIVE_TO_TARGET_2:
@@ -222,7 +249,11 @@ public class CloseToRedGoal extends LinearOpMode {
                         timer.reset();
                         Intake.raiseIntake();
                         HelperServos.setStopperStop();
-                        stateMachine = StateMachine.DRIVE_TO_TARGET_5;
+                        if (ballMode > 6) {
+                            stateMachine = StateMachine.DRIVE_TO_TARGET_5;
+                        } else {
+                            stateMachine = StateMachine.DONE;
+                        }
                     }
                     break;
                     // loop from here
@@ -263,7 +294,11 @@ public class CloseToRedGoal extends LinearOpMode {
                         timer.reset();
                         Intake.raiseIntake();
                         HelperServos.setStopperStop();
-                        stateMachine = StateMachine.DRIVE_TO_TARGET_8;
+                        if (ballMode > 9) {
+                            stateMachine = StateMachine.DRIVE_TO_TARGET_8;
+                        } else {
+                            stateMachine = StateMachine.DONE;
+                        }
                     }
                     break;
                     // to here

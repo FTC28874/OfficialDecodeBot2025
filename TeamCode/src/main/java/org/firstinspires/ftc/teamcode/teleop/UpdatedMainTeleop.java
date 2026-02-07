@@ -155,7 +155,6 @@ public class UpdatedMainTeleop extends LinearOpMode {
                 }
 
 
-
             }
             if (gamepad2.bWasPressed()) {
                 isDynamic = !isDynamic;
