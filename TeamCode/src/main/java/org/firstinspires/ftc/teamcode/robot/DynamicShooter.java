@@ -10,12 +10,12 @@ public class DynamicShooter {
     public static double goalX = 128;
     public static double goalY = 128;
 
-    private static DcMotorEx turret = null;
+    private static DcMotor turret = null;
 
     private final double motorEncoderTicksPerRev = 28 * 19.2;
     public static void init(HardwareMap hardwareMap) {
 
-        turret = hardwareMap.get(DcMotorEx.class, "turret");
+        turret = hardwareMap.get(DcMotor.class, "turret");
     }
 
     public static double calcDistToGoal(double robotX, double robotY) {
@@ -47,7 +47,7 @@ public class DynamicShooter {
 
         } else {
             // t_blue = -1105.59 - 4.11×x₁ + 7.10×y₁ + 1.24×h
-            turHead = -1105.59 - (4.11) * robotX + (7.1) * robotY + (1.24) * robotHeading;
+            turHead = -307.1978 + (-1.6701) * (robotX * -1) + (3.0168) * (robotY * -1) + (5.5425) * robotHeading;
             turHead = Math.min(Constants.MAX_TURRET_HEAD, Math.max(Constants.MIN_TURRET_HEAD, turHead));
 
         }

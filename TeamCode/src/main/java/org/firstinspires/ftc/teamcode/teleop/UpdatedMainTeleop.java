@@ -46,7 +46,7 @@ public class UpdatedMainTeleop extends LinearOpMode {
     private DcMotor driveBL = null;
     private DcMotor driveFR = null;
     private DcMotor driveBR = null;
-    private DcMotorEx turret = null;
+    private DcMotor turret = null;
     private int goalX = 128;
     private int goalY = 128;
     private boolean init = false;
@@ -59,7 +59,7 @@ public class UpdatedMainTeleop extends LinearOpMode {
         driveBL = hardwareMap.get(DcMotor.class, "driveBL");
         driveFR = hardwareMap.get(DcMotor.class, "driveFR");
         driveBR = hardwareMap.get(DcMotor.class, "driveBR");
-        turret = hardwareMap.get(DcMotorEx.class, "turret");
+        turret = hardwareMap.get(DcMotor.class, "turret");
         odo = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
         odo.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
         odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.REVERSED);
@@ -93,7 +93,7 @@ public class UpdatedMainTeleop extends LinearOpMode {
             telemetry.addData("Press [B] ", "for Red goal");
             telemetry.addData("Red Goal? ", isRed);
             if (gamepad1.aWasPressed()) {
-                DynamicShooter.setGoalPosition(-128, 128);
+                DynamicShooter.setGoalPosition(128, -128);
                 telemetry.addData("Blue goal. ", "Ready to start");
                 isRed = false;
             }
