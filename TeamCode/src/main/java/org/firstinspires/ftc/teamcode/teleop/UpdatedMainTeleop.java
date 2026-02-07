@@ -41,6 +41,7 @@ public class UpdatedMainTeleop extends LinearOpMode {
     private double robotHeading = 0;
 
     private boolean isDynamic = false;
+    private boolean turretAimToggle = true;
     private DcMotor driveFL = null;
     private DcMotor driveBL = null;
     private DcMotor driveFR = null;
@@ -75,6 +76,11 @@ public class UpdatedMainTeleop extends LinearOpMode {
         driveBR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
 
+        turret.setTargetPosition(0);
+        turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+
         Shooter.init(hardwareMap);
         Intake.init(hardwareMap);
         HelperServos.init(hardwareMap);
@@ -83,19 +89,18 @@ public class UpdatedMainTeleop extends LinearOpMode {
         init = true;
 
         while (opModeInInit()) {
-            telemetry.addData("Press [B] ", "for Blue goal");
-            telemetry.addData("Press [A] ", "for Red goal");
-            if (gamepad1.bWasPressed()) {
+            telemetry.addData("Press [A] ", "for Blue goal");
+            telemetry.addData("Press [B] ", "for Red goal");
+            telemetry.addData("Red Goal? ", isRed);
+            if (gamepad1.aWasPressed()) {
                 DynamicShooter.setGoalPosition(-128, 128);
                 telemetry.addData("Blue goal. ", "Ready to start");
                 isRed = false;
-                init = false;
             }
-            if (gamepad1.aWasPressed()) {
+            if (gamepad1.bWasPressed()) {
                 DynamicShooter.setGoalPosition(128, 128);
                 telemetry.addData("Red goal. ", "Ready to start");
                 isRed = true;
-                init = false;
             }
             telemetry.update();
         }
@@ -141,23 +146,30 @@ public class UpdatedMainTeleop extends LinearOpMode {
                     shooterTargetRPM = 2900;
                     curHoodAngle = 0.6;
                     turretPos = 168;
-                    turret.setTargetPosition(turretPos);
-                    turret.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
-                    turret.setPower(0.75);
+                    if (turretAimToggle) {
+                        turret.setTargetPosition(turretPos);
+                        turret.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+                        turret.setPower(0.75);
+                    }
                 } else  {
                     shooterTargetRPM = DynamicShooter.calcTargetRPM(goalDistance);
                     curHoodAngle = DynamicShooter.calcHoodPos(goalDistance);
 
                     turretPos = DynamicShooter.calcTurretHead(robotHeading, curX, curY, isRed);
-                    turret.setTargetPosition(turretPos);
-                    turret.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
-                    turret.setPower(0.75);
+                    if (turretAimToggle) {
+                        turret.setTargetPosition(turretPos);
+                        turret.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+                        turret.setPower(0.75);
+                    }
                 }
 
 
             }
             if (gamepad2.bWasPressed()) {
                 isDynamic = !isDynamic;
+            }
+            if (gamepad2.aWasPressed()) {
+                turretAimToggle = !turretAimToggle;
             }
 
             // shooter controls
@@ -250,10 +262,10 @@ public class UpdatedMainTeleop extends LinearOpMode {
             if (gamepad1.yWasPressed()) {
                 odo.resetPosAndIMU();
                 curHoodAngle = minHoodAngle;
-                turretPos = 0;
-                turret.setTargetPosition(turretPos);
-                turret.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
-                turret.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
+                turret.setTargetPosition(0);
+                turret.setPower(0.75);
+                turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             }
             driveFL.setPower(powerFL);
             driveFR.setPower(powerFR);
