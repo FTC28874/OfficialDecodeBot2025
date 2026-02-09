@@ -39,7 +39,7 @@ public class CloseToBlueGoal extends LinearOpMode {
     DcMotorEx turretEncoder = null;
     DcMotor turret = null;
     ElapsedTime timer = null; //asdf
-    double shooterEncSpeed = Shooter.ShootPositionState.MID_MID_RPM.position;
+    double shooterEncSpeed = 1975.0;
     double shooterHoodAngle = Shooter.ShootPositionState.MID_MID_HOOD.position;
     int ballMode = 0;
 

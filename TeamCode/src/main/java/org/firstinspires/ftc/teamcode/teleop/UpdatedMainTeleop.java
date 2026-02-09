@@ -208,11 +208,13 @@ public class UpdatedMainTeleop extends LinearOpMode {
             // turret heading controls
             if (gamepad2.left_trigger > 0.1) {
                 if (Shooter.getTurretPosition() > minTurretHeading) {
+                    turret.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                     Shooter.turnTurretDirection(false, 0.4);
                 }
             }
             if (gamepad2.right_trigger > 0.1) {
                 if (Shooter.getTurretPosition() < maxTurretHeading) {
+                    turret.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                     Shooter.turnTurretDirection(true, 0.4);
                 }
             }
@@ -280,6 +282,7 @@ public class UpdatedMainTeleop extends LinearOpMode {
             telemetry.addData("Shooter Target RPM: ", shooterTargetRPM);
             telemetry.addData("Hood Angle", curHoodAngle);
             telemetry.addData("Target Turret Position: ", turretPos);
+            telemetry.addData("Current Turret Position: ", turret.getCurrentPosition());
             telemetry.addData("Shooter ON: ", shooterState);
             telemetry.addData("Current Shooter RPM: ", Shooter.getCurrentRPM());
             telemetry.update();

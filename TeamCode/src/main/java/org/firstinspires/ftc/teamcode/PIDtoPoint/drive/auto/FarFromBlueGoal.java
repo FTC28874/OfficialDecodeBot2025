@@ -70,7 +70,7 @@ public class FarFromBlueGoal extends LinearOpMode {
     static final Pose2D INTAKE_ROW_1 = new Pose2D(DistanceUnit.INCH, 76, 29, AngleUnit.DEGREES, 90);
     static final Pose2D BEGIN_INTAKE_ROW_3 = new Pose2D(DistanceUnit.INCH, 28, 0, AngleUnit.DEGREES, 90);
     static final Pose2D INTAKE_ROW_3 = new Pose2D(DistanceUnit.INCH, 28, 29, AngleUnit.DEGREES, 90);
-    static final Pose2D END_AUTO = new Pose2D(DistanceUnit.INCH, 14, 0, AngleUnit.DEGREES, 0);
+    static final Pose2D END_AUTO = new Pose2D(DistanceUnit.INCH, 5, 14, AngleUnit.DEGREES, 0);
 
     public double inToMM(double inValue) {
         return inValue * 25.4;

@@ -47,7 +47,7 @@ public class DynamicShooter {
 
         } else {
             // t_blue = -1105.59 - 4.11×x₁ + 7.10×y₁ + 1.24×h
-            turHead = -307.1978 + (-1.6701) * (robotX * -1) + (3.0168) * (robotY * -1) + (5.5425) * robotHeading;
+            turHead = (-307.1978 + (-1.6701) * (robotX * -1) + (3.0168) * (robotY * -1) + (5.5425) * robotHeading) + 100;
             turHead = Math.min(Constants.MAX_TURRET_HEAD, Math.max(Constants.MIN_TURRET_HEAD, turHead));
 
         }

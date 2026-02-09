@@ -73,7 +73,7 @@ public class FarFromRedGoal extends LinearOpMode {
     static final Pose2D BEGIN_INTAKE_HUMAN = new Pose2D(DistanceUnit.INCH, 5, 0, AngleUnit.DEGREES, -90);
     static final Pose2D INTAKE_HUMAN = new Pose2D(DistanceUnit.INCH, 5, -29, AngleUnit.DEGREES, -90);
 
-    static final Pose2D END_AUTO = new Pose2D(DistanceUnit.INCH, 20, 0, AngleUnit.DEGREES, 0);
+    static final Pose2D END_AUTO = new Pose2D(DistanceUnit.INCH, 15, 0, AngleUnit.DEGREES, 0);
 
     public double inToMM(double inValue) {
         return inValue * 25.4;
@@ -163,7 +163,7 @@ public class FarFromRedGoal extends LinearOpMode {
                     if (timer.time() > 3.0) {
                         HelperServos.setStopperStop();
                         timer.reset();
-                        stateMachine = StateMachine.DRIVE_TO_TARGET_1;
+                        stateMachine = StateMachine.DONE;
                     }
                     break;
                 case DRIVE_TO_TARGET_1:
