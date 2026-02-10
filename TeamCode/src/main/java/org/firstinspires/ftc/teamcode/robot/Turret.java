@@ -126,12 +126,19 @@ public class Turret {
         kD = d;
     }
     public static double turretPIDControl(double reference, double state){
+
         double error = reference - state;
+
         integralSum += error * timer.seconds();
+
         double derivative = (error - lastError) / timer.seconds();
+
         lastError = error;
+
         timer.reset();
+
         return (error * kP) + (derivative * kD) + (integralSum * kI);
+
     }
 
     /**
