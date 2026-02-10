@@ -20,7 +20,7 @@ public class MecanumDrive {
     private DriveMode mode = DriveMode.MANUAL;
 
     private Pose2D targetPose = null;
-    private double kP_position = 0.01; //0.01
+    private double kP_position = 0.005; //0.01
     private double kP_heading = 0.02; //0.02
     private double maxPower = 0.6;
 

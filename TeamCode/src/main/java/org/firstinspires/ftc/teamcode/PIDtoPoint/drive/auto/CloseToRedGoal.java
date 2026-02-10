@@ -29,7 +29,7 @@ import java.util.Locale;
 // Turret Encoder Value: 126
 // Shooter Hood: 0.55
 
-@Autonomous(name="Close To Red Goal", group="Auto")
+@Autonomous(name="Close To Red Goal", group="Auto", preselectTeleOp = "New Main TeleOp")
 //@Disabled
 
 public class CloseToRedGoal extends LinearOpMode {
