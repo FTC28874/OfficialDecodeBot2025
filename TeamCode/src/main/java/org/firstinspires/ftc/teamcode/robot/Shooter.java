@@ -19,6 +19,9 @@ import com.qualcomm.robotcore.hardware.Servo;
  * Call <code>Shooter.init(hardwareMap)</code> once during OpMode init before using other methods.
  */
 public class Shooter {
+    static double Kv = 0.00012;  // Velocity feedforward (tune this!)
+    static double Ks = 0.02;     // Static friction feedforward
+    static double lastReference = 0;
     private static ElapsedTime runtime = new ElapsedTime();
     private static DcMotorEx shooterU = null;
     private static DcMotorEx shooterD = null;
@@ -194,16 +197,21 @@ public class Shooter {
         double derivative = (error - lastError) / dt;
         lastError = error;
 
-        // 4. Full PID + Feedforward Calculation
+        // 4. Feedforward Component (velocity-based)
+        double targetVelocity = (reference - lastReference) / dt;
+        double feedforward = Kv * targetVelocity + Ks * Math.signum(targetVelocity);
+
+        lastReference = reference;
+
+        // 5. Full PID + Feedforward Calculation
         double output = (error * Kp) +
                 (integralSum * Ki) +
                 (derivative * Kd) +
-                (reference * Kf);
+                feedforward;
 
-        // 5. Clamp Output Power
+        // 6. Clamp Output Power
         return Range.clip(output, -1.0, 1.0);
     }
-
     public static void turnTurretDirection(boolean right, double turretPower) {
         if (right) {
             turret.setDirection(DcMotorSimple.Direction.FORWARD);

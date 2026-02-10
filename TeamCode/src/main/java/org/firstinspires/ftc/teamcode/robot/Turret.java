@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.robot;
 
+import com.pedropathing.math.MathFunctions;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -13,6 +14,8 @@ public class Turret {
 
     // Hardware
     private static DcMotor turretMotor = null;
+    private static double kV = 0.00012;
+    private static double lastReference = 0;
 
     private static DcMotorEx encoderPort = null; // driveFR port used for encoder
 
@@ -137,8 +140,15 @@ public class Turret {
 
         timer.reset();
 
-        return (error * kP) + (derivative * kD) + (integralSum * kI);
+        double pidOutput = (error * kP) + (derivative * kD) + (integralSum * kI);
 
+        // feedforward stuff
+        double targetVelocity = (reference - lastReference) / timer.seconds();
+        double feedforward = kV * targetVelocity;
+
+        lastReference = reference;
+
+        return pidOutput + feedforward;
     }
 
     /**
