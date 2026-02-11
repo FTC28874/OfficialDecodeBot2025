@@ -14,6 +14,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.PIDtoPoint.drive.DriveToPoint;
 import org.firstinspires.ftc.teamcode.PIDtoPoint.drive.GoBildaPinpointDriver;
+import org.firstinspires.ftc.teamcode.PIDtoPoint.drive.MecanumDrive;
 import org.firstinspires.ftc.teamcode.robot.HelperServos;
 import org.firstinspires.ftc.teamcode.robot.Intake;
 import org.firstinspires.ftc.teamcode.robot.Shooter;
@@ -44,6 +45,8 @@ public class CloseToRedGoal extends LinearOpMode {
     double shooterEncSpeed = Shooter.ShootPositionState.MID_MID_RPM.position;
     double shooterHoodAngle = Shooter.ShootPositionState.MID_MID_HOOD.position;
     int ballMode = 0;
+    static double localKpPosition = 0.01;
+    static double localKpHeading = 0.01;
 
     GoBildaPinpointDriver odo = null; // Declare OpMode member for the Odometry Computer
     DriveToPoint nav = new DriveToPoint(this); //OpMode member for the point-to-point navigation class
@@ -149,6 +152,8 @@ public class CloseToRedGoal extends LinearOpMode {
             telemetry.addLine("Select [Y] for 9 Ball Auto");
             telemetry.addLine("Select [X] for 9 Ball Auto With 3rd Row");
             telemetry.addData("Current Auto Mode", ballMode);
+            telemetry.addData("Curret kP_Position", localKpPosition);
+            telemetry.addData("Current kP_Heading", localKpHeading);
             if (gamepad1.aWasPressed()) {
                 ballMode = 3;
             }
@@ -162,6 +167,20 @@ public class CloseToRedGoal extends LinearOpMode {
                 ballMode = 9;
             }
             telemetry.update();
+            if (gamepad1.dpadUpWasPressed()) {
+                localKpPosition += 0.001;
+            }
+            if (gamepad1.dpadDownWasPressed()) {
+                localKpPosition -= 0.001;
+            }
+            if (gamepad1.dpadRightWasPressed()) {
+                localKpHeading += 0.001;
+            }
+            if (gamepad1.dpadLeftWasPressed()) {
+                localKpHeading -= 0.001;
+            }
+            MecanumDrive.changeKp(localKpPosition, localKpHeading);
+
         }
 
         // Wait for the game to start (driver presses START)
@@ -350,6 +369,8 @@ public class CloseToRedGoal extends LinearOpMode {
             Pose2D pos = odo.getPosition();
             String data = String.format(Locale.US, "{X: %.3f, Y: %.3f, H: %.3f}", pos.getX(DistanceUnit.MM), pos.getY(DistanceUnit.MM), pos.getHeading(AngleUnit.DEGREES));
             telemetry.addData("Position", data);
+            telemetry.addData("Current RPM", Shooter.getCurrentRPM());
+            telemetry.addData("Target RPM", shooterEncSpeed);
 
             telemetry.update();
 

@@ -197,17 +197,10 @@ public class Shooter {
         double derivative = (error - lastError) / dt;
         lastError = error;
 
-        // 4. Feedforward Component (velocity-based)
-        double targetVelocity = (reference - lastReference) / dt;
-        double feedforward = Kv * targetVelocity + Ks * Math.signum(targetVelocity);
-
-        lastReference = reference;
-
         // 5. Full PID + Feedforward Calculation
         double output = (error * Kp) +
                 (integralSum * Ki) +
-                (derivative * Kd) +
-                feedforward;
+                (derivative * Kd);
 
         // 6. Clamp Output Power
         return Range.clip(output, -1.0, 1.0);
