@@ -14,6 +14,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.PIDtoPoint.drive.DriveToPoint;
 import org.firstinspires.ftc.teamcode.PIDtoPoint.drive.GoBildaPinpointDriver;
+import org.firstinspires.ftc.teamcode.PIDtoPoint.drive.MecanumDrive;
 import org.firstinspires.ftc.teamcode.robot.HelperServos;
 import org.firstinspires.ftc.teamcode.robot.Intake;
 import org.firstinspires.ftc.teamcode.robot.Shooter;
@@ -44,6 +45,8 @@ public class CloseToRedGoal extends LinearOpMode {
     double shooterEncSpeed = 1975.0;
     double shooterHoodAngle = Shooter.ShootPositionState.MID_MID_HOOD.position;
     int ballMode = 0;
+    static double localKpPosition = 0.005;
+    static double localKpHeading = 0.01;
 
     GoBildaPinpointDriver odo = null; // Declare OpMode member for the Odometry Computer
     DriveToPoint nav = new DriveToPoint(this); //OpMode member for the point-to-point navigation class
@@ -161,6 +164,19 @@ public class CloseToRedGoal extends LinearOpMode {
             if (gamepad1.yWasPressed()) {
                 ballMode = 9;
             }
+            if (gamepad1.dpadUpWasPressed()) {
+                localKpPosition += 0.001;
+            }
+            if (gamepad1.dpadDownWasPressed()) {
+                localKpPosition -= 0.001;
+            }
+            if (gamepad1.dpadRightWasPressed()) {
+                localKpHeading += 0.001;
+            }
+            if (gamepad1.dpadLeftWasPressed()) {
+                localKpHeading -= 0.001;
+            }
+            MecanumDrive.changeKp(localKpPosition, localKpHeading);
             telemetry.update();
         }
 
