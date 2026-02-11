@@ -152,6 +152,8 @@ public class CloseToRedGoal extends LinearOpMode {
             telemetry.addLine("Select [Y] for 9 Ball Auto");
             telemetry.addLine("Select [X] for 9 Ball Auto With 3rd Row");
             telemetry.addData("Current Auto Mode", ballMode);
+            telemetry.addData("Current kP_Position", localKpPosition);
+            telemetry.addData("Current kP_Heading", localKpHeading);
             if (gamepad1.aWasPressed()) {
                 ballMode = 3;
             }
