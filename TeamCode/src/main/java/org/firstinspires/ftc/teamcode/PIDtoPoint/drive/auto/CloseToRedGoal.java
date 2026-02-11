@@ -72,7 +72,7 @@ public class CloseToRedGoal extends LinearOpMode {
     }
 
     static final Pose2D BEGIN_INTAKE_ROW_2 = new Pose2D(DistanceUnit.INCH, -63, 25,AngleUnit.DEGREES,-90);
-    static final Pose2D SHOOT_POSE = new Pose2D(DistanceUnit.INCH, -24, 24, AngleUnit.DEGREES, -45);
+    static final Pose2D SHOOT_POSE = new Pose2D(DistanceUnit.INCH, -30, 30, AngleUnit.DEGREES, -45);
     static final Pose2D INTAKE_ROW_2 = new Pose2D(DistanceUnit.INCH, -63, 1, AngleUnit.DEGREES, -90);
     static final Pose2D BEGIN_INTAKE_ROW_1 = new Pose2D(DistanceUnit.INCH,-37,25, AngleUnit.DEGREES,-90);
     static final Pose2D INTAKE_ROW_1 = new Pose2D(DistanceUnit.INCH, -37, 1, AngleUnit.DEGREES, -90);
@@ -208,7 +208,7 @@ public class CloseToRedGoal extends LinearOpMode {
                     the robot has reached the target, and has been there for (holdTime) seconds.
                     Once driveTo returns true, it prints a telemetry line and moves the state machine forward.
                      */
-                    if (nav.driveTo(odo.getPosition(), SHOOT_POSE, 0.25, 0.0)) {
+                    if (nav.driveTo(odo.getPosition(), SHOOT_POSE, 0.3, 0.0)) {
                         Intake.raiseIntake();
                         telemetry.addLine("about to intake with stopper closed");
                         telemetry.addLine("at position #1!");
