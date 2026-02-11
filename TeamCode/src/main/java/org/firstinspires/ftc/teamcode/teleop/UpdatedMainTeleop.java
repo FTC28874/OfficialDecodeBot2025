@@ -157,7 +157,7 @@ public class UpdatedMainTeleop extends LinearOpMode {
 
                     turretPos = DynamicShooter.calcTurretHead(robotHeading, curX, curY, isRed);
                     if (turretAimToggle) {
-                        turret.setTargetPosition(turretPos);
+                        turret.setTargetPosition((int) Turret.turretPIDControl(turretPos, turret.getCurrentPosition()));
                         turret.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
                         turret.setPower(0.75);
                     }
