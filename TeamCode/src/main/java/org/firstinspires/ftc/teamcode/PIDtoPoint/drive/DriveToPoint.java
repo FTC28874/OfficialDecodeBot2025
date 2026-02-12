@@ -38,15 +38,15 @@ public class DriveToPoint {
         IN_BOUNDS
     }
 
-    private static double xyTolerance = 20; // Edit this to increase dead zones.
-    private static double yawTolerance = 0.0349066;
+    private static double xyTolerance = 20;
+    private static double yawTolerance = 0.03499;
 
-    private static double pGain = 0.008;
-    private static double dGain = 0.00001;
-    private static double accel = 10.0;
+    private static double pGain = 0.01;
+    private static double dGain = 0.0001;
+    private static double accel = 20.0;
 
-    private static double yawPGain = 5.0;
-    private static double yawDGain = 0.0;
+    private static double yawPGain = 4.0;
+    private static double yawDGain = 0.0005;
     private static double yawAccel = 20.0;
 
     private double leftFrontMotorOutput  = 0;
@@ -54,6 +54,8 @@ public class DriveToPoint {
     private double leftBackMotorOutput   = 0;
     private double rightBackMotorOutput  = 0;
 
+    private final ElapsedTime stuckTimer = new ElapsedTime();
+    private boolean drivingActive = false;
     private final ElapsedTime holdTimer = new ElapsedTime();
     private final ElapsedTime PIDTimer = new ElapsedTime();
 
@@ -105,6 +107,11 @@ public class DriveToPoint {
     public boolean driveTo(Pose2D currentPosition, Pose2D targetPosition, double power, double holdTime) {
         boolean atTarget;
 
+        if (!drivingActive) {
+            drivingActive = true;
+            stuckTimer.reset();
+        }
+
         if (selectedDriveType == DriveType.TANK){
             double xPWR;
             double hPWR;
@@ -136,7 +143,7 @@ public class DriveToPoint {
             calculateTankOutput(xPWR * power, hPWR * power);
 
 
-        //Mecanum Drive Code:
+            //Mecanum Drive Code:
         } else {
             double xPWR = calculatePID(currentPosition, targetPosition, Direction.x);
             double yPWR = calculatePID(currentPosition, targetPosition, Direction.y);
@@ -152,17 +159,65 @@ public class DriveToPoint {
             calculateMecanumOutput(xOutput * power, yOutput * power, hOutput * power);
         }
 
-        if(inBounds(currentPosition,targetPosition) == InBounds.IN_BOUNDS){
-            atTarget = true;
-        }
-        else {
+        InBounds bounds = inBounds(currentPosition, targetPosition);
+
+        boolean inTolerance = (bounds == InBounds.IN_BOUNDS);
+
+        // tighter settle window (prevents premature freezing)
+        double xError = targetPosition.getX(MM) - currentPosition.getX(MM);
+        double yError = targetPosition.getY(MM) - currentPosition.getY(MM);
+        double hError = wrapAngleRadians(
+                targetPosition.getHeading(RADIANS)
+                        - currentPosition.getHeading(RADIANS)
+        );
+
+        boolean settled =
+                Math.abs(xError) < xyTolerance * 0.4 &&
+                        Math.abs(yError) < xyTolerance * 0.4 &&
+                        Math.abs(hError) < yawTolerance * 0.4;
+
+        if (!inTolerance) {
             holdTimer.reset();
-            atTarget = false;
         }
 
-        if(atTarget && holdTimer.time() > holdTime){
+        if (stuckTimer.time() > 2.0) {
+
+            // Stop motors
+            leftFrontMotorOutput  = 0;
+            rightFrontMotorOutput = 0;
+            leftBackMotorOutput   = 0;
+            rightBackMotorOutput  = 0;
+
+            // Reset all PIDs
+            xPID.reset(PIDTimer.seconds());
+            yPID.reset(PIDTimer.seconds());
+            hPID.reset(PIDTimer.seconds());
+
+            drivingActive = false;
+
+            // Treat as "arrived"
             return true;
         }
+
+        // only finish when BOTH conditions are true
+        if (inTolerance && settled && holdTimer.time() > holdTime) {
+
+            // hard stop motors
+            leftFrontMotorOutput  = 0;
+            rightFrontMotorOutput = 0;
+            leftBackMotorOutput   = 0;
+            rightBackMotorOutput  = 0;
+
+            // reset PID so next target doesn't inherit momentum
+            xPID.reset(PIDTimer.seconds());
+            yPID.reset(PIDTimer.seconds());
+            hPID.reset(PIDTimer.seconds());
+
+            drivingActive = false;
+
+            return true;
+        }
+
         return false;
     }
 
@@ -217,19 +272,14 @@ public class DriveToPoint {
             return yPID.calculateAxisPID(yError, pGain, dGain, accel, PIDTimer.seconds());
         }
         if(direction == Direction.h){
-            double hError = angleWrap(
+            double rawError =
                     targetPosition.getHeading(AngleUnit.RADIANS)
-                            - currentPosition.getHeading(AngleUnit.RADIANS)
-            );
+                            - currentPosition.getHeading(AngleUnit.RADIANS);
+
+            double hError = wrapAngleRadians(rawError);
             return hPID.calculateAxisPID(hError, yawPGain, yawDGain, yawAccel, PIDTimer.seconds());
         }
         return 0;
-    }
-
-    private double angleWrap(double angle) {
-        while (angle > Math.PI) angle -= 2 * Math.PI;
-        while (angle < -Math.PI) angle += 2 * Math.PI;
-        return angle;
     }
 
     private InBounds inBounds (Pose2D currPose, Pose2D trgtPose){
@@ -259,40 +309,116 @@ public class DriveToPoint {
         }
 
     }
+
+    private double wrapAngleRadians(double angle) {
+        while (angle > Math.PI)  angle -= 2.0 * Math.PI;
+        while (angle < -Math.PI) angle += 2.0 * Math.PI;
+        return angle;
+    }
 }
+//
+//class PIDLoop{
+//    private double previousError;
+//    private double previousTime;
+//    private double previousOutput;
+//
+//    private double errorR;
+//
+//    public double calculateAxisPID(double error, double pGain, double dGain, double accel, double currentTime){
+//        double p = error * pGain;
+//        double cycleTime = currentTime - previousTime;
+//        double d = dGain * (previousError - error) / (cycleTime);
+//        double output = p + d;
+//        double dV = cycleTime * accel;
+//
+//        double max = Math.abs(output);
+//        if(max > 1.0){
+//            output /= max;
+//        }
+//
+//        if((output - previousOutput) > dV){
+//            output = previousOutput + dV;
+//        } else if ((output - previousOutput) < -dV){
+//            output = previousOutput - dV;
+//        }
+//
+//        previousOutput = output;
+//        previousError  = error;
+//        previousTime   = currentTime;
+//
+//        errorR = error;
+//
+//        return output;
+//    }
+//}
 
-class PIDLoop{
-    private double previousError;
-    private double previousTime;
-    private double previousOutput;
+class PIDLoop {
+    private double previousError = 0.0;
+    private double previousTime = 0.0;
+    private double previousOutput = 0.0;
 
-    private double errorR;
+    private boolean firstRun = true;
 
-    public double calculateAxisPID(double error, double pGain, double dGain, double accel, double currentTime){
-        double p = error * pGain;
+    public double calculateAxisPID(
+            double error,
+            double pGain,
+            double dGain,
+            double accel,
+            double currentTime
+    ) {
+        if (firstRun) {
+            previousError = error;
+            previousTime = currentTime;
+            previousOutput = 0.0;
+            firstRun = false;
+            return 0.0;
+        }
+
         double cycleTime = currentTime - previousTime;
-        double d = dGain * (previousError - error) / (cycleTime);
+        if (cycleTime <= 0.0) {
+            return previousOutput;
+        }
+
+        // P
+        double p = error * pGain;
+
+        // D (note sign: derivative of error)
+        double d = dGain * (error - previousError) / cycleTime;
+
         double output = p + d;
-        double dV = cycleTime * accel;
 
-        double max = Math.abs(output);
-        if(max > 1.0){
-            output /= max;
+        // Acceleration limiting
+        double maxDelta = accel * cycleTime;
+        double delta = output - previousOutput;
+
+        if (delta > maxDelta) {
+            output = previousOutput + maxDelta;
+        } else if (delta < -maxDelta) {
+            output = previousOutput - maxDelta;
         }
 
-        if((output - previousOutput) > dV){
-            output = previousOutput + dV;
-        } else if ((output - previousOutput) < -dV){
-            output = previousOutput - dV;
+        double minPower = 0.1; // tune per drivetrain
+
+        if (Math.abs(output) > 0 && Math.abs(output) < minPower) {
+            output = Math.copySign(minPower, output);
         }
 
+        // Clamp output
+        output = Math.max(-1.0, Math.min(1.0, output));
+
+        previousError = error;
+        previousTime = currentTime;
         previousOutput = output;
-        previousError  = error;
-        previousTime   = currentTime;
-
-        errorR = error;
 
         return output;
     }
 
+    /** Call this when changing targets or stopping */
+    public void reset(double currentTime) {
+        previousError = 0.0;
+        previousOutput = 0.0;
+        previousTime = currentTime;
+        firstRun = true;
+    }
 }
+
