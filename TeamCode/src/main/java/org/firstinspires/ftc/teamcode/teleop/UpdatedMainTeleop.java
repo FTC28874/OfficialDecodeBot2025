@@ -270,6 +270,7 @@ public class UpdatedMainTeleop extends LinearOpMode {
             telemetry.addData("Target Turret Position: ", turretPos);
             telemetry.addData("Shooter ON: ", shooterState);
             telemetry.addData("Current Shooter RPM: ", Shooter.getCurrentRPM());
+            telemetry.addData("Current Turret Pos: ", turret.getCurrentPosition());
             telemetry.update();
         }
     }

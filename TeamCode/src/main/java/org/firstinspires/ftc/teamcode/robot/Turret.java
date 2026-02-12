@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.robot;
 
+import com.qualcomm.hardware.dfrobot.HuskyLens;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -10,6 +11,11 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 
 public class Turret {
+    private static double maxVelocity = 500;     // ticks per second
+    private static double maxAcceleration = 300; // ticks per second²
+    private static double profileVelocity = 0;
+    private static double profilePosition = 0;
+
 
     // Hardware
     private static DcMotor turretMotor = null;
@@ -29,9 +35,9 @@ public class Turret {
     private static final double TICKS_PER_TURRET_DEGREE = (MOTOR_TICKS_PER_REV * GEAR_RATIO) / 360.0;
 
     // PID constants - tune these for your robot
-    private static double kP = 0.015;
-    private static double kI = 0.0001;
-    private static double kD = 0.001;
+    private static double kP = 0.01;
+    private static double kI = 0.0000;
+    private static double kD = 0.0008;
 
     private static double lastError = 0;
     private static double integralSum = 0;
@@ -140,7 +146,6 @@ public class Turret {
         return (error * kP) + (derivative * kD) + (integralSum * kI);
 
     }
-
     /**
      * Get current turret angle in degrees
      * @return Current angle
@@ -157,6 +162,30 @@ public class Turret {
     public static void setTargetAngle(double angle) {
         targetAngle = Range.clip(angle, minAngle, maxAngle);
     }
+    // Define a 'deadzone' so the motor doesn't hum when it's nearly perfect
+    private final int DEADZONE = 5;
+    // Gain (P-value): Adjust this to make the turret move faster or slower
+    private final double Kp = 0.005;
+
+    public void trackObject(HuskyLens.Block target, DcMotor turretMotor) {
+        // 1. Calculate how many pixels the object is from the center (160)
+        int error = target.x - 160;
+
+        // 2. Check if we are close enough to stop (Deadzone)
+        if (Math.abs(error) <= DEADZONE) {
+            turretMotor.setPower(0);
+        } else {
+            // 3. Calculate motor power based on the error
+            // As error gets smaller, power gets smaller
+            double power = error * Kp;
+
+            // 4. Clip the power so it doesn't exceed -1.0 to 1.0
+            power = Range.clip(power, -0.5, 0.5); // Limiting to 0.5 for safety
+
+            turretMotor.setPower(power);
+        }
+    }
+
 
 
     /**

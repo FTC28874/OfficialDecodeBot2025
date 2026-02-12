@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.teleop.tests;
 import static org.firstinspires.ftc.robotcore.external.navigation.AngleUnit.DEGREES;
 import static org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit.INCH;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -11,6 +12,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.PIDtoPoint.drive.GoBildaPinpointDriver;
 import org.firstinspires.ftc.teamcode.robot.Turret;
+@Disabled
 
 @TeleOp(name = "Test Turret 123", group = "Linear OpMode")
 public class TestTurret extends LinearOpMode {
@@ -39,7 +41,7 @@ public class TestTurret extends LinearOpMode {
                 Turret.zeroTurret();
             }
             if (gamepad1.y) {
-                Turret.update();
+                //urret.update();
             }
             if (gamepad1.b) {
                 Turret.setTargetAngle(20.0);
