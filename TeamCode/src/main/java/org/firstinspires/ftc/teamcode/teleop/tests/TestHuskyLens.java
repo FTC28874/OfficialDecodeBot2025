@@ -141,9 +141,9 @@ public class TestHuskyLens extends LinearOpMode {
              */
             HuskyLens.Block[] blocks = huskyLens.blocks();
             telemetry.addData("Block count", blocks.length);
-            for (int i = 0; i < blocks.length; i++) {
-                telemetry.addData("Block", blocks[i].toString());
-                telemetry.addData("Block x: ", blocks[i].x);
+            for (HuskyLens.Block block : blocks) {
+                telemetry.addData("Block", block.toString());
+                telemetry.addData("Block x: ", block.x);
                 /*
                  * Here inside the FOR loop, you could save or evaluate specific info for the currently recognized Bounding Box:
                  * - blocks[i].width and blocks[i].height   (size of box, in pixels)
