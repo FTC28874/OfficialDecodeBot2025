@@ -36,6 +36,8 @@ import com.qualcomm.hardware.dfrobot.HuskyLens;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 import org.firstinspires.ftc.robotcore.internal.system.Deadline;
 
@@ -60,8 +62,11 @@ import java.util.concurrent.TimeUnit;
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  */
 @TeleOp(name = "Sensor: HuskyLens", group = "Sensor")
-@Disabled
+
 public class TestHuskyLens extends LinearOpMode {
+    private static final double MOTOR_SPEED = 0.15;
+    private static final double DEADZONE_CM = 10; // stop when |x| <= this
+    private DcMotor alignMotor = null;
 
     private final int READ_PERIOD = 1;
 
@@ -71,6 +76,13 @@ public class TestHuskyLens extends LinearOpMode {
     public void runOpMode()
     {
         huskyLens = hardwareMap.get(HuskyLens.class, "huskylens");
+        alignMotor = hardwareMap.get(DcMotor.class, "turret");
+        alignMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        alignMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        // Flip this if the motor spins the wrong way
+        alignMotor.setDirection(DcMotor.Direction.FORWARD);
+
 
         /*
          * This sample rate limits the reads solely to allow a user time to observe
@@ -141,9 +153,36 @@ public class TestHuskyLens extends LinearOpMode {
              */
             HuskyLens.Block[] blocks = huskyLens.blocks();
             telemetry.addData("Block count", blocks.length);
+
             for (HuskyLens.Block block : blocks) {
+                double distFromCenter = (160 - block.x);
+                telemetry.addData("Dist from Center: ", distFromCenter);
                 telemetry.addData("Block", block.toString());
                 telemetry.addData("Block x: ", block.x);
+                if(block.id == 1){
+                    telemetry.addData("Goal: ", "Red Found!");
+                    telemetry.update();
+                    if (Math.abs(distFromCenter) <= DEADZONE_CM) {
+                        // Centered
+                        alignMotor.setPower(0);
+                        telemetry.addLine("Aligned: motor stopped");
+                    }
+                    else if (distFromCenter > 0) {
+                        // Tag is to the right → move left
+                        alignMotor.setPower(-MOTOR_SPEED);
+                        telemetry.addLine("Tag right → motor left");
+                    }
+                    else {
+                        // Tag is to the left → move right
+                        alignMotor.setPower(MOTOR_SPEED);
+                        telemetry.addLine("Tag left → motor right");
+                    }
+
+
+                }
+
+
+                }
                 /*
                  * Here inside the FOR loop, you could save or evaluate specific info for the currently recognized Bounding Box:
                  * - blocks[i].width and blocks[i].height   (size of box, in pixels)
@@ -158,4 +197,3 @@ public class TestHuskyLens extends LinearOpMode {
             telemetry.update();
         }
     }
-}

@@ -7,6 +7,7 @@ import com.qualcomm.hardware.dfrobot.HuskyLens;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -26,6 +27,7 @@ public class TestTurret extends LinearOpMode {
     private ElapsedTime runtime = new ElapsedTime();
     GoBildaPinpointDriver odo = null;
     private final int READ_PERIOD = 1;
+    private DcMotor alignMotor= null;
 
     @Override
     public void runOpMode() {
@@ -53,10 +55,12 @@ public class TestTurret extends LinearOpMode {
                     telemetry.addLine("Red goal (tag id 1) found!");
                     double x = 160 - block.x;
                     telemetry.addData("ID Dist from center: ", x);
+                    telemetry.update();
 
             }
-                else {
+                else if(block.id == 0){
                     telemetry.addLine("No Tag/Unknown tag");
+                    telemetry.update();
                 }
             telemetry.update();
 
