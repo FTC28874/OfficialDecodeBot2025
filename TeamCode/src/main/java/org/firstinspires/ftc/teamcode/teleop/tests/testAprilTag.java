@@ -1,25 +1,25 @@
 package org.firstinspires.ftc.teamcode.teleop.tests;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.teamcode.robot.aprilTagWebcam;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 
 @TeleOp(name = "AprilTag X Align Test", group = "Linear OpMode")
-@Disabled
+
 public class testAprilTag extends LinearOpMode {
 
     private aprilTagWebcam aprilTagWebcam = null;
     private DcMotor alignMotor= null;
 
     // Tunables
-    private static final int TARGET_TAG_ID = 21;
-    private static final double MOTOR_SPEED = 0.4;
-    private static final double DEADZONE_CM = 10; // stop when |x| <= this
+    private static final int TARGET_TAG_ID = 24;
+    private static final double MOTOR_SPEED = 0.15;
+    private static final double DEADZONE_CM = 5; // stop when |x| <= this
 
     @Override
     public void runOpMode() {
