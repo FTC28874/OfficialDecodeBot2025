@@ -41,12 +41,11 @@ public class UpdatedMainTeleop extends LinearOpMode {
     private double robotHeading = 0;
 
     private boolean isDynamic = false;
-    private boolean turretAimToggle = true;
     private DcMotor driveFL = null;
     private DcMotor driveBL = null;
     private DcMotor driveFR = null;
     private DcMotor driveBR = null;
-    private DcMotor turret = null;
+    private DcMotorEx turret = null;
     private int goalX = 128;
     private int goalY = 128;
     private boolean init = false;
@@ -59,7 +58,7 @@ public class UpdatedMainTeleop extends LinearOpMode {
         driveBL = hardwareMap.get(DcMotor.class, "driveBL");
         driveFR = hardwareMap.get(DcMotor.class, "driveFR");
         driveBR = hardwareMap.get(DcMotor.class, "driveBR");
-        turret = hardwareMap.get(DcMotor.class, "turret");
+        turret = hardwareMap.get(DcMotorEx.class, "turret");
         odo = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
         odo.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
         odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.REVERSED);
@@ -76,11 +75,6 @@ public class UpdatedMainTeleop extends LinearOpMode {
         driveBR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
 
-        turret.setTargetPosition(0);
-        turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-
         Shooter.init(hardwareMap);
         Intake.init(hardwareMap);
         HelperServos.init(hardwareMap);
@@ -91,16 +85,18 @@ public class UpdatedMainTeleop extends LinearOpMode {
         while (opModeInInit()) {
             telemetry.addData("Press [A] ", "for Blue goal");
             telemetry.addData("Press [B] ", "for Red goal");
-            telemetry.addData("Red Goal? ", isRed);
+            telemetry.addData("Red Goal?", isRed);
             if (gamepad1.aWasPressed()) {
                 DynamicShooter.setGoalPosition(128, -128);
                 telemetry.addData("Blue goal. ", "Ready to start");
                 isRed = false;
+
             }
             if (gamepad1.bWasPressed()) {
                 DynamicShooter.setGoalPosition(128, 128);
                 telemetry.addData("Red goal. ", "Ready to start");
                 isRed = true;
+
             }
             telemetry.update();
         }
@@ -146,30 +142,23 @@ public class UpdatedMainTeleop extends LinearOpMode {
                     shooterTargetRPM = 2900;
                     curHoodAngle = 0.6;
                     turretPos = 168;
-                    if (turretAimToggle) {
-                        turret.setTargetPosition(turretPos);
-                        turret.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
-                        turret.setPower(0.75);
-                    }
+                    double power = Turret.turretPIDControl(turretPos, turret.getCurrentPosition());
+                    turret.setPower(power);
                 } else  {
+                    turretPos = DynamicShooter.calcTurretHead(robotHeading, curX, curY, isRed);
+                    double power = Turret.turretPIDControl(turretPos, turret.getCurrentPosition());
                     shooterTargetRPM = DynamicShooter.calcTargetRPM(goalDistance);
                     curHoodAngle = DynamicShooter.calcHoodPos(goalDistance);
 
-                    turretPos = DynamicShooter.calcTurretHead(robotHeading, curX, curY, isRed);
-                    if (turretAimToggle) {
-                        turret.setTargetPosition(turretPos);
-                        turret.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
-                        turret.setPower(0.75);
-                    }
+                    turret.setPower(power);
+
+
                 }
 
 
             }
             if (gamepad2.bWasPressed()) {
                 isDynamic = !isDynamic;
-            }
-            if (gamepad2.aWasPressed()) {
-                turretAimToggle = !turretAimToggle;
             }
 
             // shooter controls
@@ -208,13 +197,11 @@ public class UpdatedMainTeleop extends LinearOpMode {
             // turret heading controls
             if (gamepad2.left_trigger > 0.1) {
                 if (Shooter.getTurretPosition() > minTurretHeading) {
-                    turret.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                     Shooter.turnTurretDirection(false, 0.4);
                 }
             }
             if (gamepad2.right_trigger > 0.1) {
                 if (Shooter.getTurretPosition() < maxTurretHeading) {
-                    turret.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                     Shooter.turnTurretDirection(true, 0.4);
                 }
             }
@@ -264,10 +251,10 @@ public class UpdatedMainTeleop extends LinearOpMode {
             if (gamepad1.yWasPressed()) {
                 odo.resetPosAndIMU();
                 curHoodAngle = minHoodAngle;
-                turret.setTargetPosition(0);
-                turret.setPower(0.75);
-                turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                turretPos = 0;
+                turret.setTargetPosition(turretPos);
+                turret.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+                turret.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
             }
             driveFL.setPower(powerFL);
             driveFR.setPower(powerFR);
@@ -282,9 +269,9 @@ public class UpdatedMainTeleop extends LinearOpMode {
             telemetry.addData("Shooter Target RPM: ", shooterTargetRPM);
             telemetry.addData("Hood Angle", curHoodAngle);
             telemetry.addData("Target Turret Position: ", turretPos);
-            telemetry.addData("Current Turret Position: ", turret.getCurrentPosition());
             telemetry.addData("Shooter ON: ", shooterState);
             telemetry.addData("Current Shooter RPM: ", Shooter.getCurrentRPM());
+            telemetry.addData("Current Turret Pos: ", turret.getCurrentPosition());
             telemetry.update();
         }
     }

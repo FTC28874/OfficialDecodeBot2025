@@ -1,17 +1,25 @@
 package org.firstinspires.ftc.teamcode.robot;
 
+import com.qualcomm.hardware.dfrobot.HuskyLens;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 
 public class Turret {
+    private static double maxVelocity = 500;     // ticks per second
+    private static double maxAcceleration = 300; // ticks per second²
+    private static double profileVelocity = 0;
+    private static double profilePosition = 0;
+
 
     // Hardware
     private static DcMotor turretMotor = null;
+
     private static DcMotorEx encoderPort = null; // driveFR port used for encoder
 
     // Gear ratio calculations
@@ -27,13 +35,14 @@ public class Turret {
     private static final double TICKS_PER_TURRET_DEGREE = (MOTOR_TICKS_PER_REV * GEAR_RATIO) / 360.0;
 
     // PID constants - tune these for your robot
-    private static double kP = 0.015;
-    private static double kI = 0.0001;
-    private static double kD = 0.001;
+    private static double kP = 0.01;
+    private static double kI = 0.0000;
+    private static double kD = 0.0008;
 
     private static double lastError = 0;
     private static double integralSum = 0;
     private static long lastUpdateTime = 0;
+    static ElapsedTime timer = new ElapsedTime();
 
     // Goal position (field coordinates in inches)
     // MODIFY THESE VALUES for your field setup
@@ -122,7 +131,21 @@ public class Turret {
         kI = i;
         kD = d;
     }
+    public static double turretPIDControl(double reference, double state){
 
+        double error = reference - state;
+
+        integralSum += error * timer.seconds();
+
+        double derivative = (error - lastError) / timer.seconds();
+
+        lastError = error;
+
+        timer.reset();
+
+        return (error * kP) + (derivative * kD) + (integralSum * kI);
+
+    }
     /**
      * Get current turret angle in degrees
      * @return Current angle
@@ -139,6 +162,31 @@ public class Turret {
     public static void setTargetAngle(double angle) {
         targetAngle = Range.clip(angle, minAngle, maxAngle);
     }
+    // Define a 'deadzone' so the motor doesn't hum when it's nearly perfect
+    private final int DEADZONE = 5;
+    // Gain (P-value): Adjust this to make the turret move faster or slower
+    private final double Kp = 0.005;
+
+    public void trackObject(HuskyLens.Block target, DcMotor turretMotor) {
+        // 1. Calculate how many pixels the object is from the center (160)
+        int error = target.x - 160;
+
+        // 2. Check if we are close enough to stop (Deadzone)
+        if (Math.abs(error) <= DEADZONE) {
+            turretMotor.setPower(0);
+        } else {
+            // 3. Calculate motor power based on the error
+            // As error gets smaller, power gets smaller
+            double power = error * Kp;
+
+            // 4. Clip the power so it doesn't exceed -1.0 to 1.0
+            power = Range.clip(power, -0.5, 0.5); // Limiting to 0.5 for safety
+
+            turretMotor.setPower(power);
+        }
+    }
+
+
 
     /**
      * Calculate the angle needed to aim at the goal
@@ -177,44 +225,9 @@ public class Turret {
         setTargetAngle(angleToGoal);
     }
 
-    /**
-     * Update turret control - call this in your OpMode loop
-     * Uses PID control to reach target angle
-     */
-    public static void update() {
-        double currentAngle = getCurrentAngle();
-        double error = targetAngle - currentAngle;
 
-        // Calculate time delta for integral
-        long currentTime = System.currentTimeMillis();
-        double deltaTime = (currentTime - lastUpdateTime) / 1000.0; // Convert to seconds
-        lastUpdateTime = currentTime;
 
-        // PID calculations
-        integralSum += error * deltaTime;
-
-        // Anti-windup: limit integral
-        integralSum = Range.clip(integralSum, -100, 100);
-
-        double derivative = 0;
-        if (deltaTime > 0) {
-            derivative = (error - lastError) / deltaTime;
-        }
-
-        double power = (kP * error) + (kI * integralSum) + (kD * derivative);
-
-        // Add a deadband near target to prevent oscillation
-        if (Math.abs(error) < 2.0) {
-            power *= 0.5; // Reduce power when close to target
-        }
-
-        // Clamp power
-        power = Range.clip(power, -0.8, 0.8); // Limit max power to prevent runaway
-
-        turretMotor.setPower(power);
-
-        lastError = error;
-    }
+    // Clamp power
 
     /**
      * Check if turret is at target angle
