@@ -1,8 +1,5 @@
 package org.firstinspires.ftc.teamcode.PIDtoPoint.drive.auto;
 
-import androidx.appcompat.widget.ThemedSpinnerAdapter;
-
-import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -13,24 +10,27 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
-
 import org.firstinspires.ftc.teamcode.PIDtoPoint.drive.DriveToPoint;
 import org.firstinspires.ftc.teamcode.PIDtoPoint.drive.GoBildaPinpointDriver;
+import org.firstinspires.ftc.teamcode.robot.HelperServos;
 import org.firstinspires.ftc.teamcode.robot.Intake;
 import org.firstinspires.ftc.teamcode.robot.Shooter;
-import org.firstinspires.ftc.teamcode.robot.HelperServos;
 
 import java.util.Locale;
 
+// RPM: 1800
+// Turret Encoder Value: 406
+// Shooter Hood: 0.2
 
-// turret encoder value: -372
-// hood: 0.6
-// rpm: 3500
+// Far:
+// RPM: 1950
+// Turret Encoder Value: 126
+// Shooter Hood: 0.55
 
-@Autonomous(name="Far From Red Goal", group="Auto")
+@Autonomous(name="Blue Far", group="Auto", preselectTeleOp = "New Main TeleOp")
 //@Disabled
 
-public class FarFromRedGoal extends LinearOpMode {
+public class FarFromBlueGoal2 extends LinearOpMode {
 
     DcMotor leftFrontDrive = null;
     DcMotor rightFrontDrive = null;
@@ -40,7 +40,10 @@ public class FarFromRedGoal extends LinearOpMode {
     DcMotor turret = null;
     ElapsedTime timer = null; //asdf
     double shooterEncSpeed = Shooter.ShootPositionState.FAR_RPM.position;
-    double shooterHoodSpeed = Shooter.ShootPositionState.FAR_HOOD.position;
+    double shooterHoodAngle = Shooter.ShootPositionState.FAR_HOOD.position;
+    int ballMode = 0;
+    static double localKpPosition = 0.005;
+    static double localKpHeading = 0.01;
 
     GoBildaPinpointDriver odo = null; // Declare OpMode member for the Odometry Computer
     DriveToPoint nav = new DriveToPoint(this); //OpMode member for the point-to-point navigation class
@@ -53,6 +56,7 @@ public class FarFromRedGoal extends LinearOpMode {
         WAIT_2,
         WAIT_3,
         WAIT_4,
+        WAIT_5,
         DRIVE_TO_TARGET_3,
         DRIVE_TO_TARGET_4,
         DRIVE_TO_TARGET_5,
@@ -60,20 +64,19 @@ public class FarFromRedGoal extends LinearOpMode {
         DRIVE_TO_TARGET_7,
         DRIVE_TO_TARGET_8,
         DRIVE_TO_TARGET_9,
+        DRIVE_TO_TARGET_10,
         DONE
     }
 
-    static final Pose2D BEGIN_INTAKE_ROW_2 = new Pose2D(DistanceUnit.INCH, 52, 0,AngleUnit.DEGREES,-90);
+    static final Pose2D BEGIN_INTAKE_ROW_2 = new Pose2D(DistanceUnit.INCH, 52, 0, AngleUnit.DEGREES,90);
     static final Pose2D SHOOT_POSE = new Pose2D(DistanceUnit.INCH, 5, 0, AngleUnit.DEGREES, 0);
-    static final Pose2D INTAKE_ROW_2 = new Pose2D(DistanceUnit.INCH, 52, -29, AngleUnit.DEGREES, -90);
-    static final Pose2D BEGIN_INTAKE_ROW_1 = new Pose2D(DistanceUnit.INCH,76,0, AngleUnit.DEGREES,-90);
-    static final Pose2D INTAKE_ROW_1 = new Pose2D(DistanceUnit.INCH, 76, -29, AngleUnit.DEGREES, -90);
-    static final Pose2D BEGIN_INTAKE_ROW_3 = new Pose2D(DistanceUnit.INCH, 28, 0, AngleUnit.DEGREES, -90);
-    static final Pose2D INTAKE_ROW_3 = new Pose2D(DistanceUnit.INCH, 28, -29, AngleUnit.DEGREES, -90);
-    static final Pose2D BEGIN_INTAKE_HUMAN = new Pose2D(DistanceUnit.INCH, 5, 0, AngleUnit.DEGREES, -90);
-    static final Pose2D INTAKE_HUMAN = new Pose2D(DistanceUnit.INCH, 5, -29, AngleUnit.DEGREES, -90);
+    static final Pose2D INTAKE_ROW_2 = new Pose2D(DistanceUnit.INCH, 52, 2, AngleUnit.DEGREES, 90);
+    static final Pose2D BEGIN_INTAKE_ROW_1 = new Pose2D(DistanceUnit.INCH,76,0, AngleUnit.DEGREES,90);
+    static final Pose2D INTAKE_ROW_1 = new Pose2D(DistanceUnit.INCH, 76, 29, AngleUnit.DEGREES, 90);
+    static final Pose2D BEGIN_INTAKE_ROW_3 = new Pose2D(DistanceUnit.INCH, 28, 0, AngleUnit.DEGREES, 90);
+    static final Pose2D INTAKE_ROW_3 = new Pose2D(DistanceUnit.INCH, 28, 29, AngleUnit.DEGREES, 90);
+    static final Pose2D END_AUTO = new Pose2D(DistanceUnit.INCH, 5, 12, AngleUnit.DEGREES, 90);
 
-    static final Pose2D END_AUTO = new Pose2D(DistanceUnit.INCH, 15, 0, AngleUnit.DEGREES, 0);
 
     public double inToMM(double inValue) {
         return inValue * 25.4;
@@ -131,8 +134,6 @@ public class FarFromRedGoal extends LinearOpMode {
         telemetry.addData("Device Scalar", odo.getYawScalar());
         telemetry.update();
 
-        Intake.raiseIntake();
-        sleep(1500);
         Intake.lowerIntake();
         sleep(1500);
         Shooter.lowerShooter();
@@ -142,13 +143,35 @@ public class FarFromRedGoal extends LinearOpMode {
         Shooter.setShooterPosition(0.55);
         HelperServos.setStopperPass();
 
+        while (opModeInInit()) {
+            telemetry.addLine("Select [A] for 3 Ball Auto");
+            telemetry.addLine("Select [B] for 6 Ball Auto");
+            telemetry.addLine("Select [Y] for 9 Ball Auto");
+            telemetry.addLine("Select [X] for 9 Ball Auto With 3rd Row");
+            telemetry.addData("Current Auto Mode", ballMode);
+            telemetry.addData("Current kP_Position", localKpPosition);
+            telemetry.addData("Current kP_Heading", localKpHeading);
+            if (gamepad1.aWasPressed()) {
+                ballMode = 3;
+            }
+            if (gamepad1.bWasPressed()) {
+                ballMode = 6;
+            }
+            if (gamepad1.xWasPressed()) {
+                ballMode = 12;
+            }
+            if (gamepad1.yWasPressed()) {
+                ballMode = 9;
+            }
+        }
+
         // Wait for the game to start (driver presses START)
         waitForStart();
         resetRuntime();
 
         while (opModeIsActive()) {
             odo.update();
-            Shooter.setShooterPosition(shooterHoodSpeed);
+            Shooter.setShooterPosition(shooterHoodAngle);
             Shooter.setShooterPower(Shooter.PIDControl(shooterEncSpeed, Shooter.getCurrentRPM()));
             switch (stateMachine){
                 case WAITING_FOR_START:
@@ -157,13 +180,9 @@ public class FarFromRedGoal extends LinearOpMode {
                     stateMachine = StateMachine.WAIT;
                     break;
                 case WAIT:
-                    if (timer.time() > 2.0) {
-                        Intake.runIntake();
-                    }
-                    if (timer.time() > 3.0) {
-                        HelperServos.setStopperStop();
+                    if (timer.time() > 1.0) {
                         timer.reset();
-                        stateMachine = StateMachine.DONE;
+                        stateMachine = StateMachine.DRIVE_TO_TARGET_1;
                     }
                     break;
                 case DRIVE_TO_TARGET_1:
@@ -172,13 +191,26 @@ public class FarFromRedGoal extends LinearOpMode {
                     the robot has reached the target, and has been there for (holdTime) seconds.
                     Once driveTo returns true, it prints a telemetry line and moves the state machine forward.
                      */
-                    if (nav.driveTo(odo.getPosition(), BEGIN_INTAKE_ROW_3, 0.7, 0.5)) {
+                    if (nav.driveTo(odo.getPosition(), SHOOT_POSE, 0.25, 0.0)) {
                         Intake.raiseIntake();
-                        HelperServos.setStopperStop();
                         telemetry.addLine("about to intake with stopper closed");
                         telemetry.addLine("at position #1!");
                         timer.reset();
-                        stateMachine = StateMachine.DRIVE_TO_TARGET_2;
+                        stateMachine = StateMachine.WAIT_2;
+                    }
+                    break;
+                case WAIT_2:
+                    if (timer.time() > 0.5) {
+                        Intake.runIntake();
+                    }
+                    if (timer.time() > 2.5) {
+                        timer.reset();
+                        HelperServos.setStopperStop();
+                        if (ballMode > 3) {
+                            stateMachine = StateMachine.DRIVE_TO_TARGET_2;
+                        } else {
+                            stateMachine = StateMachine.DONE;
+                        }
                     }
                     break;
                 case DRIVE_TO_TARGET_2:
@@ -187,20 +219,27 @@ public class FarFromRedGoal extends LinearOpMode {
                     the robot has reached the target, and has been there for (holdTime) seconds.
                     Once driveTo returns true, it prints a telemetry line and moves the state machine forward.
                      */
-                    if (nav.driveTo(odo.getPosition(), INTAKE_ROW_3, 0.6, 0.0)) {
+                    if (nav.driveTo(odo.getPosition(), BEGIN_INTAKE_ROW_1, 0.5, 0.5)) {
                         telemetry.addLine("at position #2!");
+                        timer.reset();
                         stateMachine = StateMachine.DRIVE_TO_TARGET_3;
                     }
                     break;
                 case DRIVE_TO_TARGET_3:
-                    if (nav.driveTo(odo.getPosition(), SHOOT_POSE, 0.35, 1.0)) {
+                    if (nav.driveTo(odo.getPosition(), INTAKE_ROW_1, 0.5, 0.0)) {
                         telemetry.addLine("At position #3");
                         timer.reset();
-                        stateMachine = StateMachine.WAIT_2;
+                        stateMachine = StateMachine.DRIVE_TO_TARGET_4;
 
                     }
                     break;
-                case WAIT_2:
+                case DRIVE_TO_TARGET_4:
+                    if (nav.driveTo(odo.getPosition(), SHOOT_POSE, 0.5, 0.5)) {
+                        timer.reset();
+                        stateMachine = StateMachine.WAIT_3;
+                    }
+                    break;
+                case WAIT_3:
                     if (timer.time() > 0.5) {
                         HelperServos.setStopperPass();
                     }
@@ -211,85 +250,36 @@ public class FarFromRedGoal extends LinearOpMode {
                         timer.reset();
                         Intake.raiseIntake();
                         HelperServos.setStopperStop();
-                        stateMachine = StateMachine.DRIVE_TO_TARGET_4;
+                        if (ballMode > 6) {
+                            stateMachine = StateMachine.DRIVE_TO_TARGET_5;
+                        } else {
+                            stateMachine = StateMachine.DONE;
+                        }
                     }
                     break;
-                case DRIVE_TO_TARGET_4:
-                    /*
-                    drive the robot to the first target, the nav.driveTo function will return true once
-                    the robot has reached the target, and has been there for (holdTime) seconds.
-                    Once driveTo returns true, it prints a telemetry line and moves the state machine forward.
-                     */
-                    if (nav.driveTo(odo.getPosition(), BEGIN_INTAKE_ROW_2, 0.7, 0.5)) {
-                        Intake.raiseIntake();
-                        HelperServos.setStopperStop();
-                        telemetry.addLine("about to intake with stopper closed");
-                        telemetry.addLine("at position #1!");
-                        timer.reset();
-                        stateMachine = StateMachine.DRIVE_TO_TARGET_5;
-                    }
-                    break;
+                    // loop from here
                 case DRIVE_TO_TARGET_5:
                     /*
                     drive the robot to the first target, the nav.driveTo function will return true once
                     the robot has reached the target, and has been there for (holdTime) seconds.
                     Once driveTo returns true, it prints a telemetry line and moves the state machine forward.
                      */
-                    if (nav.driveTo(odo.getPosition(), INTAKE_ROW_2, 0.6, 0.0)) {
+                    if (nav.driveTo(odo.getPosition(), BEGIN_INTAKE_ROW_2, 0.5, 0.5)) {
                         telemetry.addLine("at position #2!");
+                        timer.reset();
                         stateMachine = StateMachine.DRIVE_TO_TARGET_6;
                     }
                     break;
                 case DRIVE_TO_TARGET_6:
-                    if (nav.driveTo(odo.getPosition(), SHOOT_POSE, 0.45, 0.5)) {
+                    if (nav.driveTo(odo.getPosition(), INTAKE_ROW_2, 0.5, 0.0)) {
                         telemetry.addLine("At position #3");
                         timer.reset();
-                        stateMachine = StateMachine.WAIT_3;
-                    }
-                    break;
-                case WAIT_3:
-                    if (timer.time() > 1) {
-                        HelperServos.setStopperPass();
-                    }
-                    if (timer.time() > 1.5) {
-                        Intake.lowerIntake();
-                    }
-                    if (timer.time() > 2.5) {
-                        timer.reset();
-                        Intake.raiseIntake();
-                        HelperServos.setStopperStop();
                         stateMachine = StateMachine.DRIVE_TO_TARGET_7;
+
                     }
                     break;
                 case DRIVE_TO_TARGET_7:
-                    /*
-                    drive the robot to the first target, the nav.driveTo function will return true once
-                    the robot has reached the target, and has been there for (holdTime) seconds.
-                    Once driveTo returns true, it prints a telemetry line and moves the state machine forward.
-                     */
-                    if (nav.driveTo(odo.getPosition(), BEGIN_INTAKE_HUMAN, 0.7, 0.5)) {
-                        Intake.raiseIntake();
-                        HelperServos.setStopperStop();
-                        telemetry.addLine("about to intake with stopper closed");
-                        telemetry.addLine("at position #1!");
-                        timer.reset();
-                        stateMachine = StateMachine.DRIVE_TO_TARGET_8;
-                    }
-                    break;
-                case DRIVE_TO_TARGET_8:
-                    /*
-                    drive the robot to the first target, the nav.driveTo function will return true once
-                    the robot has reached the target, and has been there for (holdTime) seconds.
-                    Once driveTo returns true, it prints a telemetry line and moves the state machine forward.
-                     */
-                    if (nav.driveTo(odo.getPosition(), INTAKE_HUMAN, 0.6, 0.0)) {
-                        telemetry.addLine("at position #2!");
-                        timer.reset();
-                        stateMachine = StateMachine.DRIVE_TO_TARGET_9;
-                    }
-                    break;
-                case DRIVE_TO_TARGET_9:
-                    if (nav.driveTo(odo.getPosition(), SHOOT_POSE, 0.35, 0.5)) {
+                    if (nav.driveTo(odo.getPosition(), SHOOT_POSE, 0.5, 0.5)) {
                         timer.reset();
                         stateMachine = StateMachine.WAIT_4;
                     }
@@ -298,9 +288,44 @@ public class FarFromRedGoal extends LinearOpMode {
                     if (timer.time() > 0.5) {
                         HelperServos.setStopperPass();
                     }
-                    if (timer.time() > 3) {
+                    if (timer.time() > 1.0) {
+                        Intake.lowerIntake();
+                    }
+                    if (timer.time() > 2.5) {
                         timer.reset();
+                        Intake.raiseIntake();
                         HelperServos.setStopperStop();
+                        if (ballMode > 9) {
+                            stateMachine = StateMachine.DRIVE_TO_TARGET_8;
+                        } else {
+                            stateMachine = StateMachine.DONE;
+                        }
+                    }
+                    break;
+                    // to here
+                case DRIVE_TO_TARGET_8:
+                    /*
+                    drive the robot to the first target, the nav.driveTo function will return true once
+                    the robot has reached the target, and has been there for (holdTime) seconds.
+                    Once driveTo returns true, it prints a telemetry line and moves the state machine forward.
+                     */
+                    if (nav.driveTo(odo.getPosition(), BEGIN_INTAKE_ROW_3, 0.5, 0.5)) {
+                        telemetry.addLine("at position #2!");
+                        timer.reset();
+                        stateMachine = StateMachine.DRIVE_TO_TARGET_9;
+                    }
+                    break;
+                case DRIVE_TO_TARGET_9:
+                    if (nav.driveTo(odo.getPosition(), INTAKE_ROW_3, 0.5, 0.0)) {
+                        telemetry.addLine("At position #3");
+                        timer.reset();
+                        stateMachine = StateMachine.DRIVE_TO_TARGET_10;
+
+                    }
+                    break;
+                case DRIVE_TO_TARGET_10:
+                    if (nav.driveTo(odo.getPosition(), BEGIN_INTAKE_ROW_3, 0.5, 0.0)) {
+                        timer.reset();
                         stateMachine = StateMachine.DONE;
                     }
                     break;

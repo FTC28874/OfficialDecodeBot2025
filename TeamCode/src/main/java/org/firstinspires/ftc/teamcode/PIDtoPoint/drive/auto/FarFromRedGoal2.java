@@ -28,10 +28,10 @@ import java.util.Locale;
 // Turret Encoder Value: 126
 // Shooter Hood: 0.55
 
-@Autonomous(name="Close To Blue Goal", group="Auto", preselectTeleOp = "New Main TeleOp")
+@Autonomous(name="Red Far", group="Auto", preselectTeleOp = "New Main TeleOp")
 //@Disabled
 
-public class CloseToBlueGoal extends LinearOpMode {
+public class FarFromRedGoal2 extends LinearOpMode {
 
     DcMotor leftFrontDrive = null;
     DcMotor rightFrontDrive = null;
@@ -40,8 +40,8 @@ public class CloseToBlueGoal extends LinearOpMode {
     DcMotorEx turretEncoder = null;
     DcMotor turret = null;
     ElapsedTime timer = null; //asdf
-    double shooterEncSpeed = 2000;
-    double shooterHoodAngle = Shooter.ShootPositionState.MID_MID_HOOD.position;
+    double shooterEncSpeed = Shooter.ShootPositionState.FAR_RPM.position;
+    double shooterHoodAngle = Shooter.ShootPositionState.FAR_HOOD.position;
     int ballMode = 0;
     static double localKpPosition = 0.005;
     static double localKpHeading = 0.01;
@@ -69,14 +69,14 @@ public class CloseToBlueGoal extends LinearOpMode {
         DONE
     }
 
-    static final Pose2D BEGIN_INTAKE_ROW_2 = new Pose2D(DistanceUnit.INCH, -63, -25,AngleUnit.DEGREES,90);
-    static final Pose2D SHOOT_POSE = new Pose2D(DistanceUnit.INCH, -24, -24, AngleUnit.DEGREES, 45);
-    static final Pose2D INTAKE_ROW_2 = new Pose2D(DistanceUnit.INCH, -63, -1, AngleUnit.DEGREES, 90);
-    static final Pose2D BEGIN_INTAKE_ROW_1 = new Pose2D(DistanceUnit.INCH,-37,-25, AngleUnit.DEGREES,90);
-    static final Pose2D INTAKE_ROW_1 = new Pose2D(DistanceUnit.INCH, -37, -1, AngleUnit.DEGREES, 90);
-    static final Pose2D BEGIN_INTAKE_ROW_3 = new Pose2D(DistanceUnit.INCH, -84, -25, AngleUnit.DEGREES, 90);
-    static final Pose2D INTAKE_ROW_3 = new Pose2D(DistanceUnit.INCH, -84, -1, AngleUnit.DEGREES, 90);
-    static final Pose2D END_AUTO = new Pose2D(DistanceUnit.INCH, -49, -12, AngleUnit.DEGREES, 90);
+    static final Pose2D BEGIN_INTAKE_ROW_2 = new Pose2D(DistanceUnit.INCH, 52, 0, AngleUnit.DEGREES,-90);
+    static final Pose2D SHOOT_POSE = new Pose2D(DistanceUnit.INCH, 5, 0, AngleUnit.DEGREES, 0);
+    static final Pose2D INTAKE_ROW_2 = new Pose2D(DistanceUnit.INCH, 52, -2, AngleUnit.DEGREES, -90);
+    static final Pose2D BEGIN_INTAKE_ROW_1 = new Pose2D(DistanceUnit.INCH,76,0, AngleUnit.DEGREES,-90);
+    static final Pose2D INTAKE_ROW_1 = new Pose2D(DistanceUnit.INCH, 76, -29, AngleUnit.DEGREES, -90);
+    static final Pose2D BEGIN_INTAKE_ROW_3 = new Pose2D(DistanceUnit.INCH, 28, 0, AngleUnit.DEGREES, -90);
+    static final Pose2D INTAKE_ROW_3 = new Pose2D(DistanceUnit.INCH, 28, -29, AngleUnit.DEGREES, -90);
+    static final Pose2D END_AUTO = new Pose2D(DistanceUnit.INCH, 5, -12, AngleUnit.DEGREES, -90);
 
 
     public double inToMM(double inValue) {
@@ -164,20 +164,6 @@ public class CloseToBlueGoal extends LinearOpMode {
             if (gamepad1.yWasPressed()) {
                 ballMode = 9;
             }
-            if (gamepad1.dpadUpWasPressed()) {
-                localKpPosition += 0.001;
-            }
-            if (gamepad1.dpadDownWasPressed()) {
-                localKpPosition -= 0.001;
-            }
-            if (gamepad1.dpadRightWasPressed()) {
-                localKpHeading += 0.001;
-            }
-            if (gamepad1.dpadLeftWasPressed()) {
-                localKpHeading -= 0.001;
-            }
-            MecanumDrive.changeKp(localKpPosition, localKpHeading);
-            telemetry.update();
         }
 
         // Wait for the game to start (driver presses START)

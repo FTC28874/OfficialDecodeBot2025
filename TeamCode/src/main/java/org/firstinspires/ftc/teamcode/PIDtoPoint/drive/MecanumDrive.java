@@ -21,7 +21,7 @@ public class MecanumDrive {
 
     private Pose2D targetPose = null;
     private static double kP_position = 0.005; //0.01
-    private static double kP_heading = 0.02; //0.02
+    private static double kP_heading = 0.007; //0.02
     private double maxPower = 0.6;
 
     public static void changeKp(double newKp_position, double newKp_heading) {
