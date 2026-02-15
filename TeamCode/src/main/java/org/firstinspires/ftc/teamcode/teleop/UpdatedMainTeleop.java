@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -15,6 +16,8 @@ import org.firstinspires.ftc.teamcode.robot.HelperServos;
 import org.firstinspires.ftc.teamcode.robot.Intake;
 import org.firstinspires.ftc.teamcode.robot.Shooter;
 import org.firstinspires.ftc.teamcode.robot.Turret;
+import org.firstinspires.ftc.teamcode.robot.aprilTagWebcam;
+import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 
 @TeleOp(name = "New Main TeleOp", group = "Linear OpMode")
 
@@ -25,7 +28,7 @@ public class UpdatedMainTeleop extends LinearOpMode {
     private double shooterTargetRPM = 3000;
     private double shooterPower = 0;
     private double minHoodAngle = Shooter.HoodState.DOWN.angle; // 0.1
-    private double maxHoodAngle = Shooter.HoodState.UP.angle; // 0.6
+    private double maxHoodAngle = Shooter.HoodState.UP.angle;   // 0.6
 
     private double curHoodAngle = minHoodAngle;
 
@@ -51,6 +54,13 @@ public class UpdatedMainTeleop extends LinearOpMode {
     private boolean init = false;
     private boolean isRed = true;
 
+    // AprilTag
+    private aprilTagWebcam aprilTagWebcam = null;
+    private static int TARGET_TAG_ID = 24;
+    private static final double APRILTAG_MOTOR_SPEED = 0.15;
+    private static final double APRILTAG_DEADZONE_CM = 5;
+    private static boolean cameraOn = false;
+
 
     @Override
     public void runOpMode() {
@@ -74,11 +84,14 @@ public class UpdatedMainTeleop extends LinearOpMode {
         driveFR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         driveBR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-
         Shooter.init(hardwareMap);
         Intake.init(hardwareMap);
         HelperServos.init(hardwareMap);
         Turret.init(hardwareMap);
+
+        // Initialize AprilTag webcam
+        aprilTagWebcam = new aprilTagWebcam();
+        aprilTagWebcam.init(hardwareMap, telemetry);
 
         init = true;
 
@@ -89,34 +102,31 @@ public class UpdatedMainTeleop extends LinearOpMode {
             if (gamepad1.aWasPressed()) {
                 DynamicShooter.setGoalPosition(128, -128);
                 telemetry.addData("Blue goal. ", "Ready to start");
+                TARGET_TAG_ID = 20;
                 isRed = false;
-
             }
             if (gamepad1.bWasPressed()) {
                 DynamicShooter.setGoalPosition(128, 128);
                 telemetry.addData("Red goal. ", "Ready to start");
+                TARGET_TAG_ID = 24;
                 isRed = true;
-
             }
             telemetry.update();
         }
+
         while (opModeIsActive()) {
             double max;
 
             // POV Mode uses left joystick to go forward & strafe, and right joystick to rotate.
-            double axial = -gamepad1.left_stick_y * driverSensitivity;  // Note: pushing stick forward gives negative value
-            double lateral = gamepad1.left_stick_x * driverSensitivity;
-            double yaw = gamepad1.right_stick_x * driverSensitivity;
+            double axial   = -gamepad1.left_stick_y * driverSensitivity;
+            double lateral =  gamepad1.left_stick_x * driverSensitivity;
+            double yaw     =  gamepad1.right_stick_x * driverSensitivity;
 
-            // Combine the joystick requests for each axis-motion to determine each wheel's power.
-            // Set up a variable for each drive wheel to save the power level for telemetry.
             double powerFL = axial + lateral + yaw;
             double powerFR = axial - lateral - yaw;
             double powerBL = axial - lateral + yaw;
             double powerBR = axial + lateral - yaw;
 
-            // Normalize the values so no wheel power exceeds 100%
-            // This ensures that the robot maintains the desired motion.
             max = Math.max(Math.abs(powerFL), Math.abs(powerFR));
             max = Math.max(max, Math.abs(powerBL));
             max = Math.max(max, Math.abs(powerBR));
@@ -137,26 +147,77 @@ public class UpdatedMainTeleop extends LinearOpMode {
             goalDistance = DynamicShooter.calcDistToGoal(curX, curY);
             curTurretPos = (int) Shooter.getTurretPosition();
 
-            if (isDynamic) {
-                if (goalDistance >= 130){
-                    shooterTargetRPM = 2900;
-                    curHoodAngle = 0.6;
-                    turretPos = 168;
-                    double power = Turret.turretPIDControl(turretPos, turret.getCurrentPosition());
-                    turret.setPower(power);
-                } else  {
-                    turretPos = DynamicShooter.calcTurretHead(robotHeading, curX, curY, isRed);
-                    double power = Turret.turretPIDControl(turretPos, turret.getCurrentPosition());
-                    shooterTargetRPM = DynamicShooter.calcTargetRPM(goalDistance);
-                    curHoodAngle = DynamicShooter.calcHoodPos(goalDistance);
+            // Always update the camera pipeline every loop
+            aprilTagWebcam.update();
+            AprilTagDetection tag = aprilTagWebcam.getTagBySpecificId(TARGET_TAG_ID);
 
-                    turret.setPower(power);
+            // ---------------------------------------------------------------
+            // TURRET CONTROL — mutually exclusive: AprilTag OR odo, not both
+            // ---------------------------------------------------------------
+            if (gamepad2.x && !gamepad2.left_bumper) {
+                // --- AprilTag camera alignment mode ---
+                // Odo-based turret control (isDynamic) is completely bypassed here.
+                // The turret is driven directly by raw motor power based on tag X offset.
+                turret.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
 
+                if (tag != null) {
+                    double tagX = tag.ftcPose.x;
+                    cameraOn = true;
+                    turret.setDirection(DcMotor.Direction.REVERSE);
 
+                    if (Math.abs(tagX) <= APRILTAG_DEADZONE_CM) {
+                        // Centered — hold still
+                        turret.setPower(0);
+                        telemetry.addLine("AprilTag: Aligned");
+                        HelperServos.setStopperPass();
+                        Intake.runIntake();
+                    } else if (tagX > 0) {
+                        // Tag is to the right → rotate turret left
+                        turret.setPower(-APRILTAG_MOTOR_SPEED);
+                        telemetry.addLine("AprilTag: Tag right → turret left");
+                    } else {
+                        // Tag is to the left → rotate turret right
+                        turret.setPower(APRILTAG_MOTOR_SPEED);
+                        telemetry.addLine("AprilTag: Tag left → turret right");
+                    }
+
+                    telemetry.addData("AprilTag X (cm)", tagX);
+                    aprilTagWebcam.displayDetectionTelemetry(tag);
+                } else {
+                    turret.setDirection(DcMotor.Direction.FORWARD);
+                    // No tag seen — stop turret for safety
+                    turret.setPower(0);
+                    telemetry.addLine("AprilTag: Tag not detected");
                 }
 
+            } else {
+                // --- Odo-based turret control mode ---
+                // Restore encoder mode so PID position control works correctly
+                turret.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+                cameraOn = false;
 
+                if (isDynamic) {
+                    if (goalDistance >= 130) {
+                        shooterTargetRPM = 2900;
+                        curHoodAngle = 0.6;
+                        turretPos = 168;
+                        if (!cameraOn) {
+                            double power = Turret.turretPIDControl(turretPos, turret.getCurrentPosition());
+                            turret.setPower(power);
+                        }
+                    } else {
+                        turretPos = DynamicShooter.calcTurretHead(robotHeading, curX, curY, isRed);
+                        double power = Turret.turretPIDControl(turretPos, turret.getCurrentPosition());
+                        shooterTargetRPM = DynamicShooter.calcTargetRPM(goalDistance);
+                        curHoodAngle = DynamicShooter.calcHoodPos(goalDistance);
+                        turret.setPower(power);
+                    }
+                }
+
+                telemetry.addLine("AprilTag: inactive (odo mode)");
             }
+            // ---------------------------------------------------------------
+
             if (gamepad2.bWasPressed()) {
                 isDynamic = !isDynamic;
             }
@@ -194,19 +255,21 @@ public class UpdatedMainTeleop extends LinearOpMode {
                 }
             }
 
-            // turret heading controls
-            if (gamepad2.left_trigger > 0.1) {
-                if (Shooter.getTurretPosition() > minTurretHeading) {
-                    Shooter.turnTurretDirection(false, 0.4);
+            // turret manual heading controls (only when not in AprilTag mode)
+            if (!gamepad2.x) {
+                if (gamepad2.left_trigger > 0.1) {
+                    if (Shooter.getTurretPosition() > minTurretHeading) {
+                        Shooter.turnTurretDirection(false, 0.4);
+                    }
                 }
-            }
-            if (gamepad2.right_trigger > 0.1) {
-                if (Shooter.getTurretPosition() < maxTurretHeading) {
-                    Shooter.turnTurretDirection(true, 0.4);
+                if (gamepad2.right_trigger > 0.1) {
+                    if (Shooter.getTurretPosition() < maxTurretHeading) {
+                        Shooter.turnTurretDirection(true, 0.4);
+                    }
                 }
-            }
-            if (gamepad2.left_trigger == 0 && gamepad2.right_trigger == 0) {
-                Shooter.turnTurretDirection(true, 0);
+                if (gamepad2.left_trigger == 0 && gamepad2.right_trigger == 0) {
+                    Shooter.turnTurretDirection(true, 0);
+                }
             }
 
             // intake controls
@@ -256,12 +319,14 @@ public class UpdatedMainTeleop extends LinearOpMode {
                 turret.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
                 turret.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
             }
+
             driveFL.setPower(powerFL);
             driveFR.setPower(powerFR);
             driveBL.setPower(powerBL);
             driveBR.setPower(powerBR);
 
             telemetry.addData("Dynamic Shooting Active: ", isDynamic);
+            telemetry.addData("AprilTag Align Active: ", gamepad2.x);
             telemetry.addData("Robot X: ", pos.getX(DistanceUnit.INCH));
             telemetry.addData("Robot Y: ", pos.getY(DistanceUnit.INCH));
             telemetry.addData("goalDist: ", goalDistance);
@@ -274,5 +339,7 @@ public class UpdatedMainTeleop extends LinearOpMode {
             telemetry.addData("Current Turret Pos: ", turret.getCurrentPosition());
             telemetry.update();
         }
+
+        aprilTagWebcam.stop();
     }
 }
