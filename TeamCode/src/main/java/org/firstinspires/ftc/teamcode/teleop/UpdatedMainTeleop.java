@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -15,12 +16,22 @@ import org.firstinspires.ftc.teamcode.robot.HelperServos;
 import org.firstinspires.ftc.teamcode.robot.Intake;
 import org.firstinspires.ftc.teamcode.robot.Shooter;
 import org.firstinspires.ftc.teamcode.robot.Turret;
+import org.firstinspires.ftc.teamcode.robot.aprilTagWebcam;
+import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 
 @TeleOp(name = "New Main TeleOp", group = "Linear OpMode")
 
 public class UpdatedMainTeleop extends LinearOpMode {
     private GoBildaPinpointDriver odo = null;
     Pose2D pos = null;
+
+    // webcam
+    private aprilTagWebcam aprilTagWebcam = null;
+    private static int TARGET_TAG_ID = 24;
+    private static final double MOTOR_SPEED = 0.15;
+    private static final double DEADZONE_CM = 5;
+
+    // dt stuff
     private double driverSensitivity = 1.0;
     private double shooterTargetRPM = 3000;
     private double shooterPower = 0;
@@ -54,11 +65,13 @@ public class UpdatedMainTeleop extends LinearOpMode {
 
     @Override
     public void runOpMode() {
+        aprilTagWebcam = new aprilTagWebcam();
         driveFL = hardwareMap.get(DcMotor.class, "driveFL");
         driveBL = hardwareMap.get(DcMotor.class, "driveBL");
         driveFR = hardwareMap.get(DcMotor.class, "driveFR");
         driveBR = hardwareMap.get(DcMotor.class, "driveBR");
         turret = hardwareMap.get(DcMotorEx.class, "turret");
+        turret.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         odo = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
         odo.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
         odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.REVERSED);
@@ -79,6 +92,8 @@ public class UpdatedMainTeleop extends LinearOpMode {
         Intake.init(hardwareMap);
         HelperServos.init(hardwareMap);
         Turret.init(hardwareMap);
+        aprilTagWebcam.init(hardwareMap, telemetry);
+        turret.setDirection(DcMotorSimple.Direction.REVERSE);
 
         init = true;
 
@@ -89,18 +104,22 @@ public class UpdatedMainTeleop extends LinearOpMode {
             if (gamepad1.aWasPressed()) {
                 DynamicShooter.setGoalPosition(128, -128);
                 telemetry.addData("Blue goal. ", "Ready to start");
+                TARGET_TAG_ID = 20;
                 isRed = false;
 
             }
             if (gamepad1.bWasPressed()) {
                 DynamicShooter.setGoalPosition(128, 128);
                 telemetry.addData("Red goal. ", "Ready to start");
+                TARGET_TAG_ID = 24;
                 isRed = true;
 
             }
             telemetry.update();
         }
+
         while (opModeIsActive()) {
+
             double max;
 
             // POV Mode uses left joystick to go forward & strafe, and right joystick to rotate.
@@ -218,6 +237,15 @@ public class UpdatedMainTeleop extends LinearOpMode {
                 Intake.stopIntake();
             }
             if (gamepad2.x && !gamepad2.left_bumper) {
+                runCamera();
+                telemetry.update();
+            } else {
+                aprilTagWebcam.stop();
+            }
+
+            turret.setPower(0);
+            aprilTagWebcam.stop();
+            if (gamepad2.a) {
                 Intake.runIntake();
                 HelperServos.setStopperPass();
             }
@@ -273,6 +301,42 @@ public class UpdatedMainTeleop extends LinearOpMode {
             telemetry.addData("Current Shooter RPM: ", Shooter.getCurrentRPM());
             telemetry.addData("Current Turret Pos: ", turret.getCurrentPosition());
             telemetry.update();
+        }
+
+    }
+    public void runCamera() {
+        aprilTagWebcam.update();
+
+        AprilTagDetection tag = aprilTagWebcam.getTagBySpecificId(TARGET_TAG_ID);
+
+        if (tag != null) {
+            double x = tag.ftcPose.x;
+            turret.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+            if (Math.abs(x) <= DEADZONE_CM) {
+                // Centered
+                turret.setPower(0);
+                telemetry.addLine("Aligned: motor stopped");
+            }
+            else if (x > 0) {
+                // Tag is to the right → move left
+                turret.setPower(-MOTOR_SPEED);
+                telemetry.addLine("Tag right → motor left");
+            }
+            else {
+                // Tag is to the left → move right
+                turret.setPower(MOTOR_SPEED);
+                telemetry.addLine("Tag left → motor right");
+            }
+
+            telemetry.addData("Tag X (cm)", x);
+            aprilTagWebcam.displayDetectionTelemetry(tag);
+        }
+        else {
+            // No tag detected → stop motor for safety
+            turret.setPower(0);
+            telemetry.addLine("Tag not detected");
+            turret.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         }
     }
 }
