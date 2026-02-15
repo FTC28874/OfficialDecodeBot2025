@@ -44,7 +44,7 @@ public class CloseToBlueGoal extends LinearOpMode {
     double shooterHoodAngle = Shooter.ShootPositionState.MID_MID_HOOD.position;
     int ballMode = 0;
     static double localKpPosition = 0.005;
-    static double localKpHeading = 0.01;
+    static double localKpHeading = 0.007;
 
     GoBildaPinpointDriver odo = null; // Declare OpMode member for the Odometry Computer
     DriveToPoint nav = new DriveToPoint(this); //OpMode member for the point-to-point navigation class

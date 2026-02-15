@@ -43,7 +43,7 @@ public class FarFromBlueGoal2 extends LinearOpMode {
     double shooterHoodAngle = Shooter.ShootPositionState.FAR_HOOD.position;
     int ballMode = 0;
     static double localKpPosition = 0.005;
-    static double localKpHeading = 0.01;
+    static double localKpHeading = 0.007;
 
     GoBildaPinpointDriver odo = null; // Declare OpMode member for the Odometry Computer
     DriveToPoint nav = new DriveToPoint(this); //OpMode member for the point-to-point navigation class
@@ -69,13 +69,13 @@ public class FarFromBlueGoal2 extends LinearOpMode {
     }
 
     static final Pose2D BEGIN_INTAKE_ROW_2 = new Pose2D(DistanceUnit.INCH, 52, 0, AngleUnit.DEGREES,90);
-    static final Pose2D SHOOT_POSE = new Pose2D(DistanceUnit.INCH, 5, 0, AngleUnit.DEGREES, 0);
+    static final Pose2D SHOOT_POSE = new Pose2D(DistanceUnit.INCH, 0, 0, AngleUnit.DEGREES, 0);
     static final Pose2D INTAKE_ROW_2 = new Pose2D(DistanceUnit.INCH, 52, 2, AngleUnit.DEGREES, 90);
     static final Pose2D BEGIN_INTAKE_ROW_1 = new Pose2D(DistanceUnit.INCH,76,0, AngleUnit.DEGREES,90);
     static final Pose2D INTAKE_ROW_1 = new Pose2D(DistanceUnit.INCH, 76, 29, AngleUnit.DEGREES, 90);
     static final Pose2D BEGIN_INTAKE_ROW_3 = new Pose2D(DistanceUnit.INCH, 28, 0, AngleUnit.DEGREES, 90);
     static final Pose2D INTAKE_ROW_3 = new Pose2D(DistanceUnit.INCH, 28, 29, AngleUnit.DEGREES, 90);
-    static final Pose2D END_AUTO = new Pose2D(DistanceUnit.INCH, 5, 12, AngleUnit.DEGREES, 90);
+    static final Pose2D END_AUTO = new Pose2D(DistanceUnit.INCH, 5, 12, AngleUnit.DEGREES, 0);
 
 
     public double inToMM(double inValue) {
@@ -206,11 +206,7 @@ public class FarFromBlueGoal2 extends LinearOpMode {
                     if (timer.time() > 2.5) {
                         timer.reset();
                         HelperServos.setStopperStop();
-                        if (ballMode > 3) {
-                            stateMachine = StateMachine.DRIVE_TO_TARGET_2;
-                        } else {
-                            stateMachine = StateMachine.DONE;
-                        }
+                        stateMachine = StateMachine.DONE;
                     }
                     break;
                 case DRIVE_TO_TARGET_2:
