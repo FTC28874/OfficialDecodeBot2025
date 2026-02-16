@@ -250,9 +250,7 @@ public class UpdatedMainTeleop extends LinearOpMode {
                 }
             }
             if (gamepad2.dpadLeftWasPressed()) {
-                if (curHoodAngle > minHoodAngle) {
-                    curHoodAngle -= 0.05;
-                }
+                Shooter.lowerShooter();
             }
 
             // turret manual heading controls (only when not in AprilTag mode)

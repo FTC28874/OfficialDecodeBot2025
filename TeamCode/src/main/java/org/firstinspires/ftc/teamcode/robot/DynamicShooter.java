@@ -25,7 +25,7 @@ public class DynamicShooter {
     }
 
     public static double calcTargetRPM(double dist) {
-        double rpm = -0.0150214 * Math.pow(dist, 2) + 11.90772 * dist + 1365.70845;
+        double rpm = (-0.0150214 * Math.pow(dist, 2) + 11.90772 * dist + 1365.70845) - 50;
         rpm = Math.min(Constants.MAX_SHOOTER_RPM, Math.max(Constants.MIN_SHOOTER_RPM, rpm));
         return rpm;
     }
