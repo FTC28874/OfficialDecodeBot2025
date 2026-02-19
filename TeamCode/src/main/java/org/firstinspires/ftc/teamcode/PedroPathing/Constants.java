@@ -23,13 +23,13 @@ public class Constants {
 
     // PID and Follower Tuning
     public static FollowerConstants followerConstants = new FollowerConstants()
-            .mass(9.07185)
-            .forwardZeroPowerAcceleration(20)//66.71437757597195
-            .lateralZeroPowerAcceleration(20)//53.58475860835999
+            .mass(10.52)
+            .forwardZeroPowerAcceleration(-35.75888757063125)
+            .lateralZeroPowerAcceleration(-65.08208753967193)
             // Added D coefficient (0.02) to dampen stops and prevent jerking
-            .translationalPIDFCoefficients(new PIDFCoefficients(0.1, 0, 0.0, 0))
+            .translationalPIDFCoefficients(new PIDFCoefficients(0.15, 0, 0.01, 0.015))
             // Heading PID with D damping (0.15) to prevent rotation "snap"
-            .headingPIDFCoefficients(new PIDFCoefficients(0.3, 0, 0.0, 0.0))
+            .headingPIDFCoefficients(new PIDFCoefficients(0.7, 0, 0.0, 0.01))
             .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.025, 1, 0.00001, 0.6, 0.01))
             .centripetalScaling(0.0007);
 
@@ -44,8 +44,8 @@ public class Constants {
             .leftRearMotorDirection(DcMotorSimple.Direction.REVERSE)
             .rightFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
             .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD)
-            .xVelocity(83.90387683778297)
-            .yVelocity(63.115439107098915);
+            .xVelocity(69.00311615711124)
+            .yVelocity(56.91023506705217);
     // Pinpoint Localizer Settings
     public static PinpointConstants localizerConstants = new PinpointConstants()
             .forwardPodY(-6.126)
@@ -57,7 +57,7 @@ public class Constants {
             .strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.REVERSED);
 
     // Path Constraints
-    public static PathConstraints pathConstraints = new PathConstraints(0.99, 100, 1, 0.6);
+    public static PathConstraints pathConstraints = new PathConstraints(0.99, 100, 0.6, 0.3);
 
     /**
      * Initializes the Follower object with all custom constants.

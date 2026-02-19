@@ -1,306 +1,205 @@
-package org.firstinspires.ftc.teamcode.PedroPathing;
+package org.firstinspires.ftc.teamcode.PedroPathing; // make sure this aligns with class location
 
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
+import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
+import  com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
+import org.firstinspires.ftc.teamcode.PedroPathing.Constants;
 
-import org.firstinspires.ftc.teamcode.robot.Shooter;
-import org.firstinspires.ftc.teamcode.robot.Intake;
-
-@Autonomous
-@Disabled
-public class autopathingfarfrombluegoal extends LinearOpMode {
+@Autonomous(name = "Example Auto", group = "Examples")
+public class autopathingfarfrombluegoal extends OpMode {
 
     private Follower follower;
-    private Timer pathTimer;
+    private Timer pathTimer, actionTimer, opmodeTimer;
 
-    private GoBildaPinpointDriver pinpoint = null;
-
-    public enum PathState {
-
-        DRIVE_STARTPOS_TO_SHOOTING_POS,
-        PAUSE_1,
-
-        DRIVE_SHOOTPOS_TO_INTAKE_READY_SET_2_POS,
-        PAUSE_2,
-
-        DRIVE_INTAKE_READY_POSE_SET_2_TO_ACTUALLY_DO_INTAKE_SET_2,
-        PAUSE_3,
-
-        DRIVE_ACTUALLY_DO_INTAKE_SET_2_TO_READY_TO_EMPTY,
-        PAUSE_4,
-
-        DRIVE_READY_TO_EMPTY_TO_EMPTY_GATE,
-        PAUSE_5,
-
-        DRIVE_EMPTY_GATE_TO_GO_TO_SHOOTING_LINE,
-        PAUSE_6,
-
-        DRIVE_GO_TO_SHOOTING_LINE_TO_SHOOT_POSE,
-        PAUSE_7,
-
-        DRIVE_SHOOT_POSE_TO_INTAKE_READY_POSE_SET_1,
-        PAUSE_8,
-
-        DRIVE_INTAKE_READY_POSE_SET_1_TO_ACTUALLY_DO_INTAKE_SET_1,
-        PAUSE_9,
-
-        DRIVE_ACTUALLY_DO_INTAKE_SET_1_TO_SHOOT_POSE,
-        PAUSE_10,
-
-        DRIVE_SHOOT_POSE_TO_INTAKE_READY_POSE_SET_3,
-        PAUSE_11,
-
-        DRIVE_INTAKE_READY_POSE_SET_3_TO_ACTUALLY_DO_INTAKE_SET_3,
-        PAUSE_12,
-
-        DRIVE_ACTUALLY_DO_INTAKE_SET_3_TO_SHOOT_POSE,
-        PAUSE_13,
-
-        DRIVE_SHOOT_POSE_TO_READY_TO_EMPTY_END
-    }
-
-    private PathState pathState;
-
-    private final Pose startPose = new Pose(56.8, 7.88, Math.toRadians(90));
-    private final Pose shootPose = new Pose(56, 88, Math.toRadians(180));
-
-    private final Pose intakeReadyPoseSet2 = new Pose(55, 54.8, Math.toRadians(180));
-    private final Pose actuallyDoIntakeSet2 = new Pose(35, 54.8, Math.toRadians(180));
-
-    private final Pose readyToEmpty = new Pose(22, 69.7, Math.toRadians(90));
-    private final Pose emptyGate = new Pose(19, 69.7, Math.toRadians(90));
-    private final Pose goToShootingLine = new Pose(55.8, 69.7, Math.toRadians(90));
-
-    private final Pose intakeReadyPoseSet1 = new Pose(41.6, 81, Math.toRadians(180));
-    private final Pose actuallyDoIntakeSet1 = new Pose(21.7, 84, Math.toRadians(180));
-
-    private final Pose intakeReadyPoseSet3 = new Pose(41.6, 35.5, Math.toRadians(180));
-    private final Pose actuallyDoIntakeSet3 = new Pose(21.7, 35.5, Math.toRadians(180));
-
-    private final Pose readyToEmptyEnd = new Pose(35, 69.7, Math.toRadians(180));
-
-    private PathChain
-            driveStartToShoot,
-            driveShootToIntakeReadyPoseSet2,
-            driveIntakeReadyPoseSet2ToActuallyDoIntakeSet2,
-            driveActuallyDoIntakeSet2ToReadyToEmpty,
-            driveReadyToEmptyToEmptyGate,
-            driveEmptyGateToGoToShootingLine,
-            driveGoToShootingLineToShootPose,
-            driveShootPosetoIntakeReadyPoseSet1,
-            driveIntakeReadyPoseSet1toActuallyDoIntakeSet1,
-            driveActuallyDoIntakeSet1toShootPose,
-            driveShootPosetoIntakeReadyPoseSet3,
-            driveIntakeReadyPoseSet3toActuallyDoIntakeSet3,
-            driveActuallyDoIntakeSet3toShootPose,
-            driveShootPosetoReadyToEmptyEnd;
+    private int pathState;
+    private final Pose startPose = new Pose(28.5, 128, Math.toRadians(180)); // Start Pose of our robot.
+    private final Pose scorePose = new Pose(60, 85, Math.toRadians(135)); // Scoring Pose of our robot. It is facing the goal at a 135 degree angle.
+    private final Pose pickup1Pose = new Pose(37, 121, Math.toRadians(0)); // Highest (First Set) of Artifacts from the Spike Mark.
+    private final Pose pickup2Pose = new Pose(43, 130, Math.toRadians(0)); // Middle (Second Set) of Artifacts from the Spike Mark.
+    private final Pose pickup3Pose = new Pose(49, 135, Math.toRadians(0)); // Lowest (Third Set) of Artifacts from the Spike Mark.
+    private Path scorePreload;
+    private PathChain grabPickup1, scorePickup1, grabPickup2, scorePickup2, grabPickup3, scorePickup3;
 
     public void buildPaths() {
-        driveStartToShoot = drive(startPose, shootPose);
-        driveShootToIntakeReadyPoseSet2 = drive(shootPose, intakeReadyPoseSet2);
-        driveIntakeReadyPoseSet2ToActuallyDoIntakeSet2 = drive(intakeReadyPoseSet2, actuallyDoIntakeSet2);
-        driveActuallyDoIntakeSet2ToReadyToEmpty = drive(actuallyDoIntakeSet2, readyToEmpty);
-        driveReadyToEmptyToEmptyGate = drive(readyToEmpty, emptyGate);
-        driveEmptyGateToGoToShootingLine = drive(emptyGate, goToShootingLine);
-        driveGoToShootingLineToShootPose = drive(goToShootingLine, shootPose);
-        driveShootPosetoIntakeReadyPoseSet1 = drive(shootPose, intakeReadyPoseSet1);
-        driveIntakeReadyPoseSet1toActuallyDoIntakeSet1 = drive(intakeReadyPoseSet1, actuallyDoIntakeSet1);
-        driveActuallyDoIntakeSet1toShootPose = drive(actuallyDoIntakeSet1, shootPose);
-        driveShootPosetoIntakeReadyPoseSet3 = drive(shootPose, intakeReadyPoseSet3);
-        driveIntakeReadyPoseSet3toActuallyDoIntakeSet3 = drive(intakeReadyPoseSet3, actuallyDoIntakeSet3);
-        driveActuallyDoIntakeSet3toShootPose = drive(actuallyDoIntakeSet3, shootPose);
-        driveShootPosetoReadyToEmptyEnd = drive(shootPose, readyToEmptyEnd);
-    }
+        /* This is our scorePreload path. We are using a BezierLine, which is a straight line. */
+        scorePreload = new Path(new BezierLine(startPose, scorePose));
+        scorePreload.setLinearHeadingInterpolation(startPose.getHeading(), scorePose.getHeading());
 
-    private PathChain drive(Pose a, Pose b) {
-        return follower.pathBuilder()
-                .addPath(new BezierLine(a, b))
-                .setLinearHeadingInterpolation(a.getHeading(), b.getHeading())
+    /* Here is an example for Constant Interpolation
+    scorePreload.setConstantInterpolation(startPose.getHeading()); */
+
+        /* This is our grabPickup1 PathChain. We are using a single path with a BezierLine, which is a straight line. */
+        grabPickup1 = follower.pathBuilder()
+                .addPath(new BezierLine(scorePose, pickup1Pose))
+                .setLinearHeadingInterpolation(scorePose.getHeading(), pickup1Pose.getHeading())
+                .build();
+
+        /* This is our scorePickup1 PathChain. We are using a single path with a BezierLine, which is a straight line. */
+        scorePickup1 = follower.pathBuilder()
+                .addPath(new BezierLine(pickup1Pose, scorePose))
+                .setLinearHeadingInterpolation(pickup1Pose.getHeading(), scorePose.getHeading())
+                .build();
+
+        /* This is our grabPickup2 PathChain. We are using a single path with a BezierLine, which is a straight line. */
+        grabPickup2 = follower.pathBuilder()
+                .addPath(new BezierLine(scorePose, pickup2Pose))
+                .setLinearHeadingInterpolation(scorePose.getHeading(), pickup2Pose.getHeading())
+                .build();
+
+        /* This is our scorePickup2 PathChain. We are using a single path with a BezierLine, which is a straight line. */
+        scorePickup2 = follower.pathBuilder()
+                .addPath(new BezierLine(pickup2Pose, scorePose))
+                .setLinearHeadingInterpolation(pickup2Pose.getHeading(), scorePose.getHeading())
+                .build();
+
+        /* This is our grabPickup3 PathChain. We are using a single path with a BezierLine, which is a straight line. */
+        grabPickup3 = follower.pathBuilder()
+                .addPath(new BezierLine(scorePose, pickup3Pose))
+                .setLinearHeadingInterpolation(scorePose.getHeading(), pickup3Pose.getHeading())
+                .build();
+
+        /* This is our scorePickup3 PathChain. We are using a single path with a BezierLine, which is a straight line. */
+        scorePickup3 = follower.pathBuilder()
+                .addPath(new BezierLine(pickup3Pose, scorePose))
+                .setLinearHeadingInterpolation(pickup3Pose.getHeading(), scorePose.getHeading())
                 .build();
     }
+    public void autonomousPathUpdate() {
+        switch (pathState) {
+            case 0:
+                follower.followPath(scorePreload);
+                setPathState(1);
+                break;
+            case 1:
 
-    private void setPathState(PathState newState) {
-        pathState = newState;
+            /* You could check for
+            - Follower State: "if(!follower.isBusy()) {}"
+            - Time: "if(pathTimer.getElapsedTimeSeconds() > 1) {}"
+            - Robot Position: "if(follower.getPose().getX() > 36) {}"
+            */
+
+                /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
+                if(!follower.isBusy()) {
+                    /* Score Preload */
+
+                    /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
+                    follower.followPath(grabPickup1,true);
+                    setPathState(2);
+                }
+                break;
+            case 2:
+                /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup1Pose's position */
+                if(!follower.isBusy()) {
+                    /* Grab Sample */
+
+                    /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
+                    follower.followPath(scorePickup1,true);
+                    setPathState(3);
+                }
+                break;
+            case 3:
+                /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
+                if(!follower.isBusy()) {
+                    /* Score Sample */
+
+                    /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
+                    follower.followPath(grabPickup2,true);
+                    setPathState(4);
+                }
+                break;
+            case 4:
+                /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup2Pose's position */
+                if(!follower.isBusy()) {
+                    /* Grab Sample */
+
+                    /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
+                    follower.followPath(scorePickup2,true);
+                    setPathState(5);
+                }
+                break;
+            case 5:
+                /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
+                if(!follower.isBusy()) {
+                    /* Score Sample */
+
+                    /* Since this is a pathChain, we can have Pedro hold the end point while we are grabbing the sample */
+                    follower.followPath(grabPickup3,true);
+                    setPathState(6);
+                }
+                break;
+            case 6:
+                /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the pickup3Pose's position */
+                if(!follower.isBusy()) {
+                    /* Grab Sample */
+
+                    /* Since this is a pathChain, we can have Pedro hold the end point while we are scoring the sample */
+                    follower.followPath(scorePickup3, true);
+                    setPathState(7);
+                }
+                break;
+            case 7:
+                /* This case checks the robot's position and will wait until the robot position is close (1 inch away) from the scorePose's position */
+                if(!follower.isBusy()) {
+                    /* Set the state to a Case we won't use or define, so it just stops running an new paths */
+                    setPathState(-1);
+                }
+                break;
+        }
+    }
+
+    /** These change the states of the paths and actions. It will also reset the timers of the individual switches **/
+    public void setPathState(int pState) {
+        pathState = pState;
         pathTimer.resetTimer();
     }
+    /** This is the main loop of the OpMode, it will run repeatedly after clicking "Play". **/
+    @Override
+    public void loop() {
 
-    public void statePathUpdate() {
-        switch (pathState) {
+        // These loop the movements of the robot, these must be called continuously in order to work
+        follower.update();
+        autonomousPathUpdate();
 
-            case DRIVE_STARTPOS_TO_SHOOTING_POS:
-                follower.followPath(driveStartToShoot, true);
-                Intake.raiseIntake();
-                setPathState(PathState.PAUSE_1);
-                break;
-
-            case PAUSE_1:
-                if (pathTimer.getElapsedTimeSeconds() >= 2.0)
-                    setPathState(PathState.DRIVE_SHOOTPOS_TO_INTAKE_READY_SET_2_POS);
-                break;
-
-            case DRIVE_SHOOTPOS_TO_INTAKE_READY_SET_2_POS:
-                follower.followPath(driveShootToIntakeReadyPoseSet2, true);
-                Intake.raiseIntake();
-                Intake.runIntake();
-                setPathState(PathState.PAUSE_2);
-                break;
-
-            case PAUSE_2:
-                if (pathTimer.getElapsedTimeSeconds() >= 2.0)
-                    setPathState(PathState.DRIVE_INTAKE_READY_POSE_SET_2_TO_ACTUALLY_DO_INTAKE_SET_2);
-                break;
-
-            case DRIVE_INTAKE_READY_POSE_SET_2_TO_ACTUALLY_DO_INTAKE_SET_2:
-                follower.followPath(driveIntakeReadyPoseSet2ToActuallyDoIntakeSet2, true);
-                Intake.stopIntake();
-                Intake.lowerIntake();
-                setPathState(PathState.PAUSE_3);
-                break;
-
-            case PAUSE_3:
-                if (pathTimer.getElapsedTimeSeconds() >= 2.0)
-                    setPathState(PathState.DRIVE_ACTUALLY_DO_INTAKE_SET_2_TO_READY_TO_EMPTY);
-                break;
-
-            case DRIVE_ACTUALLY_DO_INTAKE_SET_2_TO_READY_TO_EMPTY:
-                follower.followPath(driveActuallyDoIntakeSet2ToReadyToEmpty, true);
-                setPathState(PathState.PAUSE_4);
-                break;
-
-            case PAUSE_4:
-                if (pathTimer.getElapsedTimeSeconds() >= 2.0)
-                    setPathState(PathState.DRIVE_READY_TO_EMPTY_TO_EMPTY_GATE);
-                break;
-
-            case DRIVE_READY_TO_EMPTY_TO_EMPTY_GATE:
-                follower.followPath(driveReadyToEmptyToEmptyGate, true);
-                setPathState(PathState.PAUSE_5);
-                break;
-
-            case PAUSE_5:
-                if (pathTimer.getElapsedTimeSeconds() >= 2.0)
-                    setPathState(PathState.DRIVE_EMPTY_GATE_TO_GO_TO_SHOOTING_LINE);
-                break;
-
-            case DRIVE_EMPTY_GATE_TO_GO_TO_SHOOTING_LINE:
-                follower.followPath(driveEmptyGateToGoToShootingLine, true);
-                setPathState(PathState.PAUSE_6);
-                break;
-
-            case PAUSE_6:
-                if (pathTimer.getElapsedTimeSeconds() >= 2.0)
-                    setPathState(PathState.DRIVE_GO_TO_SHOOTING_LINE_TO_SHOOT_POSE);
-                break;
-
-            case DRIVE_GO_TO_SHOOTING_LINE_TO_SHOOT_POSE:
-                follower.followPath(driveGoToShootingLineToShootPose, true);
-                setPathState(PathState.PAUSE_7);
-                break;
-
-            case PAUSE_7:
-                if (pathTimer.getElapsedTimeSeconds() >= 2.0)
-                    setPathState(PathState.DRIVE_SHOOT_POSE_TO_INTAKE_READY_POSE_SET_1);
-                break;
-
-            case DRIVE_SHOOT_POSE_TO_INTAKE_READY_POSE_SET_1:
-                follower.followPath(driveShootPosetoIntakeReadyPoseSet1, true);
-                setPathState(PathState.PAUSE_8);
-                break;
-//
-            case PAUSE_8:
-                if (pathTimer.getElapsedTimeSeconds() >= 2.0)
-                    setPathState(PathState.DRIVE_INTAKE_READY_POSE_SET_1_TO_ACTUALLY_DO_INTAKE_SET_1);
-                break;
-
-            case DRIVE_INTAKE_READY_POSE_SET_1_TO_ACTUALLY_DO_INTAKE_SET_1:
-                follower.followPath(driveIntakeReadyPoseSet1toActuallyDoIntakeSet1, true);
-                setPathState(PathState.PAUSE_9);
-                break;
-//
-            case PAUSE_9:
-                if (pathTimer.getElapsedTimeSeconds() >= 2.0)
-                    setPathState(PathState.DRIVE_ACTUALLY_DO_INTAKE_SET_1_TO_SHOOT_POSE);
-                break;
-
-            case DRIVE_ACTUALLY_DO_INTAKE_SET_1_TO_SHOOT_POSE:
-                follower.followPath(driveActuallyDoIntakeSet1toShootPose, true);
-                setPathState(PathState.PAUSE_10);
-                break;
-//
-//            case PAUSE_10:
-//                if (pathTimer.getElapsedTimeSeconds() >= 2.0)
-//                    setPathState(PathState.DRIVE_SHOOT_POSE_TO_INTAKE_READY_POSE_SET_3);
-//                break;
-//
-//            case DRIVE_SHOOT_POSE_TO_INTAKE_READY_POSE_SET_3:
-//                follower.followPath(driveShootPosetoIntakeReadyPoseSet3, true);
-//                setPathState(PathState.PAUSE_11);
-//                break;
-//
-//            case PAUSE_11:
-//                if (pathTimer.getElapsedTimeSeconds() >= 2.0)
-//                    setPathState(PathState.DRIVE_INTAKE_READY_POSE_SET_3_TO_ACTUALLY_DO_INTAKE_SET_3);
-//                break;
-//
-//            case DRIVE_INTAKE_READY_POSE_SET_3_TO_ACTUALLY_DO_INTAKE_SET_3:
-//                follower.followPath(driveIntakeReadyPoseSet3toActuallyDoIntakeSet3, true);
-//                setPathState(PathState.PAUSE_12);
-//                break;
-//
-//            case PAUSE_12:
-//                if (pathTimer.getElapsedTimeSeconds() >= 2.0)
-//                    setPathState(PathState.DRIVE_ACTUALLY_DO_INTAKE_SET_3_TO_SHOOT_POSE);
-//                break;
-//
-//            case DRIVE_ACTUALLY_DO_INTAKE_SET_3_TO_SHOOT_POSE:
-//                follower.followPath(driveActuallyDoIntakeSet3toShootPose, true);
-//                setPathState(PathState.PAUSE_13);
-//                break;
-//
-//            case PAUSE_13:
-//                if (pathTimer.getElapsedTimeSeconds() >= 2.0)
-//                    setPathState(PathState.DRIVE_SHOOT_POSE_TO_READY_TO_EMPTY_END);
-//                break;
-//
-//            case DRIVE_SHOOT_POSE_TO_READY_TO_EMPTY_END:
-//                follower.followPath(driveShootPosetoReadyToEmptyEnd, true);
-//                break;
-        }
+        // Feedback to Driver Hub for debugging
+        telemetry.addData("path state", pathState);
+        telemetry.addData("x", follower.getPose().getX());
+        telemetry.addData("y", follower.getPose().getY());
+        telemetry.addData("heading", follower.getPose().getHeading());
+        telemetry.update();
     }
 
+    /** This method is called once at the init of the OpMode. **/
     @Override
-    public void runOpMode() {
-
-        Shooter.init(hardwareMap);
-        Intake.init(hardwareMap);
-
-        pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
-
+    public void init() {
         pathTimer = new Timer();
+        opmodeTimer = new Timer();
+        opmodeTimer.resetTimer();
+
 
         follower = Constants.createFollower(hardwareMap);
-        follower.setPose(startPose);
-
         buildPaths();
-        pathState = PathState.DRIVE_STARTPOS_TO_SHOOTING_POS;
+        follower.setStartingPose(startPose);
 
-        waitForStart();
-
-        while (opModeIsActive()) {
-            telemetry.addData("x:", follower.getPose().getX());
-            telemetry.addData("y: ", follower.getPose().getY());
-            telemetry.update();
-
-            follower.update();
-            statePathUpdate();
-        }
     }
-}
+
+    /** This method is called continuously after Init while waiting for "play". **/
+    @Override
+    public void init_loop() {}
+
+    /** This method is called once at the start of the OpMode.
+     * It runs all the setup actions, including building paths and starting the path system **/
+    @Override
+    public void start() {
+        opmodeTimer.resetTimer();
+        setPathState(0);
+    }
+
+    /** We do not use this because everything should automatically disable **/
+    @Override
+    public void stop() {}}

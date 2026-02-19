@@ -13,7 +13,7 @@ import org.firstinspires.ftc.teamcode.robot.Intake;
 import org.firstinspires.ftc.teamcode.robot.Shooter;
 
 @Autonomous(name="Far From Red Goal", group = "Linear OpMode")
-@Disabled
+
 public class autopathingfarfromredgoal extends LinearOpMode {
 
     private double shooterEncSpeed = 1600;
@@ -338,9 +338,11 @@ public class autopathingfarfromredgoal extends LinearOpMode {
     @Override
     public void runOpMode() {
 
+
         Shooter.init(hardwareMap);
         Intake.init(hardwareMap);
         Constants.setBrakeMode(hardwareMap);
+        Intake.raiseIntake();
 
         pathTimer = new Timer();
         opModeTimer = new Timer();

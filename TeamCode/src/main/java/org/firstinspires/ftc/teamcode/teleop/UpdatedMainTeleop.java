@@ -14,6 +14,7 @@ import org.firstinspires.ftc.teamcode.robot.Constants;
 import org.firstinspires.ftc.teamcode.robot.DynamicShooter;
 import org.firstinspires.ftc.teamcode.robot.HelperServos;
 import org.firstinspires.ftc.teamcode.robot.Intake;
+import org.firstinspires.ftc.teamcode.robot.RobotState;
 import org.firstinspires.ftc.teamcode.robot.Shooter;
 import org.firstinspires.ftc.teamcode.robot.Turret;
 import org.firstinspires.ftc.teamcode.robot.aprilTagWebcam;
@@ -73,7 +74,6 @@ public class UpdatedMainTeleop extends LinearOpMode {
         odo.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
         odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.REVERSED);
 
-        odo.resetPosAndIMU();
         driveFL.setDirection(DcMotor.Direction.REVERSE);
         driveBL.setDirection(DcMotor.Direction.REVERSE);
         driveFR.setDirection(DcMotor.Direction.FORWARD);
@@ -96,6 +96,7 @@ public class UpdatedMainTeleop extends LinearOpMode {
         init = true;
 
         while (opModeInInit()) {
+           odo.setPosition(new Pose2D(DistanceUnit.INCH, RobotState.savedX - 44, RobotState.savedY + 148, AngleUnit.DEGREES, RobotState.savedHeading + 0));
             telemetry.addData("Press [A] ", "for Blue goal");
             telemetry.addData("Press [B] ", "for Red goal");
             telemetry.addData("Red Goal?", isRed);
