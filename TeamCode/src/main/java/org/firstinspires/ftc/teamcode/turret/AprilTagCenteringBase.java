@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.turret;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -30,7 +30,7 @@ import java.util.List;
  * Subclasses must implement {@link #getTargetTagId()} and
  * {@link #getTargetTagName()} to specify which AprilTag to track.
  *
- * All tuning constants live in {@link PanMotorConfig}.
+ * All tuning constants live in {@link TurretMotorConfig}.
  *
  * @see RedGoalCenteringTeleOp
  * @see BlueGoalCenteringTeleOp
@@ -91,8 +91,8 @@ public abstract class AprilTagCenteringBase extends LinearOpMode {
         telemetry.addData("OpMode",  "%s Centering ready", getTargetTagName());
         telemetry.addData("Tag ID",  getTargetTagId());
         telemetry.addData("Limits",  "%.0f° / %.0f°  →  %d / %d ticks",
-                PanMotorConfig.LIMIT_DEGREES_MIN, PanMotorConfig.LIMIT_DEGREES_MAX,
-                PanMotorConfig.ENCODER_LIMIT_MIN, PanMotorConfig.ENCODER_LIMIT_MAX);
+                TurretMotorConfig.LIMIT_DEGREES_MIN, TurretMotorConfig.LIMIT_DEGREES_MAX,
+                TurretMotorConfig.ENCODER_LIMIT_MIN, TurretMotorConfig.ENCODER_LIMIT_MAX);
         telemetry.addLine("Waiting for START…");
         telemetry.update();
 
@@ -140,13 +140,13 @@ public abstract class AprilTagCenteringBase extends LinearOpMode {
     private void onTagLost() {
         long elapsedMs = System.currentTimeMillis() - lastSeenTimestamp;
 
-        if (!motorHolding && elapsedMs > PanMotorConfig.HOLD_DELAY_MS) {
+        if (!motorHolding && elapsedMs > TurretMotorConfig.HOLD_DELAY_MS) {
             holdPosition();
             motorHolding = true;
         }
 
         // Bleed integral so stale accumulation doesn't cause drift on reacquire
-        integralSum *= PanMotorConfig.INTEGRAL_BLEED;
+        integralSum *= TurretMotorConfig.INTEGRAL_BLEED;
 
         sendLostTelemetry(elapsedMs);
     }
@@ -156,7 +156,7 @@ public abstract class AprilTagCenteringBase extends LinearOpMode {
     // ═══════════════════════════════════════════════════════════════════════
 
     private void initHardware() {
-        panMotor = hardwareMap.get(DcMotorEx.class, PanMotorConfig.MOTOR_NAME);
+        panMotor = hardwareMap.get(DcMotorEx.class, TurretMotorConfig.MOTOR_NAME);
 
         // Zero encoder on init — limits are relative to starting position
         panMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -180,7 +180,7 @@ public abstract class AprilTagCenteringBase extends LinearOpMode {
                 .addTag(new AprilTagMetadata(
                         getTargetTagId(),
                         getTargetTagName(),
-                        PanMotorConfig.TAG_SIZE_OUTER_IN,
+                        TurretMotorConfig.TAG_SIZE_OUTER_IN,
                         null,               // fieldPosition  (not needed for centering)
                         DistanceUnit.INCH,  // matches TAG_SIZE_OUTER_IN units
                         null))              // fieldOrientation (not needed for centering)
@@ -196,11 +196,11 @@ public abstract class AprilTagCenteringBase extends LinearOpMode {
                 .build();
 
         visionPortal = new VisionPortal.Builder()
-                .setCamera(hardwareMap.get(WebcamName.class, PanMotorConfig.CAMERA_NAME))
+                .setCamera(hardwareMap.get(WebcamName.class, TurretMotorConfig.CAMERA_NAME))
                 .addProcessor(aprilTagProcessor)
                 .setCameraResolution(new android.util.Size(
-                        PanMotorConfig.CAMERA_WIDTH,
-                        PanMotorConfig.CAMERA_HEIGHT))
+                        TurretMotorConfig.CAMERA_WIDTH,
+                        TurretMotorConfig.CAMERA_HEIGHT))
                 .setStreamFormat(VisionPortal.StreamFormat.YUY2)
                 .enableLiveView(true)
                 .build();
@@ -228,7 +228,7 @@ public abstract class AprilTagCenteringBase extends LinearOpMode {
      * Negative error  = tag is to the LEFT  of center → motor should pan left.
      */
     private double computeXError(AprilTagDetection detection) {
-        double frameCenterX = PanMotorConfig.CAMERA_WIDTH / 2.0;
+        double frameCenterX = TurretMotorConfig.CAMERA_WIDTH / 2.0;
         return detection.center.x - frameCenterX;
     }
 
@@ -239,7 +239,7 @@ public abstract class AprilTagCenteringBase extends LinearOpMode {
     private void driveMotorPID(double error) {
 
         // Deadband — coast to zero when the tag is close enough to centered
-        if (Math.abs(error) < PanMotorConfig.DEADBAND_PX) {
+        if (Math.abs(error) < TurretMotorConfig.DEADBAND_PX) {
             applySmoothedPower(0.0);
             integralSum = 0.0;
             lastError   = 0.0;
@@ -252,27 +252,27 @@ public abstract class AprilTagCenteringBase extends LinearOpMode {
         if (dt <= 0 || dt > 0.5) dt = 0.02;
 
         // ── Proportional ────────────────────────────────────────────────
-        double pTerm = PanMotorConfig.kP * error;
+        double pTerm = TurretMotorConfig.kP * error;
 
         // ── Integral (anti-windup clamp) ─────────────────────────────────
         integralSum = clamp(
                 integralSum + error * dt,
-                -PanMotorConfig.INTEGRAL_LIMIT,
-                 PanMotorConfig.INTEGRAL_LIMIT);
-        double iTerm = PanMotorConfig.kI * integralSum;
+                -TurretMotorConfig.INTEGRAL_LIMIT,
+                 TurretMotorConfig.INTEGRAL_LIMIT);
+        double iTerm = TurretMotorConfig.kI * integralSum;
 
         // ── Derivative ──────────────────────────────────────────────────
-        double dTerm = PanMotorConfig.kD * (error - lastError) / dt;
+        double dTerm = TurretMotorConfig.kD * (error - lastError) / dt;
         lastError = error;
 
         // ── Combine, clamp, scale ────────────────────────────────────────
         double rawPower = clamp(pTerm + iTerm + dTerm, -1.0, 1.0)
-                        * PanMotorConfig.MAX_VELOCITY_FRACTION;
+                        * TurretMotorConfig.MAX_VELOCITY_FRACTION;
 
         // ── Encoder soft limits ──────────────────────────────────────────
         int currentTick = panMotor.getCurrentPosition();
-        if (currentTick >= PanMotorConfig.ENCODER_LIMIT_MAX && rawPower > 0) rawPower = 0;
-        if (currentTick <= PanMotorConfig.ENCODER_LIMIT_MIN && rawPower < 0) rawPower = 0;
+        if (currentTick >= TurretMotorConfig.ENCODER_LIMIT_MAX && rawPower > 0) rawPower = 0;
+        if (currentTick <= TurretMotorConfig.ENCODER_LIMIT_MIN && rawPower < 0) rawPower = 0;
 
         applySmoothedPower(rawPower);
     }
@@ -284,8 +284,8 @@ public abstract class AprilTagCenteringBase extends LinearOpMode {
     private void applySmoothedPower(double targetPower) {
         double delta = clamp(
                 targetPower - currentPower,
-                -PanMotorConfig.RAMP_RATE,
-                 PanMotorConfig.RAMP_RATE);
+                -TurretMotorConfig.RAMP_RATE,
+                 TurretMotorConfig.RAMP_RATE);
         currentPower += delta;
         panMotor.setPower(currentPower);
     }
@@ -298,7 +298,7 @@ public abstract class AprilTagCenteringBase extends LinearOpMode {
         int holdTick = panMotor.getCurrentPosition();
         panMotor.setTargetPosition(holdTick);
         panMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        panMotor.setPower(PanMotorConfig.HOLD_POWER);
+        panMotor.setPower(TurretMotorConfig.HOLD_POWER);
         // Reset ramp and PID state so we start fresh on reacquisition
         currentPower = 0.0;
         integralSum  = 0.0;
@@ -318,19 +318,19 @@ public abstract class AprilTagCenteringBase extends LinearOpMode {
         telemetry.addLine("── " + getTargetTagName() + " Centering ──────────────");
         telemetry.addData("Status",        "TRACKING Tag #%d", getTargetTagId());
         telemetry.addData("Tag center X",  "%.1f px  (frame center = %.0f)",
-                d.center.x, PanMotorConfig.CAMERA_WIDTH / 2.0);
+                d.center.x, TurretMotorConfig.CAMERA_WIDTH / 2.0);
         telemetry.addData("X error",       "%.1f px  (deadband ±%.0f)",
-                error, PanMotorConfig.DEADBAND_PX);
+                error, TurretMotorConfig.DEADBAND_PX);
         telemetry.addData("Motor power",   "%.3f", currentPower);
         telemetry.addData("Encoder pos",   "%d  (limits: %d / %d)",
                 panMotor.getCurrentPosition(),
-                PanMotorConfig.ENCODER_LIMIT_MIN,
-                PanMotorConfig.ENCODER_LIMIT_MAX);
+                TurretMotorConfig.ENCODER_LIMIT_MIN,
+                TurretMotorConfig.ENCODER_LIMIT_MAX);
         telemetry.addLine("── PID ─────────────────────────────────");
         telemetry.addData("kP / kI / kD",  "%.4f / %.4f / %.4f",
-                PanMotorConfig.kP, PanMotorConfig.kI, PanMotorConfig.kD);
+                TurretMotorConfig.kP, TurretMotorConfig.kI, TurretMotorConfig.kD);
         telemetry.addData("Integral sum",  "%.2f  (cap ±%.0f)",
-                integralSum, PanMotorConfig.INTEGRAL_LIMIT);
+                integralSum, TurretMotorConfig.INTEGRAL_LIMIT);
         telemetry.addLine("── Tag Pose (camera frame) ──────────────");
         telemetry.addData("Range",         "%.2f in", d.ftcPose.range);
         telemetry.addData("Bearing",       "%.2f°",   d.ftcPose.bearing);
@@ -343,7 +343,7 @@ public abstract class AprilTagCenteringBase extends LinearOpMode {
                 ? "HOLDING position (tag lost)"
                 : "Searching… (tag lost)");
         telemetry.addData("Lost for",    "%d ms  (hold after %d ms)",
-                elapsedMs, PanMotorConfig.HOLD_DELAY_MS);
+                elapsedMs, TurretMotorConfig.HOLD_DELAY_MS);
         telemetry.addData("Encoder pos", "%d", panMotor.getCurrentPosition());
         telemetry.addData("Motor power", "%.3f", currentPower);
     }

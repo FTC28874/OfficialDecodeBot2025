@@ -1,7 +1,7 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.turret;
 
 /**
- * PanMotorConfig — DECODE Season (2025-2026)
+ * TurretMotorConfig — DECODE Season (2025-2026)
  *
  * Single source of truth for all camera pan motor and PID tuning constants.
  * Both RedGoalCenteringTeleOp and BlueGoalCenteringTeleOp share these values.
@@ -13,12 +13,12 @@ package org.firstinspires.ftc.teamcode;
  *
  * Motor: GoBilda 5203-2402-0014 (435 RPM, 384.5 ticks/rev)
  * Camera hardwareMap name : "Webcam 1"
- * Motor  hardwareMap name : "cameraPanMotor"
+ * Motor  hardwareMap name : "turret"
  */
-public final class PanMotorConfig {
+public final class TurretMotorConfig {
 
     // Prevent instantiation — this is a constants-only class
-    private PanMotorConfig() {}
+    private TurretMotorConfig() {}
 
     // ═══════════════════════════════════════════════════════════════════════
     //  HARDWARE
