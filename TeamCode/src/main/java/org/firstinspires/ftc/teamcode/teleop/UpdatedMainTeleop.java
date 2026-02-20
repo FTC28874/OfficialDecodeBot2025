@@ -14,6 +14,7 @@ import org.firstinspires.ftc.teamcode.robot.Constants;
 import org.firstinspires.ftc.teamcode.robot.DynamicShooter;
 import org.firstinspires.ftc.teamcode.robot.HelperServos;
 import org.firstinspires.ftc.teamcode.robot.Intake;
+import org.firstinspires.ftc.teamcode.robot.RobotState;
 import org.firstinspires.ftc.teamcode.robot.Shooter;
 import org.firstinspires.ftc.teamcode.robot.Turret;
 import org.firstinspires.ftc.teamcode.robot.aprilTagWebcam;
@@ -72,8 +73,7 @@ public class UpdatedMainTeleop extends LinearOpMode {
         odo = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
         odo.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
         odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.REVERSED);
-
-        odo.resetPosAndIMU();
+        odo.setPosition(new Pose2D(DistanceUnit.INCH, RobotState.savedX + 148.24, RobotState.savedY + 54.9, AngleUnit.DEGREES, RobotState.savedHeading + 90));
         driveFL.setDirection(DcMotor.Direction.REVERSE);
         driveBL.setDirection(DcMotor.Direction.REVERSE);
         driveFR.setDirection(DcMotor.Direction.FORWARD);

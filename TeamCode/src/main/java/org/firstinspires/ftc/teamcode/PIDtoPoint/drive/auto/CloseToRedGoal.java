@@ -17,6 +17,7 @@ import org.firstinspires.ftc.teamcode.PIDtoPoint.drive.GoBildaPinpointDriver;
 import org.firstinspires.ftc.teamcode.PIDtoPoint.drive.MecanumDrive;
 import org.firstinspires.ftc.teamcode.robot.HelperServos;
 import org.firstinspires.ftc.teamcode.robot.Intake;
+import org.firstinspires.ftc.teamcode.robot.RobotState;
 import org.firstinspires.ftc.teamcode.robot.Shooter;
 
 import java.util.Locale;
@@ -351,6 +352,12 @@ public class CloseToRedGoal extends LinearOpMode {
                         timer.reset();
                         shooterEncSpeed = 0;
                         Intake.stopIntake();
+
+                        // Save the position for teleop
+                        Pose2D finalPos = odo.getPosition();
+                        RobotState.savedX = finalPos.getX(DistanceUnit.INCH);
+                        RobotState.savedY = finalPos.getY(DistanceUnit.INCH);
+                        RobotState.savedHeading = finalPos.getHeading(AngleUnit.DEGREES);
                     }
                     break;
             }
