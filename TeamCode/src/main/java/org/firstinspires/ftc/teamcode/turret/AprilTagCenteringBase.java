@@ -22,8 +22,12 @@ import java.util.List;
  *
  * Abstract TeleOp base that:
  *  • Opens a VisionPortal with an AprilTagProcessor.
- *  • Runs a PID loop to keep a specific AprilTag horizontally centred
- *    in the camera frame by driving a turret motor.
+ *  • Applies exponential smoothing (EMA) to raw pixel error to suppress
+ *    frame-to-frame detection noise before feeding the PID controller.
+ *  • Runs a time-scaled PID loop to centre a specific AprilTag.
+ *  • Passes the PID output through a slew rate limiter so the motor
+ *    command can never change faster than SLEW_RATE_PER_SECOND, eliminating
+ *    abrupt power steps.
  *  • Enforces encoder-based soft limits (±45° from zeroed centre).
  *  • Emits clean Driver Station telemetry.
  *
@@ -52,11 +56,25 @@ public abstract class AprilTagCenteringBase extends LinearOpMode {
     private AprilTagProcessor aprilTagProcessor;
 
     // ------------------------------------------------------------------
+    // Signal pipeline state
+    // ------------------------------------------------------------------
+    /** Exponential moving average of the raw pixel error. */
+    private double smoothedError  = 0.0;
+
+    /** Last power value actually sent to the motor (used by slew limiter). */
+    private double currentPower   = 0.0;
+
+    // ------------------------------------------------------------------
     // PID state
     // ------------------------------------------------------------------
-    private double integralSum  = 0.0;
-    private double lastError    = 0.0;
+    private double integralSum    = 0.0;
+    private double lastError      = 0.0;   // operates on smoothedError
+
+    // ------------------------------------------------------------------
+    // Timers
+    // ------------------------------------------------------------------
     private final ElapsedTime pidTimer       = new ElapsedTime();
+    private final ElapsedTime slewTimer      = new ElapsedTime();
     private final ElapsedTime telemetryTimer = new ElapsedTime();
 
     // ------------------------------------------------------------------
@@ -83,6 +101,7 @@ public abstract class AprilTagCenteringBase extends LinearOpMode {
 
         waitForStart();
         pidTimer.reset();
+        slewTimer.reset();
         telemetryTimer.reset();
 
         // ── Main loop ────────────────────────────────────────────────
@@ -91,15 +110,34 @@ public abstract class AprilTagCenteringBase extends LinearOpMode {
             AprilTagDetection detection = findTargetTag();
 
             if (detection != null) {
-                double error = computeHorizontalError(detection);
-                double power = computePid(error);
-                power = applySoftLimits(power);
-                power = applyMinPower(power, error);
-                turretMotor.setPower(power);
+                // 1. Raw pixel error
+                double rawError   = computeHorizontalError(detection);
+
+                // 2. Smooth it — removes frame-to-frame detection noise
+                smoothedError     = applySmoothing(rawError);
+
+                // 3. PID on the smoothed signal
+                double pidOutput  = computePid(smoothedError);
+
+                // 4. Soft limits — scale power near travel ends
+                double safePower  = applySoftLimits(pidOutput);
+
+                // 5. Slew rate limit — prevents abrupt power steps
+                currentPower      = applySlewLimit(safePower);
+
+                // 6. Floor — ensure motor overcomes friction when moving
+                currentPower      = applyMinPower(currentPower, smoothedError);
+
+                turretMotor.setPower(currentPower);
+
             } else {
-                // Tag lost → hold position, reset PID to avoid windup
-                turretMotor.setPower(0.0);
-                resetPidState();
+                // Tag lost → ramp motor gently back to zero, then clear state
+                currentPower = applySlewLimit(0.0);
+                turretMotor.setPower(currentPower);
+
+                if (currentPower == 0.0) {
+                    resetAllState();
+                }
             }
 
             updateTelemetry(detection);
@@ -119,28 +157,16 @@ public abstract class AprilTagCenteringBase extends LinearOpMode {
         turretMotor = hardwareMap.get(DcMotorEx.class, TurretMotorConfig.MOTOR_NAME);
         turretMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         turretMotor.setDirection(DcMotorSimple.Direction.FORWARD);
-        // Power is controlled entirely by our PID — no built-in velocity controller
         turretMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
     private void initVision() {
-        /*
-         * TAG_36h11 is the AprilTagProcessor default family, so no
-         * setTagFamily() call is required.  The SDK's built-in tag library
-         * is used automatically; passing null to setTagLibrary() is invalid.
-         *
-         * setOutputUnits() controls the units of detection.ftcPose fields
-         * (range, bearing, yaw, x, y, z).  INCH keeps everything consistent
-         * with FTC field-measurement conventions.
-         */
+        // TAG_36h11 is the default family — no setTagFamily() call needed.
+        // setTagLibrary(null) is invalid; omitting it uses the built-in library.
         aprilTagProcessor = new AprilTagProcessor.Builder()
                 .setOutputUnits(DistanceUnit.INCH, AngleUnit.DEGREES)
                 .build();
 
-        /*
-         * android.util.Size is the type accepted by setCameraResolution().
-         * It is now imported explicitly at the top of the file.
-         */
         visionPortal = new VisionPortal.Builder()
                 .setCamera(hardwareMap.get(WebcamName.class, TurretMotorConfig.CAMERA_NAME))
                 .addProcessor(aprilTagProcessor)
@@ -149,7 +175,6 @@ public abstract class AprilTagCenteringBase extends LinearOpMode {
                 .enableLiveView(true)
                 .build();
 
-        // Block until the camera is streaming before leaving init
         while (!isStopRequested()
                 && visionPortal.getCameraState() != VisionPortal.CameraState.STREAMING) {
             telemetry.addLine("Waiting for camera…");
@@ -158,7 +183,6 @@ public abstract class AprilTagCenteringBase extends LinearOpMode {
         }
     }
 
-    /** Reset encoder at mechanical centre so ±MAX_TICKS is symmetric. */
     private void zeroTurretEncoder() {
         turretMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         turretMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -168,10 +192,6 @@ public abstract class AprilTagCenteringBase extends LinearOpMode {
     //  Vision helpers
     // ======================================================================
 
-    /**
-     * Scans the latest AprilTag detections and returns the one matching
-     * {@link #targetTagId}, or {@code null} if not currently visible.
-     */
     private AprilTagDetection findTargetTag() {
         List<AprilTagDetection> detections = aprilTagProcessor.getDetections();
         for (AprilTagDetection d : detections) {
@@ -181,16 +201,59 @@ public abstract class AprilTagCenteringBase extends LinearOpMode {
     }
 
     /**
-     * Horizontal pixel offset of the tag centre from the image centre.
-     *
-     * {@code detection.center} is an {@code org.opencv.core.Point} whose
-     * {@code .x} and {@code .y} fields are plain {@code double} — no cast needed.
-     *
-     * Positive → tag is right of centre → turret should rotate right (+power).
-     * Negative → tag is left of centre  → turret should rotate left  (−power).
+     * Raw horizontal pixel offset from image centre.
+     * Positive → tag right of centre → turret rotates right (+power).
+     * Negative → tag left of centre  → turret rotates left  (−power).
+     * detection.center is an org.opencv.core.Point; .x is a plain double.
      */
     private double computeHorizontalError(AprilTagDetection detection) {
         return detection.center.x - TurretMotorConfig.IMAGE_CENTER_X;
+    }
+
+    // ======================================================================
+    //  Signal pipeline
+    // ======================================================================
+
+    /**
+     * Exponential moving average filter.
+     *
+     *   smoothed = α × raw + (1 − α) × previousSmoothed
+     *
+     * Removes single-frame AprilTag detection noise before the signal
+     * reaches PID. Critical for the derivative term, which amplifies noise.
+     */
+    private double applySmoothing(double rawError) {
+        double alpha = TurretMotorConfig.ERROR_SMOOTHING_ALPHA;
+        smoothedError = alpha * rawError + (1.0 - alpha) * smoothedError;
+        return smoothedError;
+    }
+
+    /**
+     * Slew rate limiter — the core fix for abrupt motor movement.
+     *
+     * Caps how fast the motor power command can change per second.
+     * No matter what the PID requests, the actual command sent to the motor
+     * can only move by (SLEW_RATE_PER_SECOND × dt) per loop iteration.
+     *
+     * This means:
+     *  • Power never jumps from 0 → 0.60 in one tick (was causing the jerk).
+     *  • Direction reversals are smooth ramps through zero, not instant flips.
+     *  • The feel is tunable independently of PID gains via SLEW_RATE_PER_SECOND.
+     *
+     * @param target  the power level the PID wants to achieve
+     * @return        the slew-limited power to actually send to the motor
+     */
+    private double applySlewLimit(double target) {
+        double dt      = slewTimer.seconds();
+        slewTimer.reset();
+        if (dt <= 0.0) dt = 0.02;
+
+        double maxStep = TurretMotorConfig.SLEW_RATE_PER_SECOND * dt;
+        double delta   = target - currentPower;
+
+        // Clamp the step this tick to ±maxStep
+        delta = clamp(delta, -maxStep, maxStep);
+        return currentPower + delta;
     }
 
     // ======================================================================
@@ -198,22 +261,14 @@ public abstract class AprilTagCenteringBase extends LinearOpMode {
     // ======================================================================
 
     /**
-     * Time-scaled PID on horizontal pixel error.
+     * Time-scaled PID operating on the smoothed pixel error.
      *
-     * Using elapsed time (dt) makes Ki and Kd physically meaningful and
-     * consistent even when the main-loop period varies slightly.
-     *
-     * Derivative is computed on the error signal directly; since the
-     * setpoint is always zero (centre) this is equivalent to the
-     * "derivative on measurement" technique and avoids derivative kick
-     * when the tag reappears after being lost.
-     *
-     * @param error  horizontal pixel offset (positive = tag right of centre)
-     * @return       motor power in [−MAX_MOTOR_POWER, +MAX_MOTOR_POWER]
+     * @param error  smoothed horizontal pixel offset
+     * @return       desired motor power in [−MAX_MOTOR_POWER, +MAX_MOTOR_POWER]
      */
     private double computePid(double error) {
 
-        // Dead-band: suppress motor noise when already centred
+        // Dead-band: suppress motor output entirely when centred
         if (Math.abs(error) <= TurretMotorConfig.CENTERING_DEADBAND_PX) {
             resetPidState();
             return 0.0;
@@ -221,19 +276,19 @@ public abstract class AprilTagCenteringBase extends LinearOpMode {
 
         double dt = pidTimer.seconds();
         pidTimer.reset();
-        if (dt <= 0.0) dt = 0.02;   // guard: avoid divide-by-zero on first call
+        if (dt <= 0.0) dt = 0.02;
 
         // P term
         double pTerm = TurretMotorConfig.KP * error;
 
-        // I term — clamp accumulator to prevent windup
+        // I term with anti-windup clamp
         integralSum += error * dt;
         integralSum  = clamp(integralSum,
                              -TurretMotorConfig.INTEGRAL_CLAMP,
                               TurretMotorConfig.INTEGRAL_CLAMP);
         double iTerm = TurretMotorConfig.KI * integralSum;
 
-        // D term
+        // D term on smoothed error (noise already filtered by EMA)
         double dTerm = TurretMotorConfig.KD * ((error - lastError) / dt);
         lastError = error;
 
@@ -243,37 +298,25 @@ public abstract class AprilTagCenteringBase extends LinearOpMode {
                       TurretMotorConfig.MAX_MOTOR_POWER);
     }
 
-    private void resetPidState() {
-        integralSum = 0.0;
-        lastError   = 0.0;
-        pidTimer.reset();
-    }
-
     // ======================================================================
     //  Motor safety helpers
     // ======================================================================
 
     /**
-     * Linearly ramps motor power to zero as the encoder approaches a hard
-     * limit, providing smooth deceleration rather than an abrupt cut-off.
-     *
-     * Full power is allowed until within {@link TurretMotorConfig#SOFT_STOP_BUFFER_TICKS}
-     * ticks of the limit; power is then scaled proportionally 1.0 → 0.0.
+     * Linearly scales power to zero in the last SOFT_STOP_BUFFER_TICKS
+     * before each hard encoder limit.
      */
     private double applySoftLimits(double requestedPower) {
-
         double pos    = turretMotor.getCurrentPosition();
         double buffer = TurretMotorConfig.SOFT_STOP_BUFFER_TICKS;
         double limit  = TurretMotorConfig.MAX_TICKS;
 
-        // Right (positive) limit
         if (requestedPower > 0.0) {
             double remaining = limit - pos;
             if (remaining <= 0.0)   return 0.0;
             if (remaining < buffer) requestedPower *= (remaining / buffer);
         }
 
-        // Left (negative) limit
         if (requestedPower < 0.0) {
             double remaining = pos - (-limit);
             if (remaining <= 0.0)   return 0.0;
@@ -284,19 +327,40 @@ public abstract class AprilTagCenteringBase extends LinearOpMode {
     }
 
     /**
-     * Guarantees the motor receives at least {@link TurretMotorConfig#MIN_MOTOR_POWER}
-     * whenever there is meaningful error outside the dead-band.
-     * Prevents stalling under friction at very small PID outputs.
-     * Has no effect when power is already 0.0 (dead-band or at a limit).
+     * Applies a minimum power floor only when the motor is already moving
+     * (currentPower != 0) to prevent stalling under friction.
+     *
+     * Unlike the previous version this does NOT create a step from 0 → MIN.
+     * The slew limiter already handles the ramp-up from zero; this only
+     * prevents the motor from dropping below the friction threshold once moving.
      */
     private double applyMinPower(double power, double error) {
         if (power == 0.0) return 0.0;
         if (Math.abs(error) <= TurretMotorConfig.CENTERING_DEADBAND_PX) return 0.0;
 
-        if (Math.abs(power) < TurretMotorConfig.MIN_MOTOR_POWER) {
+        // Only apply floor if the motor is already in motion (avoids the hard step)
+        if (Math.abs(currentPower) > 0.0
+                && Math.abs(power) < TurretMotorConfig.MIN_MOTOR_POWER) {
             power = Math.copySign(TurretMotorConfig.MIN_MOTOR_POWER, power);
         }
         return power;
+    }
+
+    // ======================================================================
+    //  State reset
+    // ======================================================================
+
+    private void resetPidState() {
+        integralSum = 0.0;
+        lastError   = 0.0;
+        pidTimer.reset();
+    }
+
+    private void resetAllState() {
+        resetPidState();
+        smoothedError = 0.0;
+        currentPower  = 0.0;
+        slewTimer.reset();
     }
 
     // ======================================================================
@@ -311,18 +375,19 @@ public abstract class AprilTagCenteringBase extends LinearOpMode {
         telemetry.addData("Target", targetTagId + " / " + targetTagLabel);
 
         if (detection != null) {
-            double error = computeHorizontalError(detection);
-            telemetry.addData("Tag visible",  "YES");
-            telemetry.addData("Tag centre X", "%.1f px",  detection.center.x);
-            telemetry.addData("Error",        "%.1f px",  error);
-            telemetry.addData("Range",        "%.2f in",  detection.ftcPose.range);
-            telemetry.addData("Bearing",      "%.1f deg", detection.ftcPose.bearing);
+            double rawError = computeHorizontalError(detection);
+            telemetry.addData("Tag visible",    "YES");
+            telemetry.addData("Tag centre X",   "%.1f px",  detection.center.x);
+            telemetry.addData("Raw error",      "%.1f px",  rawError);
+            telemetry.addData("Smoothed error", "%.1f px",  smoothedError);
+            telemetry.addData("Range",          "%.2f in",  detection.ftcPose.range);
+            telemetry.addData("Bearing",        "%.1f deg", detection.ftcPose.bearing);
         } else {
             telemetry.addData("Tag visible", "NO — holding");
         }
 
         telemetry.addLine("────────────────────────────────────────");
-        telemetry.addData("Motor power",   "%.3f", turretMotor.getPower());
+        telemetry.addData("Motor power",   "%.3f", currentPower);
         telemetry.addData("Encoder ticks",          turretMotor.getCurrentPosition());
         telemetry.addData("Limit ± ticks", "%.1f", TurretMotorConfig.MAX_TICKS);
         telemetry.addData("Integral sum",  "%.1f", integralSum);
