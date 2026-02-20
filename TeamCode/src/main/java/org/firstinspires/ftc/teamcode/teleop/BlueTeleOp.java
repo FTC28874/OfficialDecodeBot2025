@@ -9,7 +9,7 @@ import org.firstinspires.ftc.teamcode.turret.BlueGoalCentering;
  * BlueTeleOp — BLUE alliance (AprilTag ID 20).
  * All robot logic inherited from NewTeleOp.
  */
-@TeleOp(name = "Blue TeleOp", group = "Blue Alliance")
+@TeleOp(name = "Blue Alliance", group = "Camera TeleOp")
 public class BlueTeleOp extends NewTeleOp {
     @Override
     protected AprilTagCenteringBase createCenteringSubsystem() {
