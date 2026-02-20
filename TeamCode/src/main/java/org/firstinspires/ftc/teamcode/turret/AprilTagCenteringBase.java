@@ -1,356 +1,337 @@
 package org.firstinspires.ftc.teamcode.turret;
 
+import android.util.Size;
+
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
-import org.firstinspires.ftc.vision.apriltag.AprilTagLibrary;
-import org.firstinspires.ftc.vision.apriltag.AprilTagMetadata;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 import java.util.List;
 
 /**
- * AprilTagCenteringBase — DECODE Season (2025-2026)
+ * AprilTagCenteringBase
  *
- * Abstract base class that implements all shared camera pan logic:
- *   - AprilTag detection via VisionPortal
- *   - PID centering controller
- *   - Encoder soft limits
- *   - Smooth motion ramping
- *   - Tag-lost hold behaviour
- *   - Telemetry
+ * Abstract TeleOp base that:
+ *  • Opens a VisionPortal with an AprilTagProcessor.
+ *  • Runs a PID loop to keep a specific AprilTag horizontally centred
+ *    in the camera frame by driving a turret motor.
+ *  • Enforces encoder-based soft limits (±45° from zeroed centre).
+ *  • Emits clean Driver Station telemetry.
  *
- * Subclasses must implement {@link #getTargetTagId()} and
- * {@link #getTargetTagName()} to specify which AprilTag to track.
+ * Subclasses only need to call super(tagId, tagLabel) and annotate
+ * themselves with @TeleOp.
  *
- * All tuning constants live in {@link TurretMotorConfig}.
- *
- * @see RedGoalCenteringTeleOp
- * @see BlueGoalCenteringTeleOp
+ * All tuning lives in {@link TurretMotorConfig}.
  */
 public abstract class AprilTagCenteringBase extends LinearOpMode {
 
-    // ═══════════════════════════════════════════════════════════════════════
-    //  ABSTRACT CONTRACT — implemented by each goal-specific subclass
-    // ═══════════════════════════════════════════════════════════════════════
+    // ------------------------------------------------------------------
+    // Subclass identity
+    // ------------------------------------------------------------------
+    private final int    targetTagId;
+    private final String targetTagLabel;
 
-    /**
-     * Returns the AprilTag ID this OpMode should track.
-     * e.g. 24 for RED Goal, 20 for BLUE Goal.
-     */
-    protected abstract int getTargetTagId();
+    // ------------------------------------------------------------------
+    // Hardware
+    // ------------------------------------------------------------------
+    private DcMotorEx turretMotor;
 
-    /**
-     * Returns a human-readable name for the tag used in telemetry and the
-     * AprilTag library entry.
-     * e.g. "RED Goal", "BLUE Goal"
-     */
-    protected abstract String getTargetTagName();
-
-    // ═══════════════════════════════════════════════════════════════════════
-    //  HARDWARE
-    // ═══════════════════════════════════════════════════════════════════════
-
-    private DcMotorEx      panMotor;
-    private VisionPortal   visionPortal;
+    // ------------------------------------------------------------------
+    // Vision
+    // ------------------------------------------------------------------
+    private VisionPortal      visionPortal;
     private AprilTagProcessor aprilTagProcessor;
 
-    // ═══════════════════════════════════════════════════════════════════════
-    //  PID STATE
-    // ═══════════════════════════════════════════════════════════════════════
-
+    // ------------------------------------------------------------------
+    // PID state
+    // ------------------------------------------------------------------
     private double integralSum  = 0.0;
     private double lastError    = 0.0;
-    private double currentPower = 0.0;
-    private final ElapsedTime pidTimer = new ElapsedTime();
+    private final ElapsedTime pidTimer       = new ElapsedTime();
+    private final ElapsedTime telemetryTimer = new ElapsedTime();
 
-    // ═══════════════════════════════════════════════════════════════════════
-    //  TAG-LOST STATE
-    // ═══════════════════════════════════════════════════════════════════════
+    // ------------------------------------------------------------------
+    // Constructor
+    // ------------------------------------------------------------------
+    protected AprilTagCenteringBase(int tagId, String tagLabel) {
+        this.targetTagId    = tagId;
+        this.targetTagLabel = tagLabel;
+    }
 
-    private long    lastSeenTimestamp = 0;
-    private boolean motorHolding      = false;
-
-    // ═══════════════════════════════════════════════════════════════════════
-    //  ENTRY POINT
-    // ═══════════════════════════════════════════════════════════════════════
-
+    // ======================================================================
+    //  LinearOpMode entry point
+    // ======================================================================
     @Override
     public final void runOpMode() {
 
         initHardware();
         initVision();
+        zeroTurretEncoder();
 
-        telemetry.addData("OpMode",  "%s Centering ready", getTargetTagName());
-        telemetry.addData("Tag ID",  getTargetTagId());
-        telemetry.addData("Limits",  "%.0f° / %.0f°  →  %d / %d ticks",
-                TurretMotorConfig.LIMIT_DEGREES_MIN, TurretMotorConfig.LIMIT_DEGREES_MAX,
-                TurretMotorConfig.ENCODER_LIMIT_MIN, TurretMotorConfig.ENCODER_LIMIT_MAX);
-        telemetry.addLine("Waiting for START…");
+        telemetry.addLine("Turret ready — waiting for Start");
+        telemetry.addData("Tracking tag", targetTagId + " / " + targetTagLabel);
         telemetry.update();
 
         waitForStart();
         pidTimer.reset();
-        lastSeenTimestamp = System.currentTimeMillis();
+        telemetryTimer.reset();
 
-        // ── Main loop ────────────────────────────────────────────────────
+        // ── Main loop ────────────────────────────────────────────────
         while (opModeIsActive()) {
 
-            AprilTagDetection target = findTargetTag();
+            AprilTagDetection detection = findTargetTag();
 
-            if (target != null) {
-                onTagDetected(target);
+            if (detection != null) {
+                double error = computeHorizontalError(detection);
+                double power = computePid(error);
+                power = applySoftLimits(power);
+                power = applyMinPower(power, error);
+                turretMotor.setPower(power);
             } else {
-                onTagLost();
+                // Tag lost → hold position, reset PID to avoid windup
+                turretMotor.setPower(0.0);
+                resetPidState();
             }
 
-            telemetry.update();
+            updateTelemetry(detection);
+            idle();
         }
 
-        // ── Cleanup ──────────────────────────────────────────────────────
-        safeStopMotor();
+        // ── Cleanup ──────────────────────────────────────────────────
+        turretMotor.setPower(0.0);
         visionPortal.close();
     }
 
-    // ═══════════════════════════════════════════════════════════════════════
-    //  DETECTION HANDLERS
-    // ═══════════════════════════════════════════════════════════════════════
-
-    private void onTagDetected(AprilTagDetection target) {
-        lastSeenTimestamp = System.currentTimeMillis();
-        motorHolding      = false;
-
-        // Restore velocity control if we were in hold mode
-        if (panMotor.getMode() != DcMotor.RunMode.RUN_USING_ENCODER) {
-            panMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        }
-
-        double error = computeXError(target);
-        driveMotorPID(error);
-        sendTrackingTelemetry(target, error);
-    }
-
-    private void onTagLost() {
-        long elapsedMs = System.currentTimeMillis() - lastSeenTimestamp;
-
-        if (!motorHolding && elapsedMs > TurretMotorConfig.HOLD_DELAY_MS) {
-            holdPosition();
-            motorHolding = true;
-        }
-
-        // Bleed integral so stale accumulation doesn't cause drift on reacquire
-        integralSum *= TurretMotorConfig.INTEGRAL_BLEED;
-
-        sendLostTelemetry(elapsedMs);
-    }
-
-    // ═══════════════════════════════════════════════════════════════════════
-    //  HARDWARE INIT
-    // ═══════════════════════════════════════════════════════════════════════
+    // ======================================================================
+    //  Initialisation helpers
+    // ======================================================================
 
     private void initHardware() {
-        panMotor = hardwareMap.get(DcMotorEx.class, TurretMotorConfig.MOTOR_NAME);
-
-        // Zero encoder on init — limits are relative to starting position
-        panMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        panMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-        // Brake at zero power to hold position
-        panMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
-        // Change to REVERSE if the camera pans in the wrong direction
-        panMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+        turretMotor = hardwareMap.get(DcMotorEx.class, TurretMotorConfig.MOTOR_NAME);
+        turretMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        turretMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+        // Power is controlled entirely by our PID — no built-in velocity controller
+        turretMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
-    // ═══════════════════════════════════════════════════════════════════════
-    //  VISION INIT
-    // ═══════════════════════════════════════════════════════════════════════
-
     private void initVision() {
-
-        // Register tag with correct physical dimensions for accurate pose data
-        AprilTagLibrary tagLibrary = new AprilTagLibrary.Builder()
-                .addTag(new AprilTagMetadata(
-                        getTargetTagId(),
-                        getTargetTagName(),
-                        TurretMotorConfig.TAG_SIZE_OUTER_IN,
-                        null,               // fieldPosition  (not needed for centering)
-                        DistanceUnit.INCH,  // matches TAG_SIZE_OUTER_IN units
-                        null))              // fieldOrientation (not needed for centering)
-                .build();
-
+        /*
+         * TAG_36h11 is the AprilTagProcessor default family, so no
+         * setTagFamily() call is required.  The SDK's built-in tag library
+         * is used automatically; passing null to setTagLibrary() is invalid.
+         *
+         * setOutputUnits() controls the units of detection.ftcPose fields
+         * (range, bearing, yaw, x, y, z).  INCH keeps everything consistent
+         * with FTC field-measurement conventions.
+         */
         aprilTagProcessor = new AprilTagProcessor.Builder()
-                .setTagLibrary(tagLibrary)
-                .setTagFamily(AprilTagProcessor.TagFamily.TAG_36h11)
-                .setDrawTagOutline(true)
-                .setDrawTagID(true)
-                .setDrawAxes(true)
-                .setNumThreads(2)
+                .setOutputUnits(DistanceUnit.INCH, AngleUnit.DEGREES)
                 .build();
 
+        /*
+         * android.util.Size is the type accepted by setCameraResolution().
+         * It is now imported explicitly at the top of the file.
+         */
         visionPortal = new VisionPortal.Builder()
                 .setCamera(hardwareMap.get(WebcamName.class, TurretMotorConfig.CAMERA_NAME))
                 .addProcessor(aprilTagProcessor)
-                .setCameraResolution(new android.util.Size(
-                        TurretMotorConfig.CAMERA_WIDTH,
-                        TurretMotorConfig.CAMERA_HEIGHT))
+                .setCameraResolution(new Size(640, 480))
                 .setStreamFormat(VisionPortal.StreamFormat.YUY2)
                 .enableLiveView(true)
                 .build();
+
+        // Block until the camera is streaming before leaving init
+        while (!isStopRequested()
+                && visionPortal.getCameraState() != VisionPortal.CameraState.STREAMING) {
+            telemetry.addLine("Waiting for camera…");
+            telemetry.update();
+            sleep(20);
+        }
     }
 
-    // ═══════════════════════════════════════════════════════════════════════
-    //  APRILTAG DETECTION
-    // ═══════════════════════════════════════════════════════════════════════
+    /** Reset encoder at mechanical centre so ±MAX_TICKS is symmetric. */
+    private void zeroTurretEncoder() {
+        turretMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        turretMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+    }
+
+    // ======================================================================
+    //  Vision helpers
+    // ======================================================================
 
     /**
-     * Scans current detections and returns the one matching our tag ID,
-     * or null if not currently visible.
+     * Scans the latest AprilTag detections and returns the one matching
+     * {@link #targetTagId}, or {@code null} if not currently visible.
      */
     private AprilTagDetection findTargetTag() {
         List<AprilTagDetection> detections = aprilTagProcessor.getDetections();
         for (AprilTagDetection d : detections) {
-            if (d.id == getTargetTagId()) return d;
+            if (d.id == targetTagId) return d;
         }
         return null;
     }
 
     /**
-     * Computes horizontal pixel error between the tag center and the frame center.
-     * Positive error  = tag is to the RIGHT of center → motor should pan right.
-     * Negative error  = tag is to the LEFT  of center → motor should pan left.
+     * Horizontal pixel offset of the tag centre from the image centre.
+     *
+     * {@code detection.center} is an {@code org.opencv.core.Point} whose
+     * {@code .x} and {@code .y} fields are plain {@code double} — no cast needed.
+     *
+     * Positive → tag is right of centre → turret should rotate right (+power).
+     * Negative → tag is left of centre  → turret should rotate left  (−power).
      */
-    private double computeXError(AprilTagDetection detection) {
-        double frameCenterX = TurretMotorConfig.CAMERA_WIDTH / 2.0;
-        return detection.center.x - frameCenterX;
+    private double computeHorizontalError(AprilTagDetection detection) {
+        return detection.center.x - TurretMotorConfig.IMAGE_CENTER_X;
     }
 
-    // ═══════════════════════════════════════════════════════════════════════
-    //  PID MOTOR CONTROL
-    // ═══════════════════════════════════════════════════════════════════════
+    // ======================================================================
+    //  PID controller
+    // ======================================================================
 
-    private void driveMotorPID(double error) {
+    /**
+     * Time-scaled PID on horizontal pixel error.
+     *
+     * Using elapsed time (dt) makes Ki and Kd physically meaningful and
+     * consistent even when the main-loop period varies slightly.
+     *
+     * Derivative is computed on the error signal directly; since the
+     * setpoint is always zero (centre) this is equivalent to the
+     * "derivative on measurement" technique and avoids derivative kick
+     * when the tag reappears after being lost.
+     *
+     * @param error  horizontal pixel offset (positive = tag right of centre)
+     * @return       motor power in [−MAX_MOTOR_POWER, +MAX_MOTOR_POWER]
+     */
+    private double computePid(double error) {
 
-        // Deadband — coast to zero when the tag is close enough to centered
-        if (Math.abs(error) < TurretMotorConfig.DEADBAND_PX) {
-            applySmoothedPower(0.0);
-            integralSum = 0.0;
-            lastError   = 0.0;
-            return;
+        // Dead-band: suppress motor noise when already centred
+        if (Math.abs(error) <= TurretMotorConfig.CENTERING_DEADBAND_PX) {
+            resetPidState();
+            return 0.0;
         }
 
         double dt = pidTimer.seconds();
         pidTimer.reset();
-        // Guard against stale or invalid dt values
-        if (dt <= 0 || dt > 0.5) dt = 0.02;
+        if (dt <= 0.0) dt = 0.02;   // guard: avoid divide-by-zero on first call
 
-        // ── Proportional ────────────────────────────────────────────────
-        double pTerm = TurretMotorConfig.kP * error;
+        // P term
+        double pTerm = TurretMotorConfig.KP * error;
 
-        // ── Integral (anti-windup clamp) ─────────────────────────────────
-        integralSum = clamp(
-                integralSum + error * dt,
-                -TurretMotorConfig.INTEGRAL_LIMIT,
-                 TurretMotorConfig.INTEGRAL_LIMIT);
-        double iTerm = TurretMotorConfig.kI * integralSum;
+        // I term — clamp accumulator to prevent windup
+        integralSum += error * dt;
+        integralSum  = clamp(integralSum,
+                             -TurretMotorConfig.INTEGRAL_CLAMP,
+                              TurretMotorConfig.INTEGRAL_CLAMP);
+        double iTerm = TurretMotorConfig.KI * integralSum;
 
-        // ── Derivative ──────────────────────────────────────────────────
-        double dTerm = TurretMotorConfig.kD * (error - lastError) / dt;
+        // D term
+        double dTerm = TurretMotorConfig.KD * ((error - lastError) / dt);
         lastError = error;
 
-        // ── Combine, clamp, scale ────────────────────────────────────────
-        double rawPower = clamp(pTerm + iTerm + dTerm, -1.0, 1.0)
-                        * TurretMotorConfig.MAX_VELOCITY_FRACTION;
+        double output = pTerm + iTerm + dTerm;
+        return clamp(output,
+                     -TurretMotorConfig.MAX_MOTOR_POWER,
+                      TurretMotorConfig.MAX_MOTOR_POWER);
+    }
 
-        // ── Encoder soft limits ──────────────────────────────────────────
-        int currentTick = panMotor.getCurrentPosition();
-        if (currentTick >= TurretMotorConfig.ENCODER_LIMIT_MAX && rawPower > 0) rawPower = 0;
-        if (currentTick <= TurretMotorConfig.ENCODER_LIMIT_MIN && rawPower < 0) rawPower = 0;
+    private void resetPidState() {
+        integralSum = 0.0;
+        lastError   = 0.0;
+        pidTimer.reset();
+    }
 
-        applySmoothedPower(rawPower);
+    // ======================================================================
+    //  Motor safety helpers
+    // ======================================================================
+
+    /**
+     * Linearly ramps motor power to zero as the encoder approaches a hard
+     * limit, providing smooth deceleration rather than an abrupt cut-off.
+     *
+     * Full power is allowed until within {@link TurretMotorConfig#SOFT_STOP_BUFFER_TICKS}
+     * ticks of the limit; power is then scaled proportionally 1.0 → 0.0.
+     */
+    private double applySoftLimits(double requestedPower) {
+
+        double pos    = turretMotor.getCurrentPosition();
+        double buffer = TurretMotorConfig.SOFT_STOP_BUFFER_TICKS;
+        double limit  = TurretMotorConfig.MAX_TICKS;
+
+        // Right (positive) limit
+        if (requestedPower > 0.0) {
+            double remaining = limit - pos;
+            if (remaining <= 0.0)   return 0.0;
+            if (remaining < buffer) requestedPower *= (remaining / buffer);
+        }
+
+        // Left (negative) limit
+        if (requestedPower < 0.0) {
+            double remaining = pos - (-limit);
+            if (remaining <= 0.0)   return 0.0;
+            if (remaining < buffer) requestedPower *= (remaining / buffer);
+        }
+
+        return requestedPower;
     }
 
     /**
-     * Ramps the applied motor power toward {@code targetPower} at most
-     * RAMP_RATE per cycle, giving smooth acceleration and deceleration.
+     * Guarantees the motor receives at least {@link TurretMotorConfig#MIN_MOTOR_POWER}
+     * whenever there is meaningful error outside the dead-band.
+     * Prevents stalling under friction at very small PID outputs.
+     * Has no effect when power is already 0.0 (dead-band or at a limit).
      */
-    private void applySmoothedPower(double targetPower) {
-        double delta = clamp(
-                targetPower - currentPower,
-                -TurretMotorConfig.RAMP_RATE,
-                 TurretMotorConfig.RAMP_RATE);
-        currentPower += delta;
-        panMotor.setPower(currentPower);
+    private double applyMinPower(double power, double error) {
+        if (power == 0.0) return 0.0;
+        if (Math.abs(error) <= TurretMotorConfig.CENTERING_DEADBAND_PX) return 0.0;
+
+        if (Math.abs(power) < TurretMotorConfig.MIN_MOTOR_POWER) {
+            power = Math.copySign(TurretMotorConfig.MIN_MOTOR_POWER, power);
+        }
+        return power;
     }
 
-    /**
-     * Switches the motor to RUN_TO_POSITION at the current tick to actively
-     * resist disturbances while the tag is not visible.
-     */
-    private void holdPosition() {
-        int holdTick = panMotor.getCurrentPosition();
-        panMotor.setTargetPosition(holdTick);
-        panMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        panMotor.setPower(TurretMotorConfig.HOLD_POWER);
-        // Reset ramp and PID state so we start fresh on reacquisition
-        currentPower = 0.0;
-        integralSum  = 0.0;
-        lastError    = 0.0;
+    // ======================================================================
+    //  Telemetry
+    // ======================================================================
+
+    private void updateTelemetry(AprilTagDetection detection) {
+        if (telemetryTimer.milliseconds() < TurretMotorConfig.TELEMETRY_UPDATE_MS) return;
+        telemetryTimer.reset();
+
+        telemetry.addLine("══ AprilTag Centering ══════════════════");
+        telemetry.addData("Target", targetTagId + " / " + targetTagLabel);
+
+        if (detection != null) {
+            double error = computeHorizontalError(detection);
+            telemetry.addData("Tag visible",  "YES");
+            telemetry.addData("Tag centre X", "%.1f px",  detection.center.x);
+            telemetry.addData("Error",        "%.1f px",  error);
+            telemetry.addData("Range",        "%.2f in",  detection.ftcPose.range);
+            telemetry.addData("Bearing",      "%.1f deg", detection.ftcPose.bearing);
+        } else {
+            telemetry.addData("Tag visible", "NO — holding");
+        }
+
+        telemetry.addLine("────────────────────────────────────────");
+        telemetry.addData("Motor power",   "%.3f", turretMotor.getPower());
+        telemetry.addData("Encoder ticks",          turretMotor.getCurrentPosition());
+        telemetry.addData("Limit ± ticks", "%.1f", TurretMotorConfig.MAX_TICKS);
+        telemetry.addData("Integral sum",  "%.1f", integralSum);
+        telemetry.update();
     }
 
-    private void safeStopMotor() {
-        panMotor.setPower(0);
-        panMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-    }
-
-    // ═══════════════════════════════════════════════════════════════════════
-    //  TELEMETRY
-    // ═══════════════════════════════════════════════════════════════════════
-
-    private void sendTrackingTelemetry(AprilTagDetection d, double error) {
-        telemetry.addLine("── " + getTargetTagName() + " Centering ──────────────");
-        telemetry.addData("Status",        "TRACKING Tag #%d", getTargetTagId());
-        telemetry.addData("Tag center X",  "%.1f px  (frame center = %.0f)",
-                d.center.x, TurretMotorConfig.CAMERA_WIDTH / 2.0);
-        telemetry.addData("X error",       "%.1f px  (deadband ±%.0f)",
-                error, TurretMotorConfig.DEADBAND_PX);
-        telemetry.addData("Motor power",   "%.3f", currentPower);
-        telemetry.addData("Encoder pos",   "%d  (limits: %d / %d)",
-                panMotor.getCurrentPosition(),
-                TurretMotorConfig.ENCODER_LIMIT_MIN,
-                TurretMotorConfig.ENCODER_LIMIT_MAX);
-        telemetry.addLine("── PID ─────────────────────────────────");
-        telemetry.addData("kP / kI / kD",  "%.4f / %.4f / %.4f",
-                TurretMotorConfig.kP, TurretMotorConfig.kI, TurretMotorConfig.kD);
-        telemetry.addData("Integral sum",  "%.2f  (cap ±%.0f)",
-                integralSum, TurretMotorConfig.INTEGRAL_LIMIT);
-        telemetry.addLine("── Tag Pose (camera frame) ──────────────");
-        telemetry.addData("Range",         "%.2f in", d.ftcPose.range);
-        telemetry.addData("Bearing",       "%.2f°",   d.ftcPose.bearing);
-        telemetry.addData("Elevation",     "%.2f°",   d.ftcPose.elevation);
-    }
-
-    private void sendLostTelemetry(long elapsedMs) {
-        telemetry.addLine("── " + getTargetTagName() + " Centering ──────────────");
-        telemetry.addData("Status",      motorHolding
-                ? "HOLDING position (tag lost)"
-                : "Searching… (tag lost)");
-        telemetry.addData("Lost for",    "%d ms  (hold after %d ms)",
-                elapsedMs, TurretMotorConfig.HOLD_DELAY_MS);
-        telemetry.addData("Encoder pos", "%d", panMotor.getCurrentPosition());
-        telemetry.addData("Motor power", "%.3f", currentPower);
-    }
-
-    // ═══════════════════════════════════════════════════════════════════════
-    //  UTILITIES
-    // ═══════════════════════════════════════════════════════════════════════
+    // ======================================================================
+    //  Utility
+    // ======================================================================
 
     private static double clamp(double value, double min, double max) {
         return Math.max(min, Math.min(max, value));

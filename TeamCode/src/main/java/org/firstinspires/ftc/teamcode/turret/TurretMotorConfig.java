@@ -1,170 +1,116 @@
 package org.firstinspires.ftc.teamcode.turret;
 
 /**
- * TurretMotorConfig — DECODE Season (2025-2026)
+ * TurretMotorConfig
  *
- * Single source of truth for all camera pan motor and PID tuning constants.
- * Both RedGoalCenteringTeleOp and BlueGoalCenteringTeleOp share these values.
+ * Single source of truth for all turret/centering tuning parameters.
+ * Edit values here — no need to touch any other file.
  *
- * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  TO TUNE: edit the values in this file only. Do NOT touch the base     │
- * │  class or the individual goal OpModes.                                  │
- * └─────────────────────────────────────────────────────────────────────────┘
- *
- * Motor: GoBilda 5203-2402-0014 (435 RPM, 384.5 ticks/rev)
- * Camera hardwareMap name : "Webcam 1"
- * Motor  hardwareMap name : "turret"
+ * Hardware references
+ * -------------------
+ *   Motor  : GoBilda 5203-2402-0014  (435 RPM, 384.5 PPR at output shaft)
+ *   Camera : Logitech C270  ("Webcam 1")
+ *   Target : AprilTag ID 24, family 36h11 (8 in outer / 6.5 in inner)
  */
 public final class TurretMotorConfig {
 
-    // Prevent instantiation — this is a constants-only class
-    private TurretMotorConfig() {}
+    // -------------------------------------------------------------------------
+    // Motor hardware name (must match Driver Station / Control Hub config)
+    // -------------------------------------------------------------------------
+    public static final String MOTOR_NAME  = "turret";
+    public static final String CAMERA_NAME = "Webcam 1";
 
-    // ═══════════════════════════════════════════════════════════════════════
-    //  HARDWARE
-    // ═══════════════════════════════════════════════════════════════════════
+    // -------------------------------------------------------------------------
+    // GoBilda 5203-2402-0014 encoder spec
+    // -------------------------------------------------------------------------
+    /** Encoder counts per full 360° revolution at the output shaft. */
+    public static final double TICKS_PER_REV = 384.5;
 
-    /** hardwareMap name for the webcam. */
-    public static final String CAMERA_NAME     = "Webcam 1";
+    // -------------------------------------------------------------------------
+    // Physical travel limits
+    // -------------------------------------------------------------------------
+    /**
+     * Maximum turret travel from center position, in degrees.
+     * 45° left / 45° right  →  ±45°
+     */
+    public static final double MAX_ANGLE_DEG = 45.0;
 
-    /** hardwareMap name for the pan motor. */
-    public static final String MOTOR_NAME      = "turret";
+    /** Encoder counts that correspond to MAX_ANGLE_DEG. */
+    public static final double MAX_TICKS =
+            (MAX_ANGLE_DEG / 360.0) * TICKS_PER_REV;   // ≈ 48.06 ticks
+
+    // -------------------------------------------------------------------------
+    // AprilTag physical dimensions  (inches)
+    // -------------------------------------------------------------------------
+    public static final double TAG_SIZE_INCHES = 8.0;      // outer square
+    
+    public static final double TAG_BORDER_SIZE_INCHES = 6.5;   // dark inner square
+
+    // -------------------------------------------------------------------------
+    // Vision pipeline
+    // -------------------------------------------------------------------------
+    /** Pixel column that is "centred" — set to half your stream width. */
+    public static final double IMAGE_CENTER_X = 320.0;   // 640 × 480 stream
 
     /**
-     * Encoder ticks per full revolution.
-     * GoBilda 5203-2402-0014 spec: ((1 + 46/17)² × 28) = 384.5 PPR
+     * Dead-band: if the tag's horizontal offset (px) is within this window
+     * the motor will not move.  Prevents jitter on a well-centred tag.
      */
-    public static final double TICKS_PER_REV   = 384.5;
+    public static final double CENTERING_DEADBAND_PX = 10.0;
 
-    /**
-     * Camera resolution width in pixels — Logitech C270 max resolution.
-     * Frame center X = CAMERA_WIDTH / 2 = 480.
-     * NOTE: The C270 does not support 1280×720. Its max is 960×720 (4:3).
-     */
-    public static final int    CAMERA_WIDTH    = 960;
-
-    /** Camera resolution height in pixels — Logitech C270 max resolution. */
-    public static final int    CAMERA_HEIGHT   = 720;
-
-    // ═══════════════════════════════════════════════════════════════════════
-    //  PAN LIMITS  (degrees → ticks conversion is automatic)
-    // ═══════════════════════════════════════════════════════════════════════
-
-    /**
-     * Soft limit — maximum pan to the RIGHT in degrees.
-     * Converted to ticks automatically; do not edit the tick constants below.
-     */
-    public static final double LIMIT_DEGREES_MAX =  45.0;
-
-    /**
-     * Soft limit — maximum pan to the LEFT in degrees.
-     * Converted to ticks automatically; do not edit the tick constants below.
-     */
-    public static final double LIMIT_DEGREES_MIN = -45.0;
-
-    /** Computed right-limit in encoder ticks. Do NOT edit directly. */
-    public static final int ENCODER_LIMIT_MAX =
-            (int) Math.round(degreesToTicks(LIMIT_DEGREES_MAX));
-
-    /** Computed left-limit in encoder ticks. Do NOT edit directly. */
-    public static final int ENCODER_LIMIT_MIN =
-            (int) Math.round(degreesToTicks(LIMIT_DEGREES_MIN));
-
-    // ═══════════════════════════════════════════════════════════════════════
-    //  PID GAINS
-    // ═══════════════════════════════════════════════════════════════════════
-
+    // -------------------------------------------------------------------------
+    // PID gains  (all three loops share this one set — tune here)
+    // -------------------------------------------------------------------------
     /**
      * Proportional gain.
-     * Raise if response is sluggish; lower if motor oscillates or overshoots.
+     * Start small (e.g. 0.003) and increase until the turret snaps to centre
+     * quickly without overshooting.
      */
-    public static final double kP = 0.030;
+    public static final double KP = 0.003;
 
     /**
      * Integral gain.
-     * Eliminates steady-state offset. Keep small and raise slowly.
+     * Helps eliminate steady-state offset.  Keep very small to avoid windup.
      */
-    public static final double kI = 0.0008;
+    public static final double KI = 0.0002;
 
     /**
      * Derivative gain.
-     * Dampens overshoot. Raise if oscillation persists after kP tuning.
+     * Damps oscillation / overshoot.  Increase if the turret hunts.
      */
-    public static final double kD = 0.012;
+    public static final double KD = 0.0004;
+
+    // -------------------------------------------------------------------------
+    // Integrator anti-windup clamp  (raw-pixel units)
+    // -------------------------------------------------------------------------
+    public static final double INTEGRAL_CLAMP = 200.0;
+
+    // -------------------------------------------------------------------------
+    // Motor output limits  [0.0 – 1.0]
+    // -------------------------------------------------------------------------
+    /** Absolute maximum power sent to the turret motor. */
+    public static final double MAX_MOTOR_POWER = 0.80;
 
     /**
-     * Anti-windup clamp on the integral accumulator.
-     * Prevents runaway I-term when tag is lost or error is large for a while.
+     * Minimum "kick" power needed to overcome static friction.
+     * If the PID output magnitude is below this and the error is outside the
+     * dead-band, the motor receives at least this power (signed).
      */
-    public static final double INTEGRAL_LIMIT = 50.0;
-
-    // ═══════════════════════════════════════════════════════════════════════
-    //  MOTION PROFILE
-    // ═══════════════════════════════════════════════════════════════════════
+    public static final double MIN_MOTOR_POWER = 0.08;
 
     /**
-     * Deadband in pixels.
-     * Motor stops correcting when the tag X error is within ±DEADBAND_PX.
-     * Prevents micro-jitter when the tag is essentially centered.
+     * Soft-stop buffer in ticks.
+     * When the encoder is within this many ticks of a hard limit the maximum
+     * allowable power in that direction is ramped down linearly to zero.
      */
-    public static final double DEADBAND_PX = 12.0;
+    public static final double SOFT_STOP_BUFFER_TICKS = 10.0;
 
-    /**
-     * Maximum motor velocity as a fraction of rated max [0.0 – 1.0].
-     * Lower = smoother but slower pan corrections.
-     */
-    public static final double MAX_VELOCITY_FRACTION = 0.65;
+    // -------------------------------------------------------------------------
+    // Telemetry
+    // -------------------------------------------------------------------------
+    /** Update interval for Driver Station telemetry, in milliseconds. */
+    public static final long TELEMETRY_UPDATE_MS = 50;
 
-    /**
-     * Ramp rate — maximum power change allowed per control loop cycle [0.0 – 1.0].
-     * Lower = smoother acceleration and deceleration.
-     */
-    public static final double RAMP_RATE = 0.04;
-
-    /**
-     * Milliseconds after losing the tag before switching to RUN_TO_POSITION
-     * hold mode to actively resist physical disturbances.
-     */
-    public static final long HOLD_DELAY_MS = 400;
-
-    /**
-     * Power applied to hold position in RUN_TO_POSITION mode [0.0 – 1.0].
-     * Should be enough to resist gravity/vibration but not cause jerk on reacquire.
-     */
-    public static final double HOLD_POWER = 0.3;
-
-    /**
-     * Integral bleed factor applied each loop cycle when the tag is not visible.
-     * Range (0.0 – 1.0): 0.90 means the integral decays by 10% per cycle.
-     * Prevents stale integral from causing drift on tag reacquisition.
-     */
-    public static final double INTEGRAL_BLEED = 0.90;
-
-    // ═══════════════════════════════════════════════════════════════════════
-    //  APRILTAG DIMENSIONS  (meters — DO NOT change unless tag size changes)
-    // ═══════════════════════════════════════════════════════════════════════
-
-    /** Full outer square of the AprilTag: 8.00 inches */
-    public static final double TAG_SIZE_OUTER_IN = 8.0;
-
-    /** Dark inner data region of the AprilTag: 6.50 inches */
-    public static final double TAG_SIZE_INNER_IN = 6.5;
-
-    // ═══════════════════════════════════════════════════════════════════════
-    //  UTILITY
-    // ═══════════════════════════════════════════════════════════════════════
-
-    /**
-     * Converts degrees of rotation to encoder ticks.
-     *
-     * Formula: ticks = (degrees / 360) × TICKS_PER_REV
-     *
-     * Examples (GoBilda 5203-2402-0014, 384.5 ticks/rev):
-     *   45° →  48 ticks
-     *  -45° → -48 ticks
-     *   90° →  96 ticks
-     */
-    public static double degreesToTicks(double degrees) {
-        return (degrees / 360.0) * TICKS_PER_REV;
-    }
+    // Prevent instantiation
+    private TurretMotorConfig() {}
 }
