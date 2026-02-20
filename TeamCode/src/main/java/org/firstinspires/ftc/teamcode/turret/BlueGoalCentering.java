@@ -26,14 +26,20 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
  *   Motor   : GoBilda 5203-2402-0014  → configured as "turret"
  *   Camera  : Logitech C270           → configured as "Webcam 1"
  *   Limits  : ±45° from centre  (≈ ±48 encoder ticks)
+ * 
+ * Concrete centering helper for AprilTag ID 20 ("BLUE Goal", 36h11 family).
+ * Extends AprilTagCenteringBase — all logic lives in the base class.
+ *
+ * Usage (from a parent TeleOp):
+ *
+ *   BlueGoalCentering blueGoalCentering = new BlueGoalCentering();
+ *   blueGoalCentering.init(hardwareMap, telemetry);   // in init block
+ *   blueGoalCentering.update(gamepad2.right_bumper);  // every loop tick
+ *   blueGoalCentering.stop();                         // on end
  */
-@TeleOp(name = "Blue Goal Centering", group = "Turret")
 public class BlueGoalCentering extends AprilTagCenteringBase {
 
-    /** AprilTag ID to track. */
     private static final int    TAG_ID    = 20;
-
-    /** Human-readable label shown on the Driver Station. */
     private static final String TAG_LABEL = "BLUE Goal";
 
     public BlueGoalCentering() {
