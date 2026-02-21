@@ -30,7 +30,7 @@ public final class TurretMotorConfig {
     // Physical travel limits
     // -------------------------------------------------------------------------
     /** Maximum turret travel from centre, in degrees (±45°). */
-    public static final double MAX_ANGLE_DEG = 45.0;
+    public static final double MAX_ANGLE_DEG = 80;
 
     /** Encoder counts that correspond to MAX_ANGLE_DEG. (~48 ticks) */
     public static final double MAX_TICKS = (MAX_ANGLE_DEG / 360.0) * TICKS_PER_REV;
@@ -51,7 +51,7 @@ public final class TurretMotorConfig {
      * Dead-band: motor is completely silent when the smoothed error is
      * within this many pixels of centre.
      */
-    public static final double CENTERING_DEADBAND_PX = 20.0;
+    public static final double CENTERING_DEADBAND_PX = 5;
 
     /**
      * Exponential moving-average smoothing factor for the raw pixel error.
