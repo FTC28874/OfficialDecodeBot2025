@@ -310,9 +310,10 @@ public class UpdatedMainTeleop extends LinearOpMode {
 
             // reset position to 0,0 and hood to 0.1
             if (gamepad1.yWasPressed()) {
-                odo.setPosX(103.7295, DistanceUnit.INCH);
-                odo.setPosY(128.3868, DistanceUnit.INCH);
-                odo.setHeading(-84.5685, AngleUnit.DEGREES);
+//                odo.setPosX(103.7295, DistanceUnit.INCH);
+//                odo.setPosY(128.3868, DistanceUnit.INCH);
+//                odo.setHeading(-84.5685, AngleUnit.DEGREES);
+                odo.resetPosAndIMU();
                 curHoodAngle = minHoodAngle;
                 turretPos = 0;
                 turret.setTargetPosition(turretPos);
