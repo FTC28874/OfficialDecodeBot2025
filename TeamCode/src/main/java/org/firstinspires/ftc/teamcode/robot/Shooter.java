@@ -67,7 +67,7 @@ public class Shooter {
         CLOSE_RPM(1800.0),
         MID_MID_RPM(2050.0),
         MID_RPM(2450.0),
-        FAR_RPM(3250.0),
+        FAR_RPM(2700.0),
         CLOSE_HOOD(HoodState.DOWN.angle),
         MID_MID_HOOD(0.25),
         MID_HOOD(0.3),
