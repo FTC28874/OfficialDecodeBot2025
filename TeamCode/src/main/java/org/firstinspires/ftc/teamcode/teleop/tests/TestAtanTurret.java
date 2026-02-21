@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -22,8 +23,11 @@ public class TestAtanTurret extends LinearOpMode {
     Pose2D pos = null;
     private double targetTurretAngle = 0.0;
     private int targetTurretTicks = 0;
+    private double currentTurretTicks = 0.0;
+    private double distToTarget = 0.0;
     private DcMotorEx turret = null;
     boolean turretAimToggle = false;
+    private final int DEAD_ZONE = 10;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -48,14 +52,32 @@ public class TestAtanTurret extends LinearOpMode {
             odo.update();
             targetTurretAngle = Turret.calculateTurretHeading(pos.getX(DistanceUnit.INCH), pos.getY(DistanceUnit.INCH), pos.getHeading(AngleUnit.DEGREES), 72.0, 72.0);
             targetTurretTicks = Turret.degreesToTicks(targetTurretAngle);
+            currentTurretTicks = turret.getCurrentPosition();
+            distToTarget = Math.abs(targetTurretTicks - currentTurretTicks);
+            double power = distToTarget / 100;
+            if (power > 1.0) {
+                power = 1.0;
+            }
+            if (power < 0.0) {
+                power = 0.0;
+            }
 
             if (gamepad1.xWasPressed()) {
                 turretAimToggle = !turretAimToggle;
             }
             if (turretAimToggle) {
-//                turret.setPower(Turret.turretPIDControl(targetTurretTicks, turret.getCurrentPosition()));
-                double power = Turret.turretPIDControl(targetTurretTicks, turret.getCurrentPosition());
-                turret.setPower(power);
+                if (targetTurretAngle > currentTurretTicks) {
+                    turret.setDirection(DcMotorSimple.Direction.FORWARD);
+                    turret.setPower(power);
+                } else if (targetTurretAngle < currentTurretTicks) {
+                    turret.setDirection(DcMotorSimple.Direction.REVERSE);
+                    turret.setPower(power);
+                } else if (distToTarget <= DEAD_ZONE) {
+                    turret.setPower(0);
+                }
+                if (currentTurretTicks >= 500 || currentTurretTicks <= -500) {
+                    turret.setPower(0.0);
+                }
             } else {
                 turret.setPower(0.0);
             }

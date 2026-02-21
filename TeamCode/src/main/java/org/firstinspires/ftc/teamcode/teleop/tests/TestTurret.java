@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.PIDtoPoint.drive.GoBildaPinpointDriver;
 import org.firstinspires.ftc.teamcode.robot.Turret;
 @Disabled
@@ -25,7 +26,7 @@ public class TestTurret extends LinearOpMode {
     public void runOpMode() {
 
         Turret.init(hardwareMap);
-
+        Pose2D pos = odo.getPosition();
         odo = hardwareMap.get(GoBildaPinpointDriver.class,"pinpoint");
         odo.setOffsets(-48, -156); //these are tuned for 3110-0002-0001 Product Insight #1
         odo.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
@@ -36,7 +37,7 @@ public class TestTurret extends LinearOpMode {
         waitForStart();
         runtime.reset();
         while (opModeIsActive()) {
-            double angle = Turret.calculateAngleToGoal(odo.getPosition());
+            double angle = 0.0;
             if (gamepad1.xWasPressed()) {
                 Turret.zeroTurret();
             }

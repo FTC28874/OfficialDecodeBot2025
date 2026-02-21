@@ -318,7 +318,7 @@ public class Turret {
                 )
         );
 
-        double turretAngleDeg = fieldAngleDeg - robotHeadingDeg;
+        double turretAngleDeg = fieldAngleDeg + robotHeadingDeg;
 
         turretAngleDeg = wrapDegrees(turretAngleDeg);
         turretAngleDeg = clamp(turretAngleDeg, -90.0, 90.0);
