@@ -193,37 +193,37 @@ public class Turret {
      * @param robotPose Current robot pose from Pinpoint odometry
      * @return Turret angle needed to aim at goal
      */
-    public static double calculateAngleToGoal(Pose2D robotPose) {
-        // Calculate turret position on field
-        double turretX = robotPose.getX(DistanceUnit.INCH) + turretOffsetX;
-        double turretY = robotPose.getY(DistanceUnit.INCH) + turretOffsetY;
-
-        // Calculate vector to goal
-        double deltaX = goalX - turretX;
-        double deltaY = goalY - turretY;
-
-        // Calculate absolute angle to goal (in degrees)
-        double absoluteAngle = Math.toDegrees(Math.atan2(deltaX, deltaY));
-
-        // Calculate relative angle (turret angle relative to robot)
-        double robotHeading = robotPose.getHeading(AngleUnit.DEGREES);
-        double relativeAngle = absoluteAngle - robotHeading;
-
-        // Normalize to -180 to 180
-        while (relativeAngle > 180) relativeAngle -= 360;
-        while (relativeAngle < -180) relativeAngle += 360;
-
-        return relativeAngle;
-    }
+//    public static double calculateAngleToGoal(Pose2D robotPose) {
+//        // Calculate turret position on field
+//        double turretX = robotPose.getX(DistanceUnit.INCH) + turretOffsetX;
+//        double turretY = robotPose.getY(DistanceUnit.INCH) + turretOffsetY;
+//
+//        // Calculate vector to goal
+//        double deltaX = goalX - turretX;
+//        double deltaY = goalY - turretY;
+//
+//        // Calculate absolute angle to goal (in degrees)
+//        double absoluteAngle = Math.toDegrees(Math.atan2(deltaX, deltaY));
+//
+//        // Calculate relative angle (turret angle relative to robot)
+//        double robotHeading = robotPose.getHeading(AngleUnit.DEGREES);
+//        double relativeAngle = absoluteAngle - robotHeading;
+//
+//        // Normalize to -180 to 180
+//        while (relativeAngle > 180) relativeAngle -= 360;
+//        while (relativeAngle < -180) relativeAngle += 360;
+//
+//        return relativeAngle;
+//    }
 
     /**
      * Aim at the goal automatically using Pinpoint odometry
      * @param robotPose Current robot pose from Pinpoint odometry
      */
-    public static void aimAtGoal(Pose2D robotPose) {
-        double angleToGoal = calculateAngleToGoal(robotPose);
-        setTargetAngle(angleToGoal);
-    }
+//    public static void aimAtGoal(Pose2D robotPose) {
+//        double angleToGoal = calculateAngleToGoal(robotPose);
+//        setTargetAngle(angleToGoal);
+//    }
 
 
 
@@ -293,5 +293,51 @@ public class Turret {
         double deltaY = goalY - turretY;
 
         return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    }
+
+    public static double calculateTurretHeading(
+            double robotX,
+            double robotY,
+            double robotHeadingDeg,
+            double targetX,
+            double targetY
+    ) {
+        final double turretOffsetX = -75.45;
+        final double turretOffsetY = 0;
+
+        double headingRad = Math.toRadians(robotHeadingDeg);
+
+        double turretFieldX = robotX + turretOffsetX * Math.cos(headingRad) - turretOffsetY * Math.sin(headingRad);
+
+        double turretFieldY = robotY + turretOffsetX * Math.sin(headingRad) + turretOffsetY * Math.cos(headingRad);
+
+        double fieldAngleDeg = Math.toDegrees(
+                Math.atan2(
+                        targetY - turretFieldY,
+                        targetX - turretFieldX
+                )
+        );
+
+        double turretAngleDeg = fieldAngleDeg - robotHeadingDeg;
+
+        turretAngleDeg = wrapDegrees(turretAngleDeg);
+        turretAngleDeg = clamp(turretAngleDeg, -90.0, 90.0);
+
+        return turretAngleDeg;
+    }
+
+    private static double wrapDegrees(double angle) {
+        while (angle <= -180) angle += 360;
+        while (angle > 180) angle -= 360;
+        return angle;
+    }
+
+    public static double clamp(double value, double min, double max) {
+        return Math.max(min, Math.min(max, value));
+    }
+    public static int degreesToTicks(double angleDeg) {
+        double ticks = angleDeg * TICKS_PER_TURRET_DEGREE;
+        ticks = clamp(ticks, -500, 500);
+        return (int) Math.round(ticks);
     }
 }
