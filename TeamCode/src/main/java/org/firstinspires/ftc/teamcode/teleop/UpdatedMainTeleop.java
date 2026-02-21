@@ -206,7 +206,8 @@ public class UpdatedMainTeleop extends LinearOpMode {
                             turret.setPower(power);
                         }
                     } else {
-                        turretPos = DynamicShooter.calcTurretHead(robotHeading, curX, curY, isRed);
+//                        turretPos = DynamicShooter.calcTurretHead(robotHeading, curX, curY, isRed);
+                        turretPos = Turret.degreesToTicks(Turret.calculateTurretHeading(curX, curY, robotHeading, DynamicShooter.goalX, DynamicShooter.goalY));
                         double power = Turret.turretPIDControl(turretPos, turret.getCurrentPosition());
                         shooterTargetRPM = DynamicShooter.calcTargetRPM(goalDistance);
                         curHoodAngle = DynamicShooter.calcHoodPos(goalDistance);
