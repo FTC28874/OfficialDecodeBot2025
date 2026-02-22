@@ -38,6 +38,13 @@ public class aprilTagWebcam {
 
         visionPortal = builder.build();
     }
+
+    public void continueStreaming() {
+        visionPortal.resumeStreaming();
+    }
+    public void closeStreaming() {
+        visionPortal.stopStreaming();
+    }
     public void update(){
 
         detectedTags = aprilTagProcessor.getDetections();

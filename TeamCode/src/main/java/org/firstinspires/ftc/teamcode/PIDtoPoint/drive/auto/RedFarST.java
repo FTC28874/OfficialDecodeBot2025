@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode.PIDtoPoint.drive.auto;
 
-import androidx.appcompat.widget.ThemedSpinnerAdapter;
-
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -30,10 +28,10 @@ import java.util.Locale;
 // Turret Encoder Value: 126
 // Shooter Hood: 0.55
 
-@Autonomous(name="Close To Red Goal", group="Close Auto", preselectTeleOp = "New Main TeleOp")
+@Autonomous(name="Red Far", group="Far Auto", preselectTeleOp = "New Main TeleOp")
 //@Disabled
 
-public class CloseToRedGoal extends LinearOpMode {
+public class RedFarST extends LinearOpMode {
 
     DcMotor leftFrontDrive = null;
     DcMotor rightFrontDrive = null;
@@ -42,8 +40,8 @@ public class CloseToRedGoal extends LinearOpMode {
     DcMotorEx turretEncoder = null;
     DcMotor turret = null;
     ElapsedTime timer = null; //asdf
-    double shooterEncSpeed = 2000;
-    double shooterHoodAngle = Shooter.ShootPositionState.MID_MID_HOOD.position;
+    double shooterEncSpeed = Shooter.ShootPositionState.FAR_RPM.position;
+    double shooterHoodAngle = Shooter.ShootPositionState.FAR_HOOD.position;
     int ballMode = 0;
     static double localKpPosition = 0.005;
     static double localKpHeading = 0.007;
@@ -71,14 +69,14 @@ public class CloseToRedGoal extends LinearOpMode {
         DONE
     }
 
-    static final Pose2D BEGIN_INTAKE_ROW_2 = new Pose2D(DistanceUnit.INCH, -63, 25,AngleUnit.DEGREES,-90);
-    static final Pose2D SHOOT_POSE = new Pose2D(DistanceUnit.INCH, -24, 24, AngleUnit.DEGREES, -45);
-    static final Pose2D INTAKE_ROW_2 = new Pose2D(DistanceUnit.INCH, -63, 1, AngleUnit.DEGREES, -90);
-    static final Pose2D BEGIN_INTAKE_ROW_1 = new Pose2D(DistanceUnit.INCH,-37,25, AngleUnit.DEGREES,-90);
-    static final Pose2D INTAKE_ROW_1 = new Pose2D(DistanceUnit.INCH, -37, 1, AngleUnit.DEGREES, -90);
-    static final Pose2D BEGIN_INTAKE_ROW_3 = new Pose2D(DistanceUnit.INCH, -84, 25, AngleUnit.DEGREES, -90);
-    static final Pose2D INTAKE_ROW_3 = new Pose2D(DistanceUnit.INCH, -84, 1, AngleUnit.DEGREES, -90);
-    static final Pose2D END_AUTO = new Pose2D(DistanceUnit.INCH, -49, 12, AngleUnit.DEGREES, -90);
+    static final Pose2D BEGIN_INTAKE_ROW_2 = new Pose2D(DistanceUnit.INCH, 52, 0, AngleUnit.DEGREES,-90);
+    static final Pose2D SHOOT_POSE = new Pose2D(DistanceUnit.INCH, 5, 0, AngleUnit.DEGREES, 0);
+    static final Pose2D INTAKE_ROW_2 = new Pose2D(DistanceUnit.INCH, 52, -2, AngleUnit.DEGREES, -90);
+    static final Pose2D BEGIN_INTAKE_ROW_1 = new Pose2D(DistanceUnit.INCH,76,0, AngleUnit.DEGREES,-90);
+    static final Pose2D INTAKE_ROW_1 = new Pose2D(DistanceUnit.INCH, 76, -29, AngleUnit.DEGREES, -90);
+    static final Pose2D BEGIN_INTAKE_ROW_3 = new Pose2D(DistanceUnit.INCH, 28, 0, AngleUnit.DEGREES, -90);
+    static final Pose2D INTAKE_ROW_3 = new Pose2D(DistanceUnit.INCH, 28, -29, AngleUnit.DEGREES, -90);
+    static final Pose2D END_AUTO = new Pose2D(DistanceUnit.INCH, 5, -12, AngleUnit.DEGREES, 0);
 
 
     public double inToMM(double inValue) {
@@ -166,20 +164,6 @@ public class CloseToRedGoal extends LinearOpMode {
             if (gamepad1.yWasPressed()) {
                 ballMode = 9;
             }
-            if (gamepad1.dpadUpWasPressed()) {
-                localKpPosition += 0.001;
-            }
-            if (gamepad1.dpadDownWasPressed()) {
-                localKpPosition -= 0.001;
-            }
-            if (gamepad1.dpadRightWasPressed()) {
-                localKpHeading += 0.001;
-            }
-            if (gamepad1.dpadLeftWasPressed()) {
-                localKpHeading -= 0.001;
-            }
-            MecanumDrive.changeKp(localKpPosition, localKpHeading);
-            telemetry.update();
         }
 
         // Wait for the game to start (driver presses START)
@@ -223,11 +207,7 @@ public class CloseToRedGoal extends LinearOpMode {
                     if (timer.time() > 2.5) {
                         timer.reset();
                         HelperServos.setStopperStop();
-                        if (ballMode > 3) {
-                            stateMachine = StateMachine.DRIVE_TO_TARGET_2;
-                        } else {
-                            stateMachine = StateMachine.DONE;
-                        }
+                        stateMachine = StateMachine.DONE;
                     }
                     break;
                 case DRIVE_TO_TARGET_2:
@@ -274,7 +254,7 @@ public class CloseToRedGoal extends LinearOpMode {
                         }
                     }
                     break;
-                    // loop from here
+                // loop from here
                 case DRIVE_TO_TARGET_5:
                     /*
                     drive the robot to the first target, the nav.driveTo function will return true once
@@ -319,7 +299,7 @@ public class CloseToRedGoal extends LinearOpMode {
                         }
                     }
                     break;
-                    // to here
+                // to here
                 case DRIVE_TO_TARGET_8:
                     /*
                     drive the robot to the first target, the nav.driveTo function will return true once

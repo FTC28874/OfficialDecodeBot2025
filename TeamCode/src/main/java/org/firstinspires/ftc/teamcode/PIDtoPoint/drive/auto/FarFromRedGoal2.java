@@ -4,6 +4,7 @@ package org.firstinspires.ftc.teamcode.PIDtoPoint.drive.auto;
 
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -28,8 +29,8 @@ import java.util.Locale;
 // hood: 0.6
 // rpm: 3500
 
-@Autonomous(name="Far From Red Goal 2", group="Auto")
-//@Disabled
+@Autonomous(name="Far From Red Goal 2", group="Far Auto")
+@Disabled
 
 public class FarFromRedGoal2 extends LinearOpMode {
     private double turretPos = 0;
