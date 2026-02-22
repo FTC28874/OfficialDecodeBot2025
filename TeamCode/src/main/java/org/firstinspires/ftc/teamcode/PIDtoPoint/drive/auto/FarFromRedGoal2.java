@@ -132,7 +132,7 @@ public class FarFromRedGoal2 extends LinearOpMode {
 
         Intake.raiseIntake();
         sleep(1500);
-        Intake.lowerIntake();
+        Intake.raiseIntake();
         sleep(1500);
         Shooter.lowerShooter();
         sleep(1500);
@@ -172,9 +172,8 @@ public class FarFromRedGoal2 extends LinearOpMode {
                     }
                     break;
                 case DRIVE_TO_HUMAN_PLAYER:
-                    if (nav.driveTo(odo.getPosition(), INTAKE_HUMAN, 0.4, 0.5)) {
+                    if (nav.driveTo(odo.getPosition(), INTAKE_HUMAN, 0.4, 1.0)) {
                         Intake.raiseIntake();
-                        HelperServos.setStopperStop();
                         telemetry.addLine("about to intake at HUMAN PLAYER");
                         timer.reset();
                         stateMachine = StateMachine.DRIVE_TO_SHOOT_POS;
