@@ -129,6 +129,11 @@ public class KidsTeleOp extends LinearOpMode {
             telemetry.addData("Driver Sensitivity", driverSensitivity);
             telemetry.addData("Shooter RPM", shooterTargetRPM);
             telemetry.addData("OVERRIDE", override);
+            telemetry.addLine("+++++++");
+            telemetry.addData("FL", powerFL);
+            telemetry.addData("FR", powerFR);
+            telemetry.addData("BL", powerBL);
+            telemetry.addData("BR", powerBR);
         }
     }
 }
