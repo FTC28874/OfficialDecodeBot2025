@@ -27,7 +27,7 @@ import java.util.Locale;
 // Turret Encoder Value: 126
 // Shooter Hood: 0.55
 
-@Autonomous(name="Blue Far", group="Far Auto", preselectTeleOp = "New Main TeleOp")
+@Autonomous(name="Far From Blue Goal 2", group="Far Auto", preselectTeleOp = "New Main TeleOp")
 //@Disabled
 
 public class FarFromBlueGoal2 extends LinearOpMode {

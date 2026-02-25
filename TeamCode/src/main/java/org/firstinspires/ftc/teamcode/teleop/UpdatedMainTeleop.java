@@ -157,14 +157,14 @@ public class UpdatedMainTeleop extends LinearOpMode {
             // ---------------------------------------------------------------
             if (gamepad2.x && !gamepad2.left_bumper) {
 
-                if (gamepad2.x && isDynamic) {
-                    aprilTagWebcam.continueStreaming();
-                    streamingActive = true;
-
-                } else if (!gamepad2.x && streamingActive) {
-                    aprilTagWebcam.closeStreaming();
-                    streamingActive = false;
-                }
+//                if (gamepad2.x && isDynamic) {
+//                    aprilTagWebcam.continueStreaming();
+//                    streamingActive = true;
+//
+//                } else if (!gamepad2.x && streamingActive) {
+//                    aprilTagWebcam.closeStreaming();
+//                    streamingActive = false;
+//                }
                 // --- AprilTag camera alignment mode ---
                 // Odo-based turret control (isDynamic) is completely bypassed here.
                 // The turret is driven directly by raw motor power based on tag X offset.
@@ -201,7 +201,7 @@ public class UpdatedMainTeleop extends LinearOpMode {
                 }
 
             } else {
-                aprilTagWebcam.closeStreaming();
+//                aprilTagWebcam.closeStreaming();
                 // --- Odo-based turret control mode ---
                 // Restore encoder mode so PID position control works correctly
                 turret.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);

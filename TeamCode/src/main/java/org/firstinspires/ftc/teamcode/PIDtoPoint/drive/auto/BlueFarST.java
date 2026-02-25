@@ -12,7 +12,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.PIDtoPoint.drive.DriveToPoint;
 import org.firstinspires.ftc.teamcode.PIDtoPoint.drive.GoBildaPinpointDriver;
-import org.firstinspires.ftc.teamcode.PIDtoPoint.drive.MecanumDrive;
 import org.firstinspires.ftc.teamcode.robot.HelperServos;
 import org.firstinspires.ftc.teamcode.robot.Intake;
 import org.firstinspires.ftc.teamcode.robot.Shooter;
@@ -28,10 +27,10 @@ import java.util.Locale;
 // Turret Encoder Value: 126
 // Shooter Hood: 0.55
 
-@Autonomous(name="Red Far ST", group="Far Auto", preselectTeleOp = "New Main TeleOp")
+@Autonomous(name="Blue Far ST", group="Far Auto", preselectTeleOp = "New Main TeleOp")
 //@Disabled
 
-public class RedFarST extends LinearOpMode {
+public class BlueFarST extends LinearOpMode {
 
     DcMotor leftFrontDrive = null;
     DcMotor rightFrontDrive = null;
@@ -69,14 +68,14 @@ public class RedFarST extends LinearOpMode {
         DONE
     }
 
-    static final Pose2D BEGIN_INTAKE_ROW_2 = new Pose2D(DistanceUnit.INCH, 52, 0, AngleUnit.DEGREES,-90);
-    static final Pose2D SHOOT_POSE = new Pose2D(DistanceUnit.INCH, 5, 0, AngleUnit.DEGREES, 0);
-    static final Pose2D INTAKE_ROW_2 = new Pose2D(DistanceUnit.INCH, 52, -2, AngleUnit.DEGREES, -90);
-    static final Pose2D BEGIN_INTAKE_ROW_1 = new Pose2D(DistanceUnit.INCH,76,0, AngleUnit.DEGREES,-90);
-    static final Pose2D INTAKE_ROW_1 = new Pose2D(DistanceUnit.INCH, 76, -29, AngleUnit.DEGREES, -90);
-    static final Pose2D BEGIN_INTAKE_ROW_3 = new Pose2D(DistanceUnit.INCH, 28, 0, AngleUnit.DEGREES, -90);
-    static final Pose2D INTAKE_ROW_3 = new Pose2D(DistanceUnit.INCH, 28, -29, AngleUnit.DEGREES, -90);
-    static final Pose2D END_AUTO = new Pose2D(DistanceUnit.INCH, 5, -12, AngleUnit.DEGREES, 0);
+    static final Pose2D BEGIN_INTAKE_ROW_2 = new Pose2D(DistanceUnit.INCH, 52, 0, AngleUnit.DEGREES,90);
+    static final Pose2D SHOOT_POSE = new Pose2D(DistanceUnit.INCH, 0, 0, AngleUnit.DEGREES, 0);
+    static final Pose2D INTAKE_ROW_2 = new Pose2D(DistanceUnit.INCH, 52, 2, AngleUnit.DEGREES, 90);
+    static final Pose2D BEGIN_INTAKE_ROW_1 = new Pose2D(DistanceUnit.INCH,76,0, AngleUnit.DEGREES,90);
+    static final Pose2D INTAKE_ROW_1 = new Pose2D(DistanceUnit.INCH, 76, 29, AngleUnit.DEGREES, 90);
+    static final Pose2D BEGIN_INTAKE_ROW_3 = new Pose2D(DistanceUnit.INCH, 28, 0, AngleUnit.DEGREES, 90);
+    static final Pose2D INTAKE_ROW_3 = new Pose2D(DistanceUnit.INCH, 28, 29, AngleUnit.DEGREES, 90);
+    static final Pose2D END_AUTO = new Pose2D(DistanceUnit.INCH, 5, 12, AngleUnit.DEGREES, 0);
 
 
     public double inToMM(double inValue) {
