@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.teleop;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -20,7 +21,7 @@ import org.firstinspires.ftc.teamcode.robot.aprilTagWebcam;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 
 @TeleOp(name = "New Main TeleOp", group = "Linear OpMode")
-
+@Disabled
 public class UpdatedMainTeleop extends LinearOpMode {
     private GoBildaPinpointDriver odo = null;
     Pose2D pos = null;

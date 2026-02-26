@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.PIDtoPoint.drive.auto;
 import androidx.appcompat.widget.ThemedSpinnerAdapter;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -31,7 +32,7 @@ import java.util.Locale;
 // Shooter Hood: 0.55
 
 @Autonomous(name="Close To Red Goal", group="Close Auto", preselectTeleOp = "New Main TeleOp")
-//@Disabled
+@Disabled
 
 public class CloseToRedGoal extends LinearOpMode {
 

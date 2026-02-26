@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.teleop.tests;
 
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -10,7 +11,7 @@ import org.firstinspires.ftc.teamcode.robot.aprilTagWebcam;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 
 @TeleOp(name = "AprilTag X Align Test", group = "Linear OpMode")
-
+@Disabled
 public class testAprilTag extends LinearOpMode {
 
     private aprilTagWebcam aprilTagWebcam = null;

@@ -1,8 +1,7 @@
 package org.firstinspires.ftc.teamcode.teleop;
 
-import androidx.appcompat.widget.ThemedSpinnerAdapter;
-
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 
@@ -10,6 +9,7 @@ import org.firstinspires.ftc.teamcode.robot.HelperServos;
 import org.firstinspires.ftc.teamcode.robot.Intake;
 import org.firstinspires.ftc.teamcode.robot.Shooter;
 
+@TeleOp(name = "Kid's TeleOp", group = "Linear OpMode")
 public class KidsTeleOp extends LinearOpMode {
     private double driverSensitivity = 0.3;
     private double shooterTargetRPM = 700.0;

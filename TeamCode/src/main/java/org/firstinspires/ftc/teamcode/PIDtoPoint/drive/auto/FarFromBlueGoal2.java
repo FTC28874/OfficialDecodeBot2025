@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.PIDtoPoint.drive.auto;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -28,7 +29,7 @@ import java.util.Locale;
 // Shooter Hood: 0.55
 
 @Autonomous(name="Far From Blue Goal 2", group="Far Auto", preselectTeleOp = "New Main TeleOp")
-//@Disabled
+@Disabled
 
 public class FarFromBlueGoal2 extends LinearOpMode {
 

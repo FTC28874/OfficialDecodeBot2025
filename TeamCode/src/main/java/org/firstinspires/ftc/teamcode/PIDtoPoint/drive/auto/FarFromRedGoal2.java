@@ -30,7 +30,7 @@ import java.util.Locale;
 // rpm: 3500
 
 @Autonomous(name="Far From Red Goal 2", group="Far Auto")
-//@Disabled
+@Disabled
 
 public class FarFromRedGoal2 extends LinearOpMode {
     private double turretPos = 0;
