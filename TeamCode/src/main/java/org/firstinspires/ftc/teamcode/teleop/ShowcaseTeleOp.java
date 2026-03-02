@@ -1,27 +1,35 @@
 package org.firstinspires.ftc.teamcode.teleop;
 
 
+import androidx.appcompat.widget.ThemedSpinnerAdapter;
+
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.robot.Intake;
 import org.firstinspires.ftc.teamcode.robot.Shooter;
 import org.firstinspires.ftc.teamcode.robot.HelperServos;
-
+import com.qualcomm.robotcore.util.ElapsedTime;
+@TeleOp(name = "Showcase TeleOp", group = "Linear OpMode")
 public class ShowcaseTeleOp extends LinearOpMode {
 
 
     private boolean stopperServo = false;
+    private ElapsedTime runtime = new ElapsedTime();
     @Override
     public void runOpMode() {
 
         Intake.init(hardwareMap);
         Shooter.init(hardwareMap);
+        HelperServos.init(hardwareMap);
 
         Intake.raiseIntake();
         Shooter.lowerShooter();
 
         waitForStart();
+        runtime.reset();
         while (opModeIsActive()) {
+
             // Shooter Control
             if (gamepad1.right_bumper) {
                 Shooter.setShooterPower(Shooter.PIDControl(500, Shooter.getCurrentRPM()));

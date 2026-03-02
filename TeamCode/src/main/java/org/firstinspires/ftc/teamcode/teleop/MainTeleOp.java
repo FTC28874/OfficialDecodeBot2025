@@ -22,7 +22,7 @@ import org.firstinspires.ftc.teamcode.robot.Turret;
 // speed far pos 2000
 
 @TeleOp(name="Main Teleop", group="Linear OpMode")
-@Disabled
+//@Disabled
 public class MainTeleOp extends LinearOpMode {
 
     // Declare OpMode members for each of the 4 motors.

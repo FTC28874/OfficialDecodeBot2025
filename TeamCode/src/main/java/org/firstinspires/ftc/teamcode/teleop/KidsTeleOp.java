@@ -82,6 +82,8 @@ public class KidsTeleOp extends LinearOpMode {
             if (gamepad1.left_bumper) {
                 Intake.runIntake();
                 HelperServos.setStopperStop();
+            } else {
+                Intake.stopIntake();
             }
 
 
@@ -120,7 +122,7 @@ public class KidsTeleOp extends LinearOpMode {
                 HelperServos.setStopperStop();
 
             } else {
-                driverSensitivity = 0.3;
+                driverSensitivity = 0.5;
             }
             if (gamepad2.xWasPressed()) {
                 override = !override;
@@ -134,6 +136,7 @@ public class KidsTeleOp extends LinearOpMode {
             telemetry.addData("FR", powerFR);
             telemetry.addData("BL", powerBL);
             telemetry.addData("BR", powerBR);
+            telemetry.update();
         }
     }
 }
