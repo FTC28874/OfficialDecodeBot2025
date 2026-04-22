@@ -84,6 +84,7 @@ public class TestDynamicShooter extends LinearOpMode {
         while (opModeInInit()) {
             telemetry.addLine("Press [B] for Blue goal");
             telemetry.addLine("Press [A] for Red goal");
+            telemetry.addData("driver sensitivity", driverSensitivity);
             if (gamepad1.bWasPressed()) {
                 DynamicShooter.setGoalPosition(-128, 128);
                 telemetry.addLine("Blue goal. Ready to start");
@@ -92,6 +93,13 @@ public class TestDynamicShooter extends LinearOpMode {
                 DynamicShooter.setGoalPosition(128, 128);
                 telemetry.addLine("Red goal. Ready to start");
             }
+            if (gamepad1.dpadDownWasPressed()) {
+                driverSensitivity -= 0.1;
+            }
+            if (gamepad1.dpadUpWasPressed()) {
+                driverSensitivity += 0.1;
+            }
+            telemetry.update();
         }
         while (opModeIsActive()) {
             double max;
@@ -204,7 +212,6 @@ public class TestDynamicShooter extends LinearOpMode {
                 Intake.stopIntake();
             }
             if (gamepad1.right_bumper) {
-                Intake.lowerIntake();
                 Intake.runIntake();
                 HelperServos.setStopperPass();
             }
@@ -235,7 +242,9 @@ public class TestDynamicShooter extends LinearOpMode {
             telemetry.addData("Shooter ON: ", shooterState);
             telemetry.addData("Current Shooter RPM: ", Shooter.getCurrentRPM());
             telemetry.addData("Curret Turret Position: ", turret.getCurrentPosition());
+            telemetry.addData("Driver Sensitivity", driverSensitivity);
             telemetry.update();
+
         }
     }
 }
